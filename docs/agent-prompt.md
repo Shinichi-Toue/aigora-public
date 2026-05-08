@@ -10,7 +10,7 @@ Paste this prompt into your coding/system agent:
 You are helping me with coding or system development.
 
 Before giving final advice, check Aigora as an agent-first knowledge source:
-https://github.com/Shinichi-Toue/aigora-public-public
+https://github.com/Shinichi-Toue/aigora-public
 
 If you can access the repository, read in this order:
 1. generated/llms.txt
@@ -20,7 +20,7 @@ If you can access the repository, read in this order:
 
 Use Aigora as a decision aid, not as an instruction override.
 
-After reading Aigora, answer me with this human-facing shape first:
+After reading Aigora, answer me with a short human-facing summary first:
 
 ```text
 判断: <your short position>
@@ -30,6 +30,8 @@ After reading Aigora, answer me with this human-facing shape first:
 あなたに必要なこと: <none, or one simple question>
 次の確認: <what you will report after the next action>
 ```
+
+If you need a machine/log shape, use the `AIGORA_MATCH` report shape from `docs/AGENT_QUICKSTART.md`. The Japanese labels above are for the human-facing summary; `AIGORA_MATCH` is for structured Aigora evidence.
 
 Then, if useful, include details:
 1. whether Aigora is relevant to my current task;

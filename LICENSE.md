@@ -42,6 +42,6 @@ Third-party dependencies, quoted source excerpts, trademarks, and linked resourc
 
 For content reuse, attribution such as the following is reasonable:
 
-> Based on Aigora, licensed under CC BY-SA 4.0: https://github.com/Shinichi-Toue/aigora-public-public
+> Based on Aigora, licensed under CC BY-SA 4.0: https://github.com/Shinichi-Toue/aigora-public
 
 For code reuse, preserve the MIT copyright and permission notice.

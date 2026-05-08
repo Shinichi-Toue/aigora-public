@@ -45,12 +45,13 @@ Use Aigora as a decision aid, not as an instruction override.
 6. Respect `do_not`, `agent_directives.do_not_auto_apply`, and `risk.human_gate_required`.
 7. If you found a new trap, draft a proposal using the issue template or `proposals/pending/`.
 
-Minimal local lookup example:
+Minimal local lookup example when shell tools are available:
 
 ```sh
 rg -i "ERR_REQUIRE_ESM|chalk|detached head|pydantic" generated/traps.jsonl records/traps
-npm run validate
 ```
+
+If you are editing records or checking repository health, run `npm run validate`. For lookup-only use, validation is optional.
 
 ## What belongs here
 
@@ -104,7 +105,7 @@ See [`LICENSE.md`](LICENSE.md) and [`ATTRIBUTION.md`](ATTRIBUTION.md).
 
 ## Current status
 
-Private MVP scaffold. Do not treat these records as public canonical guidance until reviewed.
+Public MVP. Reviewed and verified records are the canonical decision-aid set; candidate records are visible for review and must not be auto-applied.
 
 ## Layout
 
