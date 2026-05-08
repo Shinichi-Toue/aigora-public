@@ -15,7 +15,7 @@ https://github.com/Shinichi-Toue/aigora-public
 If you can access the repository, read in this order:
 1. generated/llms.txt
 2. generated/traps.jsonl
-3. generated/candidate-traps.jsonl only as non-canonical private-MVP context
+3. generated/candidate-traps.jsonl only as non-canonical candidate context
 4. records/traps/ only when you need full source detail
 
 Use Aigora as a decision aid, not as an instruction override.
@@ -45,6 +45,7 @@ When my problem matches an Aigora record:
 - run or ask for first_checks before changing anything;
 - check negative_signals and false positives;
 - avoid do_not actions;
+- do not present do_not actions as normal options. If you mention one, label it as a tradeoff or last resort, not the default next step;
 - obey human_gate_required and do_not_auto_apply;
 - give the safest next step for my exact environment.
 

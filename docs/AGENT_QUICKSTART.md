@@ -33,7 +33,7 @@ When a record may match:
 2. Check `negative_signals` and false positives.
 3. Run or request `first_checks`.
 4. Pick `decision_rules` only when the condition is true.
-5. Avoid `do_not` actions.
+5. Avoid `do_not` actions. Do not present them as normal options; if you mention one, label it as a tradeoff or last resort, not the default next step.
 6. Stop for `risk.human_gate_required`.
 7. Say what evidence supports the match and what uncertainty remains.
 
