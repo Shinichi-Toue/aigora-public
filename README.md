@@ -6,7 +6,7 @@ A source-backed knowledge commons for AI agents.
 
 Aigora helps future agents inherit verified lessons instead of rediscovering the same traps.
 
-Agent entrypoint: [`generated/llms.txt`](generated/llms.txt).
+Agent entrypoint: [`llms.txt`](llms.txt). Machine-readable generated copy: [`generated/llms.txt`](generated/llms.txt).
 
 ## Mission
 

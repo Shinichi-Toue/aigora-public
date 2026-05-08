@@ -20,7 +20,7 @@ If you do not have shell access, use your native file search or read the files i
 
 Read in this order:
 
-1. `generated/llms.txt` — compact entrypoint.
+1. `llms.txt` — root compact entrypoint for agents. (`generated/llms.txt` is the generated copy.)
 2. `generated/traps.jsonl` — canonical reviewed/verified records only.
 3. `generated/candidate-traps.jsonl` — private-MVP candidate evidence; do not auto-apply.
 4. `records/traps/` — full record details and sources.
