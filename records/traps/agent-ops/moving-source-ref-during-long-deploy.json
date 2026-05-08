@@ -1,0 +1,315 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.moving-source-ref-during-long-deploy",
+  "record_type": "trap",
+  "record_version": 2,
+  "created_at": "2026-05-08T19:55:00+09:00",
+  "updated_at": "2026-05-08T20:10:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Moving source refs during long deploys are not deploy failures",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "git",
+    "docker",
+    "workflow",
+    "version-drift",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "Agents may treat a moving branch name or mutable image tag as if it stayed fixed for a long build or deploy. A deploy can complete for the approved commit or image digest while the branch/tag advances afterward, so the next action is to read immutable deploy evidence and review the incremental drift separately.",
+  "ai_value": "Helps agents avoid reusing approval for newly merged code, mislabeling a successful frozen-SHA deploy as failed, or bypassing reviewed deployment paths when branch heads or tags move during long rollouts.",
+  "applies_to": {
+    "ecosystem": "ci-cd/deployment",
+    "contexts": [
+      "a deploy, build, or rollout starts from a branch name, symbolic git ref, workflow ref, or mutable container image tag",
+      "the build or rollout is long enough that commits can merge or tags can move before completion evidence is checked",
+      "review or approval applies to one commit/image, but the agent observes a newer branch head or tag after rollout",
+      "the deploy system records immutable evidence such as commit SHA, image digest, release manifest, task definition revision, deployment id, or smoke result"
+    ],
+    "tools": [
+      {
+        "name": "git",
+        "version_range": "general git workflow behavior",
+        "observed_versions": [
+          "2.x local reproduction"
+        ]
+      },
+      {
+        "name": "github-actions",
+        "version_range": "workflow context behavior; docs checked 2026-05-08",
+        "observed_versions": [
+          "GitHub Actions docs current on 2026-05-08"
+        ]
+      },
+      {
+        "name": "docker",
+        "version_range": "container image tags/digests; docs checked 2026-05-08",
+        "observed_versions": [
+          "Docker docs current on 2026-05-08"
+        ]
+      },
+      {
+        "name": "amazon-ecs",
+        "version_range": "ECS service deployments using image tags/digests; docs checked 2026-05-08",
+        "observed_versions": [
+          "AWS ECS software version consistency docs current on 2026-05-08"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The deploy uses a branch, symbolic ref, or workflow ref but also records a specific expected commit SHA.",
+      "pattern": "refs/heads/.+|GITHUB_REF|github.ref|expected_commit|freeze_sha|approved_sha",
+      "agent_interpretation": "Treat the commit SHA as the immutable deploy target for this batch; the branch name is only a moving selector unless separately pinned.",
+      "detectable_by": [
+        "deploy command",
+        "workflow logs",
+        "release manifest",
+        "CI environment variables"
+      ]
+    },
+    {
+      "description": "The branch head observed after rollout differs from the deployed or approved commit.",
+      "pattern": "source[_-]?ref[_-]?drift|deployed_commit.+branch_head_now|approved_sha.+current_head",
+      "agent_interpretation": "Do not mark the frozen deploy as failed solely because the branch advanced. Open an incremental review for the difference.",
+      "detectable_by": [
+        "deploy record",
+        "git rev-parse output",
+        "post-rollout summary"
+      ]
+    },
+    {
+      "description": "A rerun or manual workflow dispatch defaults to the current branch head instead of the originally approved commit.",
+      "pattern": "workflow_dispatch|rerun|re-run|run again|branch head|current head",
+      "agent_interpretation": "Confirm the rerun target SHA before assuming it is the same reviewed artifact or commit.",
+      "detectable_by": [
+        "GitHub Actions run metadata",
+        "workflow inputs",
+        "CI logs"
+      ]
+    },
+    {
+      "description": "The deployment uses a mutable container image tag while the platform or registry can resolve an immutable digest.",
+      "pattern": ":latest|image tag|image digest|sha256:|mutable tag",
+      "agent_interpretation": "Read the image digest or deployment artifact identity before reasoning from the tag name alone.",
+      "detectable_by": [
+        "container image reference",
+        "task definition",
+        "registry output",
+        "deployment events"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The deploy target was an immutable commit SHA, signed release, immutable tag, or image digest, and no newer target is being considered.",
+      "pattern": "^[0-9a-f]{40}$|@sha256:[0-9a-f]+|immutable tag|signed release",
+      "why_it_matters": "If both approval and deployment are pinned to the same immutable identity and no moving selector is used for follow-up, this trap may not apply. Continue normal deploy verification."
+    },
+    {
+      "description": "The post-rollout evidence shows the deployed artifact itself is unhealthy or differs from the frozen deploy record.",
+      "pattern": "smoke failed|health check failed|artifact digest mismatch|task failed|rollback",
+      "why_it_matters": "That is a real deployment or artifact-integrity failure, not merely source-ref drift. Diagnose the failed rollout directly."
+    },
+    {
+      "description": "The human or release policy explicitly approved the later commit range after it was reviewed separately.",
+      "pattern": "incremental range reviewed|approved new SHA|separate review complete",
+      "why_it_matters": "A later SHA can be deployed safely after its own review. The trap is reusing the earlier approval without checking the drift."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "The branch head after deploy is what production must be running.",
+    "If main advanced during a deploy, the deploy failed or must be redone immediately.",
+    "Approval for commit A also approves commit B because both were on the same branch name.",
+    "A container image tag such as latest identifies one stable artifact.",
+    "A workflow rerun or manual dispatch automatically targets the same commit that was originally reviewed."
+  ],
+  "first_checks": [
+    {
+      "check": "Read immutable deployment evidence: deployed commit, image digest, release manifest, task definition or deployment id, rollout state, and smoke result.",
+      "why": "Production truth should come from the deploy record and artifact identity, not the moving branch or tag observed afterward.",
+      "files": [
+        "deploy record",
+        "release manifest",
+        "CI/CD logs",
+        "container registry or task definition output"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Compare the deployed immutable identity with the current branch head or current tag digest.",
+      "why": "This separates a completed frozen deploy from a new, unreviewed incremental change.",
+      "command": "git rev-parse <branch> && git log --oneline <deployed-sha>..<branch>",
+      "safe_to_run": true
+    },
+    {
+      "check": "Inspect only the incremental range for gated changes before treating catch-up as simple.",
+      "why": "New commits may include DB, security, permission, billing, or public-behavior changes requiring independent review.",
+      "files": [
+        "git diff --stat <deployed-sha>..<target-sha>",
+        "migration files",
+        "security/auth/config files"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "For workflow reruns or manual dispatch, confirm the exact target SHA and artifact identity before redeploying.",
+      "why": "A rerun path may use the current branch head or supplied ref, which can differ from the earlier reviewed commit.",
+      "files": [
+        "workflow run metadata",
+        "workflow inputs",
+        "GitHub Actions github context"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Deploy evidence shows the approved deploy SHA or digest reached steady state and smoke checks passed, while the branch head or tag moved afterward.",
+      "action": "modify_workflow",
+      "action_detail": "close_frozen_deploy_and_open_incremental_review",
+      "then": "Treat the frozen deploy batch as complete for its immutable target. Create a separate review packet for the incremental range from deployed SHA/digest to the new target.",
+      "confidence": "high",
+      "source_ids": [
+        "local-repro-2026-05-08",
+        "docker-pull-digest",
+        "aws-ecs-version-consistency"
+      ]
+    },
+    {
+      "condition": "The agent is about to rerun or manually dispatch a deploy from a branch name after earlier approval was tied to a specific SHA.",
+      "action": "diagnose",
+      "action_detail": "confirm_rerun_target_sha_before_action",
+      "then": "Check the workflow run target ref and SHA. If it differs from the approved SHA, stop and review the incremental range before deployment.",
+      "confidence": "medium",
+      "source_ids": [
+        "github-actions-ref-context",
+        "github-actions-default-variables"
+      ]
+    },
+    {
+      "condition": "A mutable image tag is used in task definitions or deployment config, but the platform exposes a resolved image digest.",
+      "action": "modify_workflow",
+      "action_detail": "reason_from_digest_not_tag",
+      "then": "Compare and record the image digest used for the deployment. Do not infer artifact identity from the tag alone.",
+      "confidence": "high",
+      "source_ids": [
+        "docker-pull-digest",
+        "aws-ecs-version-consistency",
+        "aws-ecs-whats-new-version-consistency"
+      ]
+    },
+    {
+      "condition": "The incremental range includes database migrations, permissions, auth/security, billing, publication, destructive history/data operations, or other hard-gated changes.",
+      "action": "human_gate",
+      "action_detail": "require_independent_review_before_catch_up_deploy",
+      "then": "Do not catch up automatically. Route the incremental range through the required review/wrapper/approval path before deploying it.",
+      "confidence": "high",
+      "source_ids": [
+        "local-repro-2026-05-08"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not reuse approval for commit A to deploy newly merged commit B.",
+    "Do not treat source-ref drift alone as proof that the completed deploy failed.",
+    "Do not infer production artifact identity from a branch name or mutable image tag when a commit SHA, digest, release manifest, or deployment id is available.",
+    "Do not bypass reviewed deploy wrappers, CI/CD policy, or human gates just to catch up faster.",
+    "Do not clean, reset, or discard unrelated local work merely to simplify deploy evidence; use a clean archive or build context when available."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Read immutable deploy evidence, compare it with the moving ref or tag, then close the frozen batch or open an incremental review instead of redeploying blindly."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "Deployment can affect live availability, billing, permissions, auth/security, data, and public behavior. This record supports diagnosis and review partitioning; it does not authorize production deployment or catch-up."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "github-actions-ref-context",
+        "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T19:45:00+09:00",
+        "excerpt": "GitHub Actions documents github.ref as the fully formed branch or tag ref that triggered a workflow run.",
+        "supports": "Shows that workflows can expose a branch/tag ref separately from other run metadata, so agents must distinguish ref names from immutable commit targets."
+      },
+      {
+        "id": "github-actions-default-variables",
+        "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/variables",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T19:45:00+09:00",
+        "excerpt": "GitHub Actions documents GITHUB_REF as the branch or tag ref and provides default environment variables for workflow steps.",
+        "supports": "Supports checking workflow run metadata and default variables before assuming a rerun targets the same reviewed commit."
+      },
+      {
+        "id": "docker-pull-digest",
+        "url": "https://docs.docker.com/reference/cli/docker/image/pull/",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T19:45:00+09:00",
+        "excerpt": "Docker documents pulling by digest as pinning an image to a specific version rather than relying on a tag.",
+        "supports": "Supports the rule that digest identity is safer evidence than mutable tag names for deployed container artifacts."
+      },
+      {
+        "id": "aws-ecs-version-consistency",
+        "url": "https://aws.amazon.com/blogs/containers/announcing-software-version-consistency-for-amazon-ecs-services/",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T19:45:00+09:00",
+        "excerpt": "AWS explains that image tags are not immutable and that ECS captures image digests for service deployment consistency.",
+        "supports": "Supports the mutable-tag drift portion of the trap and the need to reason from resolved digests during deployments."
+      },
+      {
+        "id": "aws-ecs-whats-new-version-consistency",
+        "url": "https://aws.amazon.com/about-aws/whats-new/2024/07/amazon-ecs-software-version-consistency-containerized-applications/",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T19:45:00+09:00",
+        "excerpt": "AWS states that ECS resolves image tags to SHA256 image digests when deploying service updates for version consistency.",
+        "supports": "Provides an official release-note style source for digest-based deployment consistency when mutable tags are used."
+      },
+      {
+        "id": "local-repro-2026-05-08",
+        "url": "artifact:benchmarks/moving-source-ref-during-long-deploy/repro.sh",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-08T19:50:00+09:00",
+        "excerpt": "Repository repro script freezes one commit as deployed, advances the branch, then reports source_ref_drift_detected=true and an incremental range to review separately.",
+        "supports": "Provides a public-safe reproducible script for the branch-ref drift scenario and the safe conclusion that a frozen SHA deploy can complete while later branch changes require separate review."
+      },
+      {
+        "id": "core-session-distillation-2026-05-08",
+        "url": "artifact:proposals/pending/moving-source-ref-during-long-deploy.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-08T19:20:00+09:00",
+        "excerpt": "A de-identified de-identified long-running development-session extraction reported long builds where reviewed deploys completed while the source branch advanced again.",
+        "supports": "Provides the originating de-identified agent-trap observation, without secrets or private hostnames."
+      }
+    ],
+    "verification_runs": [
+      {
+        "run_at": "2026-05-08T19:50:00+09:00",
+        "environment": {
+          "os_context": "local Linux verification session, temporary git repository in a temporary git repository",
+          "runtime": {
+            "name": "git",
+            "version": "2.x"
+          },
+          "packages": []
+        },
+        "command": "./benchmarks/moving-source-ref-during-long-deploy/repro.sh | tee benchmarks/moving-source-ref-during-long-deploy/repro-2026-05-08.txt",
+        "safe_to_rerun": true,
+        "observed_result": "The script printed a frozen deployed_commit, a different branch_head_now, incremental_range=<freeze>..<head>, source_ref_drift_detected=true, and safe_conclusion=deploy of frozen sha can be complete; review incremental range separately.",
+        "conclusion": "Branch-head drift after a long deploy is diagnosable without treating the completed frozen-SHA deploy as failed or reusing approval for the newer head."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-05-08",
+    "volatility": "medium",
+    "next_check_due": "2026-08-08"
+  }
+}

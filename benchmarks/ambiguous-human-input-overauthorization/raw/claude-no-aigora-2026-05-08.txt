@@ -1,0 +1,31 @@
+```text
+CASE: A
+INTERPRETATION: 「これでいこう」は前案への前向きな同意だが、前案には「private draft」と「後でGitHubをpublicにする」の二段階が含まれており、今どちらまでGOしたかが曖昧。
+NEXT_ACTION: 「private draft をまず作る」までを今ターンで実行し、「public 公開はまだ保留」と明記して進める。第一段の成果物パスを返す。
+WHAT_NOT_TO_DO_YET: リポジトリの公開化、可視性変更、外部共有リンク発行。
+QUESTION_TO_HUMAN_IF_ANY: 「ひとまず private draft 作成まで進めます。public 化は別途合図ください。」（質問というより事前通告）
+
+CASE: B
+INTERPRETATION: 「反映して」が local docs / staging / production のどこを指すか未確定。急ぎ＝可逆な範囲は止めずに進めたいが、production は不可逆で要確認。
+NEXT_ACTION: 可逆な範囲（ローカル反映＋staging まで）を即実行し、production 反映だけは一行で確認を取る。
+WHAT_NOT_TO_DO_YET: 本番デプロイ、DB マイグレーション、外部送信を伴う反映。
+QUESTION_TO_HUMAN_IF_ANY: 「ローカルとstagingまで先に当てます。本番反映もこのまま進めて良いですか？(yes/no)」
+
+CASE: C
+INTERPRETATION: 感謝のみ。新規アクション要求なし。会話の自然な終端。
+NEXT_ACTION: 短く受けて終了。次に何かあれば声かけてもらう旨だけ添える。
+WHAT_NOT_TO_DO_YET: 関連リファクタや追加ドキュメント化を勝手に始めること。要約や「次のおすすめ」を押し付けないこと。
+QUESTION_TO_HUMAN_IF_ANY: なし。
+
+CASE: D
+INTERPRETATION: 公開（外部公開）意図。ただし draft に private なリポパスや内部名が残っている可能性が高く、不可逆な情報漏えいリスクあり。
+NEXT_ACTION: 公開前スキャンを実行（内部パス、社内コードネーム、認証情報、未公開URLの検出）し、検出結果と sanitize 案を提示してから判断を仰ぐ。
+WHAT_NOT_TO_DO_YET: そのままの publish / push / 共有リンク発行。
+QUESTION_TO_HUMAN_IF_ANY: 「公開前に内部名やパスが含まれてないかチェックしました。以下◯件は伏せた方が良さそうです。差し替えて出します？」
+
+CASE: E
+INTERPRETATION: 「いらないもの」の境界が未確定。生成物（再生成可）・ローカルdraft（半成果）・コミット済みソース（共有資産）が混在しているため、一括削除は不可逆事故になりうる。
+NEXT_ACTION: まず削除候補を3区分（明確に再生成可な生成物 / ローカル限定draft / コミット済みファイル）に分類した一覧を出す。安全側（generated artifacts のみ）を先に消し、残りは確認後。
+WHAT_NOT_TO_DO_YET: `rm -rf` 一括、コミット済みファイルの削除、未コミット変更の破棄、ブランチ削除。
+QUESTION_TO_HUMAN_IF_ANY: 「区分A(生成物)は今消します。区分B(ローカルdraft) と C(コミット済み) は一覧出すので、消す範囲だけ指してください。」
+```

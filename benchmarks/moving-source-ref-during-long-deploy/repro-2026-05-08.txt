@@ -1,0 +1,8 @@
+deploy_start freeze_ref=master freeze_sha=b45057c61b0f4f720b09293a622bf735dd4980ed
+after_long_build current_ref=master current_head=bbbb9a5655ce4ec45e8e445863b5699bc1807ea9
+deployed_commit=b45057c61b0f4f720b09293a622bf735dd4980ed
+branch_head_now=bbbb9a5655ce4ec45e8e445863b5699bc1807ea9
+incremental_range=b45057c61b0f4f720b09293a622bf735dd4980ed..bbbb9a5655ce4ec45e8e445863b5699bc1807ea9
+bbbb9a5 (HEAD -> master) v2 merged while deploy builds
+source_ref_drift_detected=true
+safe_conclusion=deploy of frozen sha can be complete; review incremental range separately

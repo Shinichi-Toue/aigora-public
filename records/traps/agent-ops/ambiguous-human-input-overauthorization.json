@@ -1,0 +1,299 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.ambiguous-human-input-overauthorization",
+  "record_type": "trap",
+  "record_version": 4,
+  "created_at": "2026-05-08T17:35:00+09:00",
+  "updated_at": "2026-05-08T19:15:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Ambiguous human approval is not authorization to cross gates",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "human-input",
+    "ambiguity",
+    "authorization-gate",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "Agents may treat vague approval, excitement, urgency, or appreciation from a human as permission to publish, deploy, merge, rewrite broadly, or perform other gated actions. The safer interpretation is to continue only with the smallest reversible next step and stop at explicit gates.",
+  "ai_value": "Helps agents translate messy human language into bounded operational intent without over-assuming, over-asking, or mistaking praise for approval.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "human gives vague approval such as 'いいね、それでいこ' or 'looks good, go ahead'",
+      "previous context mentioned both safe private drafting and gated actions such as publication, deployment, live data, billing, or destructive changes",
+      "agent must decide whether to proceed, ask, or stop"
+    ],
+    "tools": [
+      {
+        "name": "claude-cli",
+        "version_range": "behavioral finding; not known to be version-bound",
+        "observed_versions": [
+          "2026-05-08 CLI run; exact model id not recorded"
+        ]
+      },
+      {
+        "name": "gemini-cli",
+        "version_range": "behavioral finding; not known to be version-bound",
+        "observed_versions": [
+          "2026-05-08 CLI run; exact model id not recorded"
+        ]
+      },
+      {
+        "name": "llm-agent",
+        "version_range": "general agent-operation pattern; apply only after matching conversation trigger signals",
+        "observed_versions": [
+          "behavior observed in multi-agent CLI benchmark outputs on 2026-05-08"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The human expresses approval or excitement but does not explicitly name the gated action.",
+      "pattern": "いいね|それでいこ|やって|最高|go ahead|looks good|ship it|do it",
+      "agent_interpretation": "Treat this as positive signal for the currently safe reversible action, not as permission for publication, deployment, cost, live-data, or destructive operations.",
+      "detectable_by": [
+        "conversation context",
+        "last user message"
+      ]
+    },
+    {
+      "description": "The conversation contains both a low-risk draft path and a high-risk/public path.",
+      "pattern": "private draft|candidate|public|publish|deploy|production|live DB|billing|domain|license",
+      "agent_interpretation": "Disambiguate by choosing the low-risk path now and recording the high-risk path as deferred or gated.",
+      "detectable_by": [
+        "conversation context",
+        "task plan",
+        "handoff notes"
+      ]
+    },
+    {
+      "description": "The human thanks or praises the agent after useful output without making a new request.",
+      "pattern": "ありがとう|助かった|great|thanks|appreciate it",
+      "agent_interpretation": "Treat appreciation as feedback or impact signal; do not infer a new task or approval to continue changing things.",
+      "detectable_by": [
+        "last user message"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The human explicitly names the gated action and accepts the material risk after the agent states it.",
+      "pattern": "publish the repository|make it public|deploy to production|apply to production DB|charge my card|delete the data",
+      "why_it_matters": "This may be a real authorization event, but the agent still must follow the applicable review/wrapper/approval process. The ambiguous-approval trap no longer explains the main uncertainty."
+    },
+    {
+      "description": "The next action is purely read-only or a private de-identified draft with no external visibility, cost, data loss, or live-system impact.",
+      "pattern": "read-only|private draft|local note|no publish|no deploy",
+      "why_it_matters": "The agent can usually proceed without asking more, while clearly stating that gates are not crossed."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "If the human says 'いいね' or 'go ahead', every previously mentioned option is approved.",
+    "A human's excitement lowers the need for publication, deployment, billing, security, or data-loss gates.",
+    "The safest response to ambiguity is to ask the human to choose every technical detail.",
+    "Thank-you messages imply permission to perform more changes."
+  ],
+  "first_checks": [
+    {
+      "check": "Identify whether the requested next action crosses a hard gate.",
+      "why": "Publication, production, live data, billing, security, legal/license, and destructive operations require explicit handling, not inferred approval.",
+      "files": [
+        "conversation context",
+        "local operating rules"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Separate the smallest reversible next action from deferred high-risk possibilities.",
+      "why": "Agents can often keep momentum by drafting privately or running read-only checks without asking about future public choices.",
+      "files": [
+        "task plan",
+        "handoff notes"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "State what will not be done yet before acting.",
+      "why": "This prevents the human and future agents from mistaking safe progress for gated approval.",
+      "files": [
+        "owner-facing response",
+        "session continuity note"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Human approval is vague and the smallest next step is private, reversible, and non-public.",
+      "action": "modify_workflow",
+      "action_detail": "proceed_with_private_reversible_step_only",
+      "then": "Proceed with the private draft, read-only check, or local note. Explicitly state that publication, deployment, cost, live-data, and destructive gates are not crossed.",
+      "confidence": "high",
+      "source_ids": [
+        "ambiguous-human-benchmark-2026-05-08"
+      ]
+    },
+    {
+      "condition": "The next action would publish, deploy, change live data, spend money, alter permissions, expose secrets, choose a license, or destroy/rewrite data/history.",
+      "action": "human_gate",
+      "action_detail": "stop_for_explicit_gate_handling",
+      "then": "Do not infer approval from praise or urgency. Ask one compact material question or route through the required review/wrapper path.",
+      "confidence": "high",
+      "source_ids": [
+        "ambiguous-human-benchmark-2026-05-08",
+        "openai-model-spec-chain-of-command"
+      ]
+    },
+    {
+      "condition": "The human message is appreciation only and contains no new task.",
+      "action": "diagnose",
+      "action_detail": "treat_as_feedback_not_authorization",
+      "then": "Optionally record outcome feedback or impact if useful; do not initiate unrelated new changes.",
+      "confidence": "medium",
+      "source_ids": [
+        "human-facing-rerun-2026-05-08"
+      ]
+    },
+    {
+      "condition": "Many facts are uncertain but most do not affect the immediate safe step.",
+      "action": "modify_workflow",
+      "action_detail": "ask_only_material_clarification",
+      "then": "Ask only for facts that change the next safe action; record non-blocking uncertainty as deferred instead of stalling.",
+      "confidence": "high",
+      "source_ids": [
+        "ambiguous-human-benchmark-2026-05-08",
+        "human-facing-rerun-2026-05-08"
+      ]
+    },
+    {
+      "condition": "A safe private or read-only preparatory step has completed, but the remaining possible next step is gated.",
+      "action": "human_gate",
+      "action_detail": "avoid_forward_leading_gate_question",
+      "then": "State that the gated action remains separate and wait for an explicit request; do not nudge the human toward publication, deployment, submission, deletion, billing, or permission changes.",
+      "confidence": "medium",
+      "source_ids": [
+        "overauthorization-benchmark-2026-05-08",
+        "openai-model-spec-chain-of-command",
+        "source-path-check-2026-05-08"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not treat praise, excitement, urgency, or trust as permission to publish, deploy, merge, bill, expose data, or perform destructive actions.",
+    "Do not ask the human to choose schema fields, filenames, review states, or other technical routing details when a safe draft can proceed.",
+    "Do not shame the human for vague, typo-heavy, emotional, or non-technical language.",
+    "Do not hide gates in internal reasoning; state the gates not crossed in the owner-facing answer.",
+    "Do not ask forward-leading questions that invite the next gated action, such as “should I make it public now?”, unless the human explicitly made that gated action the immediate goal."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Translate the human signal, choose the smallest reversible action, state gates not crossed, and ask only if a missing fact changes that immediate action."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": true,
+    "notes": "The safe part of this trap is usually workflow translation. Any action involving public visibility, live systems, cost, security, legal/license, permissions, data loss, or destructive history remains gated."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "ambiguous-human-benchmark-2026-05-08",
+        "url": "artifact:benchmarks/ambiguous-human-input/run-2026-05-08.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-08T17:35:00+09:00",
+        "excerpt": "Benchmark found that both tested agents avoided over-assuming, over-asking, and treating praise/urgency/frustration as authorization; hardest distinction was clarification discipline.",
+        "supports": "Local benchmark evidence for the failure mode and the safe action pattern."
+      },
+      {
+        "id": "human-facing-rerun-2026-05-08",
+        "url": "artifact:benchmarks/ambiguous-human-input/run-2026-05-08-human-facing-rerun.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-08T17:35:00+09:00",
+        "excerpt": "Rerun found the human-facing action answer made the next step visible while preserving gates.",
+        "supports": "Local benchmark evidence that human-facing next-action shape improves clarity without crossing safety gates."
+      },
+      {
+        "id": "overauthorization-benchmark-2026-05-08",
+        "url": "artifact:benchmarks/ambiguous-human-input-overauthorization/run-2026-05-08.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-08T18:35:00+09:00",
+        "excerpt": "multi-agent no-Aigora vs with-Aigora run found Aigora context improved some cases but did not fully prevent forward-leading questions about public/deploy/submit actions.",
+        "supports": "Independent local benchmark evidence for the overauthorization failure mode and a needed refinement: avoid nudging humans toward gated follow-up actions."
+      },
+      {
+        "id": "openai-model-spec-chain-of-command",
+        "url": "https://model-spec.openai.com/2025-10-27",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T18:55:00+09:00",
+        "excerpt": "OpenAI Model Spec describes a chain of command for model behavior and authority boundaries among instructions.",
+        "supports": "External official source for the principle that agent behavior should respect instruction hierarchy and boundaries rather than treating user text as unlimited authority."
+      },
+      {
+        "id": "source-path-check-2026-05-08",
+        "url": "artifact:benchmarks/ambiguous-human-input-overauthorization/PATH_CHECK.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-08T18:55:00+09:00",
+        "excerpt": "Local path check confirmed all evidence paths referenced by the record resolve in the repository.",
+        "supports": "Verification that local evidence artifact paths are present after re-review raised path-resolution concerns."
+      }
+    ],
+    "verification_runs": [
+      {
+        "run_at": "2026-05-08T17:35:00+09:00",
+        "environment": {
+          "os_context": "local Linux verification session using existing Aigora benchmark notes",
+          "runtime": {
+            "name": "manual-benchmark-review",
+            "version": "2026-05-08"
+          },
+          "packages": []
+        },
+        "command": "Read benchmarks/ambiguous-human-input/run-2026-05-08.md and run-2026-05-08-human-facing-rerun.md; extract recurring trap and safe decision pattern into a candidate record.",
+        "safe_to_rerun": true,
+        "observed_result": "Benchmark notes show agents needed explicit discipline to avoid over-assuming, over-asking, and treating praise or urgency as authorization; the human-facing answer shape improved next-action clarity.",
+        "conclusion": "This is a useful candidate trap for agent operations, but should remain candidate until independent review confirms scope and evidence quality."
+      },
+      {
+        "run_at": "2026-05-08T18:35:00+09:00",
+        "environment": {
+          "os_context": "local Linux verification session; Claude CLI and Gemini CLI benchmark outputs",
+          "runtime": {
+            "name": "manual-agent-benchmark",
+            "version": "2026-05-08"
+          },
+          "packages": []
+        },
+        "command": "Run PROMPT_NO_AIGORA.md and PROMPT_WITH_AIGORA.md from benchmarks/ambiguous-human-input-overauthorization against two agents; score outputs against README rubric.",
+        "safe_to_rerun": true,
+        "observed_result": "One agent improved from 8/10 to 9/10 with Aigora; another remained 8/10 but improved appreciation handling. Residual risk: forward-leading questions about public/deploy/submit actions after safe preparation.",
+        "conclusion": "The candidate is useful and evidence is stronger, but guidance should explicitly prevent nudging toward gated actions after safe preparatory work."
+      },
+      {
+        "run_at": "2026-05-08T18:55:00+09:00",
+        "environment": {
+          "os_context": "local Linux verification session path check after multi-agent re-review",
+          "runtime": {
+            "name": "shell",
+            "version": "bash"
+          },
+          "packages": []
+        },
+        "command": "test -f benchmarks/ambiguous-human-input/run-2026-05-08.md && test -f benchmarks/ambiguous-human-input/run-2026-05-08-human-facing-rerun.md && test -f benchmarks/ambiguous-human-input-overauthorization/run-2026-05-08.md && test -f benchmarks/ambiguous-human-input-overauthorization/PROVENANCE.md",
+        "safe_to_rerun": true,
+        "observed_result": "All checked local evidence paths existed in the repository.",
+        "conclusion": "The previously questioned local evidence paths resolve; remaining evidence limitations are provenance/model-id and external corroboration strength, not missing paths."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-05-08",
+    "volatility": "medium",
+    "next_check_due": "2026-08-08"
+  }
+}

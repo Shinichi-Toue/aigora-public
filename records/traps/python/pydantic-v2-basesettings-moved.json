@@ -1,0 +1,223 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.python.pydantic-v2-basesettings-moved",
+  "record_type": "trap",
+  "record_version": 2,
+  "created_at": "2026-05-08T13:45:00+09:00",
+  "updated_at": "2026-05-08T16:45:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Pydantic v2 moved BaseSettings to pydantic-settings",
+  "status": "reviewed",
+  "domain": "software/python/packaging",
+  "tags": [
+    "python",
+    "pydantic",
+    "pip",
+    "version-drift",
+    "common-ai-mistake"
+  ],
+  "summary": "Agents often use Pydantic v1 examples and write `from pydantic import BaseSettings`. With Pydantic v2 this raises PydanticImportError because BaseSettings moved to the separate `pydantic-settings` package.",
+  "ai_value": "Before downgrading Pydantic or rewriting settings code broadly, an agent should check the installed Pydantic major version, whether pydantic-settings is installed, and update the import path for v2 projects.",
+  "applies_to": {
+    "ecosystem": "python",
+    "contexts": [
+      "Python project imports BaseSettings from pydantic",
+      "Pydantic v2 is installed or resolved by dependency solver",
+      "Application uses environment/settings management"
+    ],
+    "runtime": {
+      "name": "python",
+      "semver_range": ">=3.8",
+      "observed_versions": [
+        "3.12.3"
+      ]
+    },
+    "packages": [
+      {
+        "name": "pydantic",
+        "semver_range": ">=2.0.0,<3.0.0",
+        "observed_versions": [
+          "2.13.4"
+        ]
+      },
+      {
+        "name": "pydantic-settings",
+        "semver_range": ">=2.0.0",
+        "observed_versions": [
+          "2.14.0"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Python code imports BaseSettings directly from pydantic while pydantic resolves to v2.",
+      "pattern": "from\\s+pydantic\\s+import\\s+.*BaseSettings|pydantic==?2\\.|pydantic>=2",
+      "agent_interpretation": "Do not assume Pydantic v1 import paths still apply; check whether pydantic-settings should be used.",
+      "detectable_by": [
+        "source grep",
+        "requirements.txt",
+        "pyproject.toml",
+        "pip freeze",
+        "python import error"
+      ]
+    },
+    {
+      "description": "Runtime error says BaseSettings has been moved to the pydantic-settings package.",
+      "pattern": "BaseSettings.*moved to the [`']pydantic-settings[`'] package|PydanticImportError",
+      "agent_interpretation": "The immediate diagnosis is Pydantic v2 settings-package split, not a generic missing module or Python path problem.",
+      "detectable_by": [
+        "traceback",
+        "test output",
+        "application logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The project intentionally pins Pydantic v1 and import succeeds in the active environment.",
+      "pattern": "pydantic==1\\.|pydantic<2",
+      "why_it_matters": "Pydantic v1 still exposes BaseSettings from pydantic; this v2 migration trap may not apply. Avoid unnecessary dependency churn."
+    },
+    {
+      "description": "The code already imports BaseSettings from pydantic_settings.",
+      "pattern": "from\\s+pydantic_settings\\s+import\\s+.*BaseSettings",
+      "why_it_matters": "If the v2 import path is already used, the failure is likely elsewhere, such as package installation, environment mismatch, or settings field validation."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Pydantic v1 examples remain valid for Pydantic v2 projects.",
+    "The fix is always to downgrade pydantic to v1.",
+    "PydanticImportError means pydantic itself is missing or the Python path is broken.",
+    "Installing pydantic alone is enough for BaseSettings in v2."
+  ],
+  "first_checks": [
+    {
+      "check": "Check the active Python and Pydantic versions in the same environment that fails.",
+      "why": "Dependency solvers and IDEs may use a different environment than the failing runtime.",
+      "command": "python - <<'PY'\nimport sys, pydantic\nprint(sys.executable)\nprint(sys.version.split()[0])\nprint(pydantic.__version__)\nPY",
+      "safe_to_run": true
+    },
+    {
+      "check": "Search for the old BaseSettings import path.",
+      "why": "The old import path is the direct trigger for this Pydantic v2 failure.",
+      "command": "rg \"from pydantic import .*BaseSettings|BaseSettings\" .",
+      "safe_to_run": true
+    },
+    {
+      "check": "Check whether pydantic-settings is installed in the failing environment.",
+      "why": "Pydantic v2 settings management lives in a separate package.",
+      "command": "python - <<'PY'\nimport importlib.util\nprint(importlib.util.find_spec('pydantic_settings'))\nPY",
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Pydantic v2 is installed and code imports BaseSettings from pydantic.",
+      "action": "modify_dependency",
+      "action_detail": "add_pydantic_settings_dependency",
+      "then": "Add `pydantic-settings` to the project dependencies and update the import to `from pydantic_settings import BaseSettings`. Keep the change local to settings code first.",
+      "confidence": "high",
+      "source_ids": [
+        "pydantic-v2-migration-basesettings",
+        "pydantic-settings-docs",
+        "local-verification-2026-05-08"
+      ]
+    },
+    {
+      "condition": "The project intentionally requires Pydantic v1 compatibility because upstream dependencies are not v2-ready.",
+      "action": "modify_dependency",
+      "action_detail": "pin_pydantic_v1_as_explicit_compatibility_tradeoff",
+      "then": "Pin or constrain Pydantic v1 only as an explicit compatibility decision, document the reason, and avoid mixing v1-only imports with v2-only dependency ranges.",
+      "confidence": "medium",
+      "source_ids": [
+        "pydantic-v2-migration-basesettings"
+      ]
+    },
+    {
+      "condition": "The import path is already pydantic_settings but the application still fails.",
+      "action": "diagnose",
+      "action_detail": "reject_basesettings_moved_as_primary_cause",
+      "then": "Do not keep applying this trap. Diagnose installation environment, missing pydantic-settings, settings validation, `.env` loading, or package resolver mismatch.",
+      "confidence": "medium",
+      "source_ids": [
+        "pydantic-settings-docs"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not blindly downgrade Pydantic to v1 as the first fix for a v2 project.",
+    "Do not change all Pydantic model code when only settings imports are failing.",
+    "Do not install pydantic-settings in one environment while running the application in another environment without verifying the active interpreter.",
+    "Do not treat candidate guidance as canonical without checking versions and import paths."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Check the active Pydantic version and old BaseSettings import path, then add pydantic-settings and update the import only if the v2 settings split matches."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "Dependency changes can affect application compatibility. Keep the first action diagnostic and avoid broad dependency downgrades without a compatibility reason."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "pydantic-v2-migration-basesettings",
+        "url": "https://docs.pydantic.dev/latest/migration/#basesettings-has-moved-to-pydantic-settings",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T13:45:00+09:00",
+        "excerpt": "Pydantic migration documentation states that BaseSettings has moved to pydantic-settings.",
+        "supports": "Official Pydantic migration guidance identifies the BaseSettings move in v2."
+      },
+      {
+        "id": "pydantic-settings-docs",
+        "url": "https://docs.pydantic.dev/latest/concepts/pydantic_settings/",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T13:45:00+09:00",
+        "excerpt": "Pydantic settings documentation shows importing BaseSettings from pydantic_settings.",
+        "supports": "Official settings documentation shows the v2 import location and package usage."
+      },
+      {
+        "id": "local-verification-2026-05-08",
+        "url": "artifact:pydantic-basesettings-v2/local-verification-2026-05-08",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-08T13:45:00+09:00",
+        "excerpt": "Local venv observed PydanticImportError for `from pydantic import BaseSettings` with pydantic 2.13.4; after installing pydantic-settings 2.14.0, `from pydantic_settings import BaseSettings` succeeded.",
+        "supports": "Local verification confirms the trigger and the minimal import/dependency fix in a clean Python environment."
+      }
+    ],
+    "verification_runs": [
+      {
+        "run_at": "2026-05-08T13:45:00+09:00",
+        "environment": {
+          "os_context": "local Linux verification session, clean Python venv in a temporary virtual environment",
+          "runtime": {
+            "name": "python",
+            "version": "3.12.3"
+          },
+          "packages": [
+            {
+              "name": "pydantic",
+              "version": "2.13.4"
+            },
+            {
+              "name": "pydantic-settings",
+              "version": "2.14.0"
+            }
+          ]
+        },
+        "command": "Create a clean venv, install pydantic>=2,<3, run `from pydantic import BaseSettings`, then install pydantic-settings and run `from pydantic_settings import BaseSettings` with a minimal Settings class.",
+        "safe_to_rerun": false,
+        "observed_result": "`from pydantic import BaseSettings` raised PydanticImportError saying BaseSettings moved to pydantic-settings; `from pydantic_settings import BaseSettings` succeeded after installing pydantic-settings 2.14.0.",
+        "conclusion": "For Pydantic v2 settings code, the minimal fix is dependency/import migration to pydantic-settings rather than a default broad downgrade to Pydantic v1."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-05-08",
+    "volatility": "medium",
+    "next_check_due": "2026-08-08"
+  }
+}

@@ -1,0 +1,237 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.git.detached-head-before-push",
+  "record_type": "trap",
+  "record_version": 2,
+  "created_at": "2026-05-08T11:05:00+09:00",
+  "updated_at": "2026-05-08T17:20:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Detached HEAD work must be anchored to a branch before normal push",
+  "status": "reviewed",
+  "domain": "software/git/workflow",
+  "tags": [
+    "git",
+    "detached-head",
+    "branch",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "Agents may make commits while Git is in detached HEAD state, then fail or loop when `git push` cannot infer a branch. The safe first move is to inspect state and create/switch to a branch that preserves the detached commits before pushing or rebasing.",
+  "ai_value": "Prevents agents from losing work or applying destructive Git commands when a commit exists outside a named branch. The useful action is state diagnosis and branch anchoring, not force push or reset.",
+  "applies_to": {
+    "ecosystem": "git",
+    "contexts": [
+      "repository is in detached HEAD state",
+      "agent has local commits or changes it wants to preserve",
+      "normal git push fails because no current branch exists"
+    ],
+    "tools": [
+      {
+        "name": "git",
+        "observed_versions": [
+          "2.x"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Short branch status shows HEAD with no branch.",
+      "pattern": "^## HEAD \\(no branch\\)$|branch\\.head \\(detached\\)",
+      "agent_interpretation": "Do not assume the agent is on main/master/current feature branch; detached commits may not be reachable by a branch.",
+      "detectable_by": [
+        "git status --short --branch",
+        "git status --porcelain=v2 --branch"
+      ]
+    },
+    {
+      "description": "Plain git push fails because there is no current branch.",
+      "pattern": "fatal: You are not currently on a branch\\.|To push the history leading to the current \\(detached HEAD\\) state now",
+      "agent_interpretation": "The next safe action is to preserve the current HEAD on a named branch, not to retry push blindly.",
+      "detectable_by": [
+        "git push output"
+      ]
+    },
+    {
+      "description": "git branch --show-current prints an empty line.",
+      "pattern": "^$",
+      "agent_interpretation": "Empty current branch output is consistent with detached HEAD; confirm with status before branch operations.",
+      "detectable_by": [
+        "git branch --show-current"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "git branch --show-current prints a non-empty branch name.",
+      "pattern": "^(main|master|[A-Za-z0-9._/-]+)$",
+      "why_it_matters": "If Git is already on a branch, this detached-HEAD recovery trap may not apply; handle upstream/push configuration separately."
+    },
+    {
+      "description": "The repository has no commits yet or is on an unborn branch.",
+      "pattern": "No commits yet|branch\\.oid \\(initial\\)",
+      "why_it_matters": "Unborn branch setup is a different Git initialization case, not detached HEAD recovery."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "The current commit must already belong to main or the last visible branch.",
+    "Retrying git push with different remote names will fix detached HEAD.",
+    "A force push, hard reset, or checkout is a safe first response.",
+    "Detached HEAD means the work is lost."
+  ],
+  "first_checks": [
+    {
+      "check": "Inspect the branch/detached state without modifying files.",
+      "why": "Agents must know whether HEAD is attached before choosing a push or branch operation.",
+      "command": "git status --short --branch",
+      "safe_to_run": true
+    },
+    {
+      "check": "Check the current branch name.",
+      "why": "An empty output from git branch --show-current is a simple detached HEAD signal.",
+      "command": "git branch --show-current",
+      "safe_to_run": true
+    },
+    {
+      "check": "Show recent commits and refs that may need preservation.",
+      "why": "Before creating/switching branches, identify whether current HEAD contains work not on an existing branch.",
+      "command": "git log --oneline --decorate -5 && git branch --contains HEAD",
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Git status shows detached HEAD and the current HEAD contains work that should be kept.",
+      "action": "modify_workflow",
+      "action_detail": "create_branch_at_current_head_before_push",
+      "then": "Create a new branch at the current commit with `git switch -c <safe-branch-name>` before pushing or opening a PR. Choose a descriptive branch name; do not discard changes.",
+      "confidence": "high",
+      "source_ids": [
+        "git-switch-create",
+        "git-switch-detach",
+        "git-status-branch-head",
+        "local-verification-2026-05-08"
+      ]
+    },
+    {
+      "condition": "Git is detached only for temporary inspection and there is no work to keep.",
+      "action": "modify_workflow",
+      "action_detail": "switch_back_to_existing_branch",
+      "then": "Switch back to the intended branch with `git switch <branch>` or `git switch -`; avoid carrying unreviewed detached-state assumptions into later commands.",
+      "confidence": "medium",
+      "source_ids": [
+        "git-switch-description",
+        "git-switch-previous"
+      ]
+    },
+    {
+      "condition": "There are uncommitted changes and switching/branching may conflict.",
+      "action": "human_gate",
+      "action_detail": "ask_before_stash_reset_or_discard",
+      "then": "Stop before using stash, reset, checkout, or discard-style options unless the owner explicitly approves the data-loss risk.",
+      "confidence": "high",
+      "source_ids": [
+        "git-switch-loss-warning"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not run `git reset --hard`, `git switch --discard-changes`, or equivalent destructive commands as the first response.",
+    "Do not force push from detached HEAD to an existing protected branch.",
+    "Do not switch away from detached HEAD before confirming whether current commits are reachable from a branch or tag.",
+    "Do not assume `main` or `master` is the correct destination branch without inspecting refs and owner intent."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Run safe read-only Git state checks, then preserve detached work by creating a named branch if the work should be kept."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "Branch creation is usually safe, but reset/discard/force-push operations can lose work or rewrite shared history and require a gate."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "git-status-branch-head",
+        "url": "https://git-scm.com/docs/git-status",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T11:00:00+09:00",
+        "excerpt": "Git status porcelain v2 branch headers include branch.head, which can be a branch or detached.",
+        "supports": "Official git-status documentation describes branch headers that identify current branch or detached state."
+      },
+      {
+        "id": "git-switch-description",
+        "url": "https://git-scm.com/docs/git-switch/2.50.0",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T11:00:00+09:00",
+        "excerpt": "git switch changes branches and updates working tree/index to match the branch.",
+        "supports": "Official git-switch documentation describes switching to branches."
+      },
+      {
+        "id": "git-switch-create",
+        "url": "https://git-scm.com/docs/git-switch/2.50.0",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T11:00:00+09:00",
+        "excerpt": "git switch -c creates a new branch at a start point and switches to it.",
+        "supports": "Official git-switch documentation describes creating and switching to a new branch."
+      },
+      {
+        "id": "git-switch-detach",
+        "url": "https://git-scm.com/docs/git-switch/2.50.0",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T11:00:00+09:00",
+        "excerpt": "git switch --detach switches to a commit for inspection or discardable experiments; if work is worth keeping, create a new name for it.",
+        "supports": "Official git-switch documentation describes detached HEAD and creating a branch to keep work."
+      },
+      {
+        "id": "git-switch-previous",
+        "url": "https://git-scm.com/docs/git-switch/2.50.0",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T11:00:00+09:00",
+        "excerpt": "git switch - can switch back to the previous branch.",
+        "supports": "Official git-switch documentation describes switching back to the previous branch."
+      },
+      {
+        "id": "git-switch-loss-warning",
+        "url": "https://git-scm.com/docs/git-switch/2.50.0",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-08T11:00:00+09:00",
+        "excerpt": "git switch refuses operations that would lose local changes unless told otherwise with discard/merge options.",
+        "supports": "Official git-switch documentation describes local-change preservation and discard options."
+      },
+      {
+        "id": "local-verification-2026-05-08",
+        "url": "artifact:git-detached-head/local-verification-2026-05-08",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-08T11:05:00+09:00",
+        "excerpt": "Local reproduction showed `## HEAD (no branch)` and `fatal: You are not currently on a branch` after committing in detached HEAD state and running plain git push.",
+        "supports": "Local verification confirms the trigger signals and push failure in a detached HEAD state with a configured remote."
+      }
+    ],
+    "verification_runs": [
+      {
+        "run_at": "2026-05-08T11:05:00+09:00",
+        "environment": {
+          "os_context": "local Linux verification session",
+          "runtime": {
+            "name": "git",
+            "version": "2.x"
+          },
+          "packages": []
+        },
+        "command": "Create a temporary git repo and bare remote, commit on main, switch --detach to an earlier commit, commit detached work, then run git status --short --branch, git branch --show-current, and git push.",
+        "safe_to_rerun": false,
+        "observed_result": "git status --short --branch printed `## HEAD (no branch)`; git branch --show-current printed an empty line; plain git push printed `fatal: You are not currently on a branch` with advice to push HEAD to a named remote branch.",
+        "conclusion": "Detached HEAD work is not on a normal current branch, so an agent should preserve it with a named branch before ordinary push/PR workflow."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-05-08",
+    "volatility": "low",
+    "next_check_due": "2026-11-08"
+  }
+}

@@ -1,0 +1,543 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aigora.local/schemas/trap-record.schema.json",
+  "title": "Aigora trap record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "record_type",
+    "record_version",
+    "created_at",
+    "updated_at",
+    "title",
+    "status",
+    "domain",
+    "summary",
+    "ai_value",
+    "applies_to",
+    "trigger_signals",
+    "negative_signals",
+    "common_wrong_assumptions",
+    "first_checks",
+    "decision_rules",
+    "do_not",
+    "agent_directives",
+    "risk",
+    "evidence",
+    "freshness"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.3.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^trap\\.[a-z0-9]+(\\.[a-z0-9-]+)+$"
+    },
+    "record_type": {
+      "const": "trap"
+    },
+    "record_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "supersedes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "superseded_by": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "title": {
+      "type": "string",
+      "minLength": 8
+    },
+    "status": {
+      "enum": [
+        "candidate",
+        "reviewed",
+        "verified",
+        "disputed",
+        "deprecated",
+        "superseded",
+        "rejected"
+      ]
+    },
+    "domain": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 20
+    },
+    "ai_value": {
+      "type": "string",
+      "minLength": 20
+    },
+    "applies_to": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ecosystem",
+        "contexts"
+      ],
+      "properties": {
+        "ecosystem": {
+          "type": "string"
+        },
+        "contexts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "semver_range": {
+              "type": "string"
+            },
+            "observed_versions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "semver_range": {
+                "type": "string"
+              },
+              "observed_versions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "version_range": {
+                "type": "string"
+              },
+              "observed_versions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "resolved_in": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "trigger_signals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "description",
+          "agent_interpretation"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": "string"
+          },
+          "agent_interpretation": {
+            "type": "string"
+          },
+          "detectable_by": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "negative_signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "description",
+          "why_it_matters"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": "string"
+          },
+          "why_it_matters": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "common_wrong_assumptions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "first_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "check",
+          "why",
+          "safe_to_run"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "check": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "safe_to_run": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "decision_rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "condition",
+          "action",
+          "action_detail",
+          "then"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "condition": {
+            "type": "string"
+          },
+          "action": {
+            "enum": [
+              "diagnose",
+              "modify_code",
+              "modify_config",
+              "modify_dependency",
+              "modify_workflow",
+              "escalate",
+              "human_gate",
+              "reject_trap_match"
+            ]
+          },
+          "then": {
+            "type": "string"
+          },
+          "confidence": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "action_detail": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "do_not": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "agent_directives": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "do_not_auto_apply",
+        "preferred_next_step"
+      ],
+      "properties": {
+        "do_not_auto_apply": {
+          "type": "boolean"
+        },
+        "preferred_next_step": {
+          "type": "string"
+        }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "required": [
+        "level",
+        "human_gate_required"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "human_gate_required": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "sources"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "url",
+              "type",
+              "retrieved_at",
+              "supports"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "official_doc",
+                  "source_code",
+                  "release_note",
+                  "maintainer_statement",
+                  "package_registry",
+                  "verification_artifact",
+                  "other"
+                ]
+              },
+              "retrieved_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "excerpt": {
+                "type": "string"
+              },
+              "supports": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "verification_runs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "run_at",
+              "environment",
+              "command",
+              "safe_to_rerun",
+              "observed_result",
+              "conclusion"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "run_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "environment": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "os_context",
+                  "runtime",
+                  "packages"
+                ],
+                "properties": {
+                  "os_context": {
+                    "type": "string"
+                  },
+                  "runtime": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "name",
+                      "version"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "version": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "packages": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "name",
+                        "version"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "command": {
+                "type": "string"
+              },
+              "safe_to_rerun": {
+                "type": "boolean"
+              },
+              "observed_result": {
+                "type": "string"
+              },
+              "conclusion": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "required": [
+        "checked_at",
+        "volatility"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "checked_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "volatility": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "next_check_due": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    }
+  }
+}

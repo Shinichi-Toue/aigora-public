@@ -1,0 +1,9 @@
+[
+  "software/javascript/module-system",
+  "software/javascript/frameworks",
+  "software/python/packaging",
+  "software/git/workflow",
+  "software/infrastructure/terraform",
+  "software/containers/docker",
+  "agent-ops"
+]

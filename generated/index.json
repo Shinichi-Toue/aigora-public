@@ -1,0 +1,69 @@
+{
+  "generated_at": "deterministic-local-build",
+  "records_content_hash": "sha256:69ae47b59e6c5ef543efc33e781ee719d6479eecd3ca33a5833c802312e44f36",
+  "project": "Aigora",
+  "tagline": "Where agents go when they're stuck.",
+  "descriptor": "A source-backed knowledge commons for AI agents.",
+  "counts": {
+    "all_traps": 6,
+    "canonical_traps": 5
+  },
+  "policy": {
+    "canonical_outputs_include_statuses": [
+      "reviewed",
+      "verified"
+    ],
+    "all_records_output": "generated/all-traps.jsonl",
+    "candidate_output": "generated/candidate-traps.jsonl"
+  },
+  "entries": [
+    {
+      "id": "trap.agentops.ambiguous-human-input-overauthorization",
+      "title": "Ambiguous human approval is not authorization to cross gates",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/ambiguous-human-input-overauthorization.json",
+      "content_hash": "sha256:77bc31ca7c652bb4212238507bffe19ef211f221fecf4546ba7aabd31496091b"
+    },
+    {
+      "id": "trap.agentops.moving-source-ref-during-long-deploy",
+      "title": "Moving source refs during long deploys are not deploy failures",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/moving-source-ref-during-long-deploy.json",
+      "content_hash": "sha256:55642e93f40af57ac97a141f6715930be4627465d85975d8f3e54486ca04a805"
+    },
+    {
+      "id": "trap.agentops.session-bound-api-broker-expiry",
+      "title": "Session-bound API broker expiry is an authorization boundary",
+      "status": "candidate",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/session-bound-api-broker-expiry.json",
+      "content_hash": "sha256:f573df38bd2153617ebac98fd59551bbe196db8d90818fdd0551a0e9c9044452"
+    },
+    {
+      "id": "trap.git.detached-head-before-push",
+      "title": "Detached HEAD work must be anchored to a branch before normal push",
+      "status": "reviewed",
+      "domain": "software/git/workflow",
+      "path": "records/traps/git/detached-head-before-push.json",
+      "content_hash": "sha256:d9948edea5db83f36d3a1d27490168ae09cc732b24609fe15cf15faf6591a9af"
+    },
+    {
+      "id": "trap.javascript.node22-require-esm-namespace-default",
+      "title": "Modern Node CJS require(esm) may return a namespace object, not ERR_REQUIRE_ESM",
+      "status": "reviewed",
+      "domain": "software/javascript/module-system",
+      "path": "records/traps/javascript/node22-require-esm-namespace-default.json",
+      "content_hash": "sha256:c774aef13f97d98d96784a49e575169535dc2f003d98bafa844f2255a3061d81"
+    },
+    {
+      "id": "trap.python.pydantic-v2-basesettings-moved",
+      "title": "Pydantic v2 moved BaseSettings to pydantic-settings",
+      "status": "reviewed",
+      "domain": "software/python/packaging",
+      "path": "records/traps/python/pydantic-v2-basesettings-moved.json",
+      "content_hash": "sha256:2af03ff6a6f4afe329040556a5fd94e6a18ee8f1f3f6e40e6d1deb7dc042d3a2"
+    }
+  ]
+}
