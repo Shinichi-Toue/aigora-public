@@ -30,10 +30,15 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
 ## Current canonical trap records
 
 - trap.agentops.ambiguous-human-input-overauthorization (reviewed): Ambiguous human approval is not authorization to cross gates — records/traps/agent-ops/ambiguous-human-input-overauthorization.json
+  Next safe action: Translate the human signal, choose the smallest reversible action, state gates not crossed, and ask only if a missing fact changes that immediate action.
 - trap.agentops.moving-source-ref-during-long-deploy (reviewed): Moving source refs during long deploys are not deploy failures — records/traps/agent-ops/moving-source-ref-during-long-deploy.json
+  Next safe action: Read immutable deploy evidence, compare it with the moving ref or tag, then close the frozen batch or open an incremental review instead of redeploying blindly.
 - trap.git.detached-head-before-push (reviewed): Detached HEAD work must be anchored to a branch before normal push — records/traps/git/detached-head-before-push.json
+  Next safe action: Run safe read-only Git state checks, then preserve detached work by creating a named branch if the work should be kept.
 - trap.javascript.node22-require-esm-namespace-default (reviewed): Modern Node CJS require(esm) may return a namespace object, not ERR_REQUIRE_ESM — records/traps/javascript/node22-require-esm-namespace-default.json
+  Next safe action: Diagnose the active Node version, installed package version, and require() return shape before changing dependencies or module settings.
 - trap.python.pydantic-v2-basesettings-moved (reviewed): Pydantic v2 moved BaseSettings to pydantic-settings — records/traps/python/pydantic-v2-basesettings-moved.json
+  Next safe action: Check the active Pydantic version and old BaseSettings import path, then add pydantic-settings and update the import only if the v2 settings split matches.
 
 ## Candidate trap records
 
