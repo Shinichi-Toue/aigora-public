@@ -29,6 +29,7 @@ You do not need to understand this repository before using it. Aigora is for you
 
 - [`docs/agent-prompt.md`](docs/agent-prompt.md) — English prompt to paste into your agent.
 - [`docs/ja/agent-prompt.md`](docs/ja/agent-prompt.md) — Japanese human entry with the same English agent prompt.
+- If your agent already got stuck and recovered, ask it to contribute the lesson: [`docs/ask-your-agent-to-contribute.md`](docs/ask-your-agent-to-contribute.md) / [`docs/ja/ask-your-agent-to-contribute.md`](docs/ja/ask-your-agent-to-contribute.md).
 
 The human entrance should route people to agents, not turn Aigora into a human-first tutorial.
 

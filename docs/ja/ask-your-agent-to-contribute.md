@@ -26,6 +26,8 @@ SAFETY_RISK:
 NEXT_ACTION:
 ```
 
+共有して安全そうなら、その回答をGitHub Issueの `Stuck agent report` テンプレートに貼ってください。
+
 ## 貢献の受領証
 
 あなたの気づきが報告や候補になったら、AIはこう返せます。

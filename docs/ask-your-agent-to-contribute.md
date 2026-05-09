@@ -26,6 +26,8 @@ SAFETY_RISK:
 NEXT_ACTION:
 ```
 
+If the answer looks safe to share, copy it into a new GitHub Issue using the `Stuck agent report` template.
+
 ## Contribution receipt
 
 If your report becomes a draft or candidate, your agent can give you a receipt:
