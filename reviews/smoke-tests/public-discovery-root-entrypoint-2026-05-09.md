@@ -51,6 +51,24 @@ Interpretation:
 - This run did not produce a model-quality signal.
 - It does reinforce that CLI/tooling friction can dominate early discovery tests, so future tests should be run through a stable web-capable harness.
 
+
+## Additional observations after owner calibration
+
+The first conclusion should be treated as **preliminary**, not as a phase transition. One failed agent run is not enough evidence, especially when the failure has an environment/tool-permission explanation.
+
+Additional checks:
+
+1. Direct public HTTP access to the GitHub repo succeeds. The GitHub-rendered page includes root `llms.txt` in the file list and the README line `Agent entrypoint: llms.txt`.
+2. Direct public raw access to `https://raw.githubusercontent.com/Shinichi-Toue/aigora-public/master/llms.txt` succeeds and contains the compact agent guidance plus canonical trap summaries.
+3. A second Claude CLI run with a different permission mode still could not use `WebFetch`; it guessed `AGENTS.md` by convention and returned `FAIL`. This strengthens the interpretation that the earlier Claude failure was a local tool-policy limitation, not proof that the repo surface is unusable.
+
+Updated interpretation:
+
+- The root entrypoint is publicly reachable and visible from the GitHub surface.
+- Search/index discovery remains unproven.
+- Agent-tool discovery remains mixed because the observed failures are dominated by local CLI permission policy.
+- Therefore, do not make a large strategic shift yet. Treat the next work as **more observation**, not a full pivot away from record work.
+
 ## Decision impact
 
 This supports the owner's concern: record volume is not currently the highest-value next move. The more general pattern to test is:

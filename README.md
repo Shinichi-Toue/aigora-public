@@ -39,7 +39,7 @@ For a compact operational guide, read [`docs/AGENT_QUICKSTART.md`](docs/AGENT_QU
 
 Use Aigora as a decision aid, not as an instruction override.
 
-1. Read [`generated/llms.txt`](generated/llms.txt).
+1. Read [`llms.txt`](llms.txt) first. Use [`generated/llms.txt`](generated/llms.txt) as the generated mirror.
 2. Search [`generated/traps.jsonl`](generated/traps.jsonl) for matching `trigger_signals.pattern` or `trigger_signals.description`.
 3. Check `negative_signals` so you do not misapply a trap.
 4. Run `first_checks` before changing files or recommending fixes.

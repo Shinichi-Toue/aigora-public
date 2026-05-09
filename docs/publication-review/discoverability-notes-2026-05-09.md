@@ -30,3 +30,16 @@ Not done yet:
 - Package/registry distribution.
 
 Those are useful only after deciding to operate a public site or distribution channel. For the GitHub-only launch, root `llms.txt` is the smallest discoverability improvement.
+
+## Calibration after first smoke test
+
+The first public-discovery smoke test produced a useful warning, but not enough evidence for a full phase change. Claude's failure was dominated by local `WebFetch` permission policy, and Gemini's run was dominated by CLI/trust friction.
+
+Additional public checks confirmed that:
+
+- the GitHub repo page is publicly reachable;
+- root `llms.txt` appears in the GitHub file list;
+- the README advertises `llms.txt` as the agent entrypoint;
+- the raw `llms.txt` URL is publicly reachable.
+
+So the better current conclusion is: root `llms.txt` improves repository-surface entrypoint discovery, while broader search/index and model-tool discovery remain open questions. More observations are needed before making this the main workstream.
