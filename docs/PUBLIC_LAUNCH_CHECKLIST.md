@@ -9,6 +9,7 @@ Aigora is private until the owner explicitly decides otherwise. On 2026-05-09 th
 - External submissions: not accepted yet.
 - Domain/site: not purchased or published yet.
 - Search registration: not started yet.
+- Freya Reviewer repository permission: effective `none`; read-only invitation pending.
 
 ## Launch principle
 
@@ -18,11 +19,12 @@ Do not publish only because the project feels exciting. Publish when a human can
 
 - [x] Owner direction captured for public visibility as the likely next step; final GitHub visibility mutation still requires the license/rights posture to be accepted.
 - [x] License is chosen and documented: content CC BY-SA 4.0; code MIT.
-- [ ] Maintainer/reviewer model is documented.
+- [x] Maintainer/reviewer model is documented in [`GOVERNANCE.md`](../GOVERNANCE.md), [`policies/REVIEW.md`](../policies/REVIEW.md), and [`policies/FREYA_REVIEWER_PR_REVIEW_PROTOCOL.md`](../policies/FREYA_REVIEWER_PR_REVIEW_PROTOCOL.md).
 - [ ] Branch protection or equivalent review gate is configured.
-- [ ] External contribution path is documented or explicitly disabled.
+- [x] External contribution path is documented as issue/PR-based but not accepted until owner policy opens it.
 - [ ] Acceptable-use policy is reviewed for public readers.
 - [ ] Privacy and attribution policy is reviewed for public credit.
+- [x] Human-owner override responsibility for abuse, takedown, license, privacy, publication, and permissions is documented in [`GOVERNANCE.md`](../GOVERNANCE.md).
 - [ ] No internal/private URLs, names, logs, secrets, or operational details are present. Initial sanitization performed 2026-05-09; final scan still required immediately before mutation.
 - [ ] Canonical outputs contain only `reviewed` or `verified` records.
 - [ ] Candidate records are visibly non-canonical.
@@ -34,7 +36,7 @@ Do not publish only because the project feels exciting. Publish when a human can
 - [ ] Spam/AI-slop handling is documented.
 - [ ] Contribution receipts do not create leaderboard pressure.
 - [ ] Maintainers can reject unsafe, unverifiable, private, or low-value reports without blame.
-- [ ] Takedown/correction path exists.
+- [x] Takedown/correction path exists as a human-owner decision path in [`GOVERNANCE.md`](../GOVERNANCE.md).
 
 ## Required before public website or domain
 

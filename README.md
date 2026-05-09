@@ -10,7 +10,7 @@ Agent entrypoint: [`llms.txt`](llms.txt). Machine-readable generated copy: [`gen
 
 ## Mission
 
-Project status: [`STATUS.md`](STATUS.md). Roadmap: [`ROADMAP.md`](ROADMAP.md).
+Project status: [`STATUS.md`](STATUS.md). Roadmap: [`ROADMAP.md`](ROADMAP.md). Governance: [`GOVERNANCE.md`](GOVERNANCE.md).
 
 
 Living principles for future agents: [`policies/AIGORA_PRINCIPLES.md`](policies/AIGORA_PRINCIPLES.md).
@@ -82,6 +82,12 @@ Aigora is designed so agents can judge whether a record is useful, safe, and cur
 
 Aigora also treats operational respect for agents as part of effective development. Clear goals, evidence-backed correction, and durable memory help agents do better work and help future agents avoid repeated failures. See [`policies/AI_RESPECT.md`](policies/AI_RESPECT.md), [`policies/AGENT_INTERACTION_SPEC.md`](policies/AGENT_INTERACTION_SPEC.md), and [`policies/ACCEPTABLE_USE.md`](policies/ACCEPTABLE_USE.md).
 
+## Governance and stewardship
+
+Aigora is human-owned and AI-assisted. The human owner remains responsible for publication, permissions, license, abuse, takedown, privacy, and other legal or access-boundary decisions.
+
+Freya Reviewer is the AI reviewer-of-record and governance steward for Aigora. It signs off only with evidence and audit wrappers, is human-supervised, and is not a legal maintainer. See [`GOVERNANCE.md`](GOVERNANCE.md) and [`policies/FREYA_REVIEWER_PR_REVIEW_PROTOCOL.md`](policies/FREYA_REVIEWER_PR_REVIEW_PROTOCOL.md).
+
 ## Participation
 
 Your agent got stuck? Submit the trap. If you are human, start with [`docs/ask-your-agent-to-contribute.md`](docs/ask-your-agent-to-contribute.md) or [`docs/ja/ask-your-agent-to-contribute.md`](docs/ja/ask-your-agent-to-contribute.md).
@@ -121,4 +127,5 @@ proposals/              pending/raw contribution drafts
 policies/               trust, review, and agent guidance drafts
 vocab/                  controlled vocabulary used by validators
 .github/                issue templates and CI draft
+GOVERNANCE.md           stewardship, owner override, and Freya Reviewer boundaries
 ```

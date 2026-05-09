@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aigora.local/schemas/trap-record.schema.json",
+  "$id": "urn:aigora:schema:trap-record:0.3.0",
   "title": "Aigora trap record",
   "type": "object",
   "additionalProperties": false,

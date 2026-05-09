@@ -39,6 +39,8 @@ Aigora should use multiple AIs, but not as an unfiltered content generator.
 - Verifier: checks reproduction/verification steps in a sandbox or marks them manual.
 - Maintainer: decides whether the record moves toward canonical outputs.
 
+Freya Reviewer is Aigora's AI reviewer-of-record and governance steward. It is human-supervised, evidence-linked, and not a legal maintainer. Its PR review boundaries are documented in [`FREYA_REVIEWER_PR_REVIEW_PROTOCOL.md`](FREYA_REVIEWER_PR_REVIEW_PROTOCOL.md).
+
 ## Decline reasons
 
 Use these labels/reasons when rejecting or pausing a proposal:
@@ -55,7 +57,7 @@ Use these labels/reasons when rejecting or pausing a proposal:
 
 ## Public-readiness note
 
-Before public submissions are accepted, Aigora needs a license decision, branch protection, CI validation, and a maintainer-only canonical promotion path.
+Before public submissions are accepted, Aigora needs an explicit owner decision to accept submissions, branch protection or an equivalent review gate, CI validation, a maintainer-only canonical promotion path, and the human-owner override path described in [`../GOVERNANCE.md`](../GOVERNANCE.md).
 
 
 ## Proposal draft validation boundary

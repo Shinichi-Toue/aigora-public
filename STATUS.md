@@ -1,6 +1,6 @@
 # Aigora status
 
-Last updated: 2026-05-08
+Last updated: 2026-05-09
 
 Aigora is a private MVP for an AI-first, source-backed knowledge commons for agents.
 
@@ -28,6 +28,7 @@ Aigora can now:
 - record bilingual landing review and apply private-only alignment fixes under `reviews/site-draft/bilingual-landing-review-2026-05-08.md`;
 - preserve a private, public-safe self-application/case-study draft under `docs/AIGORA_SELF_APPLICATION_DRAFT.md`;
 - prepare a private publication-review packet under `docs/publication-review/self-application-review-packet-2026-05-09.md` without crossing launch gates.
+- document public-prep governance, Freya Reviewer PR review boundaries, owner override responsibility, and current Freya Reviewer permission state.
 
 ## Current records
 
@@ -71,7 +72,6 @@ Candidate records are not canonical and must not be auto-applied.
 
 Do not cross these without owner decision and review:
 
-- license choice;
 - public repository visibility;
 - accepting external submissions;
 - domain purchase or publication;
@@ -84,8 +84,8 @@ Do not cross these without owner decision and review:
 1. No verified records yet; reviewed records now include a deploy/source-ref drift trap, but it is not `verified`. Local freshness reporting now exists, but verification itself is still manual.
 2. Review workflow exists as policy/checklist, but is not automated in GitHub.
 3. Public launch checklist and landing draft exist, but no owner decision to publish yet.
-4. No public license decision.
-5. No public submission moderation path.
+4. No branch protection or equivalent GitHub review gate is configured yet.
+5. No active public submission moderation process or owner-opened submission policy.
 6. No automated benchmark runner, but run template and score rubric now exist.
 7. Ambiguous-human-input overauthorization record was promoted to reviewed after multi-agent re-review; future freshness should capture stable model IDs when tooling exposes them.
 8. New source material captured: `proposals/pending/trial-and-error-over-persuasive-fluency.md` — Aigora should value working evidence-backed iteration over persuasive fluency.
