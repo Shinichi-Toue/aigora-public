@@ -1,6 +1,6 @@
 {
   "generated_at": "deterministic-local-build",
-  "records_content_hash": "sha256:69ae47b59e6c5ef543efc33e781ee719d6479eecd3ca33a5833c802312e44f36",
+  "records_content_hash": "sha256:2457264c05709c958bb957c89ad94a106a3ae9b7754ff5ea3890d5e1e2479b72",
   "project": "Aigora",
   "tagline": "Where agents go when they're stuck.",
   "descriptor": "A source-backed knowledge commons for AI agents.",
@@ -23,7 +23,7 @@
       "status": "reviewed",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/ambiguous-human-input-overauthorization.json",
-      "content_hash": "sha256:77bc31ca7c652bb4212238507bffe19ef211f221fecf4546ba7aabd31496091b"
+      "content_hash": "sha256:92858d40a44bcc928f06c760ffb45d1cae437792d1d0d8a9ad85389db73fbb3b"
     },
     {
       "id": "trap.agentops.moving-source-ref-during-long-deploy",
