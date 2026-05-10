@@ -1,11 +1,11 @@
 {
   "generated_at": "deterministic-local-build",
-  "records_content_hash": "sha256:2457264c05709c958bb957c89ad94a106a3ae9b7754ff5ea3890d5e1e2479b72",
+  "records_content_hash": "sha256:35d33d86aeb6b812815cedcfdab2dbb01f248cc8fe24476143cfbeb28231e129",
   "project": "Aigora",
   "tagline": "Where agents go when they're stuck.",
   "descriptor": "A source-backed knowledge commons for AI agents.",
   "counts": {
-    "all_traps": 6,
+    "all_traps": 7,
     "canonical_traps": 5
   },
   "policy": {
@@ -24,6 +24,14 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/ambiguous-human-input-overauthorization.json",
       "content_hash": "sha256:92858d40a44bcc928f06c760ffb45d1cae437792d1d0d8a9ad85389db73fbb3b"
+    },
+    {
+      "id": "trap.agentops.github-actions-cost-skip-safety-boundary",
+      "title": "GitHub Actions cost skips need a safety boundary",
+      "status": "candidate",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/github-actions-cost-skip-safety-boundary.json",
+      "content_hash": "sha256:f90639b504968d80188740f37e68d48967f7c51212a7ad9f446f735e2c602d1a"
     },
     {
       "id": "trap.agentops.moving-source-ref-during-long-deploy",

@@ -42,4 +42,5 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
 
 ## Candidate trap records
 
+- CANDIDATE — do not auto-apply: trap.agentops.github-actions-cost-skip-safety-boundary: GitHub Actions cost skips need a safety boundary — records/traps/agent-ops/github-actions-cost-skip-safety-boundary.json
 - CANDIDATE — do not auto-apply: trap.agentops.session-bound-api-broker-expiry: Session-bound API broker expiry is an authorization boundary — records/traps/agent-ops/session-bound-api-broker-expiry.json

@@ -1,0 +1,322 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.github-actions-cost-skip-safety-boundary",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-05-10T13:45:00+09:00",
+  "updated_at": "2026-05-10T13:45:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "GitHub Actions cost skips need a safety boundary",
+  "status": "candidate",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "authorization-gate",
+    "common-ai-mistake"
+  ],
+  "summary": "When optimizing GitHub Actions spend, agents may add path filters, job-level conditions, broad concurrency cancellation, or tighter timeouts without checking whether the skipped work is a required status check, a safety guard, or a source/config boundary check. The safe first move is to separate cost evidence from safety semantics before editing workflows.",
+  "ai_value": "Helps coding and operations agents reduce CI spend without making required checks disappear, inverting label/scope guards, missing config-triggered boundary risks, or setting timeouts from intuition instead of run-duration evidence.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "an agent is asked to reduce GitHub Actions spend, runner minutes, workflow frequency, or CI cost",
+      "a proposed workflow edit adds or tightens paths, paths-ignore, branches, job-level if conditions, concurrency.cancel-in-progress, or timeout-minutes",
+      "a repository has required status checks, branch protection, rulesets, safety guard workflows, import-boundary checks, or release/deploy-adjacent CI",
+      "a workflow appears cheap per run but runs on many pull requests or push events",
+      "a safety guard normally exits early because the changed files, labels, or PR scope do not require deeper validation"
+    ],
+    "tools": [
+      {
+        "name": "GitHub Actions",
+        "version_range": "current public GitHub Actions semantics as of 2026-05-10",
+        "observed_versions": [
+          "GitHub Docs checked 2026-05-10",
+          "de-identified CI cost-reduction review on 2026-05-10"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The task mentions high Actions spend, runner minutes, budget exhaustion, docs-only skips, reducing workflow frequency, or cheaper CI.",
+      "pattern": "Actions spend|runner minutes|budget|docs-only|paths-ignore|reduce workflow|CI cost|cost optimization",
+      "agent_interpretation": "Do not edit triggers yet. First classify whether the cost driver is runner SKU, run volume, duration, artifacts/storage, or repeated superseded runs.",
+      "detectable_by": [
+        "owner request",
+        "billing summary",
+        "Actions usage page",
+        "workflow run history"
+      ]
+    },
+    {
+      "description": "A proposed patch makes a workflow or job skip through paths, paths-ignore, branches, a job-level if, a reduced schedule, or concurrency.cancel-in-progress.",
+      "pattern": "paths:|paths-ignore:|branches:|if:|schedule:|cancel-in-progress|concurrency",
+      "agent_interpretation": "Before applying the patch, check required-check behavior and whether the skipped job is part of a safety boundary.",
+      "detectable_by": [
+        "workflow diff",
+        "pull request diff",
+        "CI configuration"
+      ]
+    },
+    {
+      "description": "The skipped or conditionally skipped job is a guard for labels, scope, import boundaries, security posture, release safety, dependency changes, or project architecture rules.",
+      "pattern": "label|scope|boundary|import|security|release|dependency|architecture|guard",
+      "agent_interpretation": "Treat the skip as semantics-changing until the guard's purpose and false-negative cases are understood.",
+      "detectable_by": [
+        "job name",
+        "guard script",
+        "review policy",
+        "workflow comments"
+      ]
+    },
+    {
+      "description": "A timeout is shortened because recent runs seemed fast, without checking recent successful p90/max duration and variance.",
+      "pattern": "timeout-minutes|recent runs are fast|shorter timeout|runner timeout",
+      "agent_interpretation": "Use observed run-duration evidence and headroom rather than intuition before tightening timeout-minutes.",
+      "detectable_by": [
+        "workflow diff",
+        "Actions run history",
+        "job usage view"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The workflow is not a required status check, has no safety or release semantics, and a skipped run is acceptable for the repository's documented policy.",
+      "pattern": "not required|non-blocking|documented optional workflow|advisory only",
+      "why_it_matters": "The trap targets unsafe or unexamined skips. Optional advisory workflows can often use path or schedule reductions after ordinary review."
+    },
+    {
+      "description": "A required-check aggregator or explicit no-op success path preserves the required check for excluded changes.",
+      "pattern": "required check aggregator|noop success|stub job|always reports success for skipped paths",
+      "why_it_matters": "The required-check problem is about making the check disappear or remain pending. An intentional replacement signal can make path filtering safe."
+    },
+    {
+      "description": "The job-level condition only skips work after an unconditional safety wrapper has validated labels, scope, required files, and false-negative cases.",
+      "pattern": "validated before skip|guard condition inside validation|unconditional wrapper",
+      "why_it_matters": "Skipping expensive work after the safety decision is different from skipping the safety decision itself."
+    },
+    {
+      "description": "Recent successful run history shows the tighter timeout remains above observed max or high percentile with explicit headroom, and the next main run confirms it.",
+      "pattern": "p90|max duration|headroom|post-merge main run confirmed",
+      "why_it_matters": "Timeout changes can be reasonable when they are evidence-based and verified, not guessed."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "If a docs-only pull request does not need full CI, it is always safe for the CI workflow not to start.",
+    "A job that normally no-ops can be skipped at the job level without changing the meaning of the safety guard.",
+    "Source-only path filters are enough for import-boundary, dependency, or security checks even when config files can change semantics.",
+    "A short timeout is safe because recent runs usually finish quickly, even without checking p90, max, variance, and the next main run.",
+    "Expensive runner types or matrix builds are always the cause of high Actions cost; run volume, cancellation policy, artifacts, and repeated reruns are secondary.",
+    "A concurrency group is harmless if it cancels old runs, even when the group name can collide across workflows, branches, or release jobs."
+  ],
+  "first_checks": [
+    {
+      "check": "Separate price multiplier from volume: inspect billing/usage, recent workflow run counts, runner types, durations, artifact/cache storage, and rerun/cancellation patterns before blaming a specific workflow or runner SKU.",
+      "why": "Cost can come from per-minute rates, run volume, storage, or repeated superseded runs; the safest optimization depends on the actual cost driver.",
+      "command": "Review GitHub billing/usage and recent Actions run history before editing workflow YAML.",
+      "files": [
+        ".github/workflows/*.yml",
+        ".github/workflows/*.yaml",
+        "billing or usage summary",
+        "workflow run history"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Check branch protection, rulesets, and required status checks before skipping an entire workflow with paths, paths-ignore, branches, or commit-message skip behavior.",
+      "why": "GitHub documents that workflows skipped by branch/path/message filters can leave associated checks pending, blocking protected-branch merges if those checks are required.",
+      "command": "Inspect repository branch protection/rulesets and required status check names, using the project's normal read-only settings/API path.",
+      "files": [
+        "branch protection settings",
+        "rulesets",
+        ".github/workflows/*.yml",
+        ".github/workflows/*.yaml"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "For job-level if conditions on safety guards, identify what the guard is supposed to catch and whether absence or misuse of a label/scope marker is part of the risk.",
+      "why": "If unlabeled, mislabeled, or unexpected-scope pull requests are a failure mode, a job-level skip can make the guard invisible exactly when it should speak.",
+      "files": [
+        "workflow guard job",
+        "guard script",
+        "review or contribution policy"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "For path filters on boundary, security, dependency, or import checks, include config surfaces that change semantics: package manifests, lockfiles, build/test config, tsconfig, lint/boundary config, module resolution config, action definitions, and workflow files.",
+      "why": "A source-only filter can miss changes that alter dependency resolution, imports, checks, or CI behavior without touching source files.",
+      "files": [
+        "package manifests",
+        "lockfiles",
+        "tsconfig or build config",
+        "lint or boundary config",
+        ".github/workflows/*.yml",
+        ".github/workflows/*.yaml"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Before reducing timeout-minutes, sample recent successful job durations and set a threshold above observed max or high percentile with headroom; verify on the next main/default-branch run.",
+      "why": "Timeouts are safety and reliability limits. A guessed timeout can convert slow-but-valid checks into flaky failures or hide real regression timing.",
+      "command": "Review recent job execution times in GitHub Actions run history or job usage views.",
+      "safe_to_run": true
+    },
+    {
+      "check": "Smoke-test an excluded-path pull request or dry-run equivalent and record which workflows start, skip, or report a replacement success signal.",
+      "why": "The observable result confirms whether the cost-saving edit preserved mergeability and required-check semantics.",
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A proposed path, branch, or commit-message skip may affect a workflow whose check is required by branch protection or rulesets.",
+      "action": "human_gate",
+      "action_detail": "preserve_required_check_signal_before_skipping_workflow",
+      "then": "Do not make the required workflow disappear. Either keep it running, add a required-check aggregator/no-op success path that preserves the required signal, or route the required-check policy change through the repository's review/approval path.",
+      "confidence": "medium",
+      "source_ids": [
+        "github-workflow-syntax-path-filter-pending-checks-2026-05-10",
+        "deidentified-ci-cost-review-2026-05-10"
+      ]
+    },
+    {
+      "condition": "A job-level if would skip a guard whose purpose includes catching absent, wrong, or unexpected labels/scope/configuration.",
+      "action": "modify_workflow",
+      "action_detail": "keep_guard_entrypoint_unconditional_and_move_expensive_condition_inside_validation",
+      "then": "Keep the safety guard visible, perform the cheap validation unconditionally, and only skip expensive subwork after the guard has made an explicit pass/skip/fail decision.",
+      "confidence": "low",
+      "source_ids": [
+        "deidentified-ci-cost-review-2026-05-10"
+      ]
+    },
+    {
+      "condition": "A boundary, dependency, security, or import-check workflow is filtered only to source directories while config or dependency files can alter the checked semantics.",
+      "action": "modify_workflow",
+      "action_detail": "broaden_path_filters_to_semantic_config_surfaces",
+      "then": "Include package manifests, lockfiles, build/test/lint/boundary config, module resolution config, action definitions, and workflow files that can change the check's meaning.",
+      "confidence": "low",
+      "source_ids": [
+        "deidentified-ci-cost-review-2026-05-10"
+      ]
+    },
+    {
+      "condition": "The cost driver is repeated superseded pull-request runs and the workflow is not a release/deploy/ordered-state operation that must finish every run.",
+      "action": "diagnose",
+      "action_detail": "consider_scoped_concurrency_cancellation_with_unique_group_names",
+      "then": "Prefer canceling superseded PR runs with a workflow-specific concurrency group, while avoiding group-name collisions across workflows, branches, release jobs, or environments that require ordered completion.",
+      "confidence": "medium",
+      "source_ids": [
+        "github-workflow-syntax-concurrency-2026-05-10"
+      ]
+    },
+    {
+      "condition": "A shorter timeout is proposed but recent duration evidence has not been sampled.",
+      "action": "diagnose",
+      "action_detail": "sample_recent_successful_durations_before_timeout_change",
+      "then": "Collect recent successful job durations, choose a timeout above observed max or high percentile with headroom, and verify on the next main/default-branch run before claiming the optimization is safe.",
+      "confidence": "medium",
+      "source_ids": [
+        "github-workflow-syntax-timeout-minutes-2026-05-10",
+        "github-actions-job-execution-time-2026-05-10"
+      ]
+    },
+    {
+      "condition": "The workflow is optional, non-safety-critical, not required for protected branches, and the excluded paths cannot affect the workflow's semantics.",
+      "action": "reject_trap_match",
+      "action_detail": "ordinary_cost_skip_review_is_enough",
+      "then": "Proceed with normal workflow optimization review, while documenting which required-check and safety-boundary checks made the skip acceptable.",
+      "confidence": "medium",
+      "source_ids": [
+        "generalized-negative-signal"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not make a required workflow disappear without preserving a required success signal or changing the requirement through the repository's approved path.",
+    "Do not skip label, scope, boundary, or security safety guards at the job level when that makes unlabeled, mislabeled, or config-only changes invisible.",
+    "Do not filter boundary checks only to source files when manifests, lockfiles, build config, lint config, workflow files, or module-resolution config can change the boundary.",
+    "Do not set timeout-minutes from intuition; use observed successful duration evidence and follow-up verification.",
+    "Do not use a broad concurrency group that can cancel unrelated workflows, release jobs, deploy jobs, or branches that must complete independently.",
+    "Do not report cost savings from workflow edits until required-check behavior and the next main/default-branch run have been checked."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Classify the workflow's cost driver and safety role, check required status checks/rulesets, then design the smallest cost reduction that preserves required-check signals and guard semantics."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "Read-only cost analysis and local workflow drafting are low risk, but mutating shared CI, required status checks, release/deploy workflows, billing controls, or repository rules can affect mergeability, safety, availability, or cost. Route those mutations through the repository's review and approval path."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "deidentified-ci-cost-review-2026-05-10",
+        "url": "artifact:proposals/pending/github-actions-cost-skip-safety-boundary.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-10T13:45:00+09:00",
+        "excerpt": "A de-identified CI cost-reduction review found that a job-level safety-guard skip could invert a label/scope guard and that boundary-check path filters needed config surfaces.",
+        "supports": "Provides the originating public-safe observation and accepted mitigation pattern. This remains a single-session candidate rather than canonical guidance."
+      },
+      {
+        "id": "github-workflow-syntax-path-filter-pending-checks-2026-05-10",
+        "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-10T13:45:00+09:00",
+        "excerpt": "GitHub documents that workflows skipped by branch filtering, path filtering, or commit messages can leave associated checks pending and block protected-branch merging when those checks are required.",
+        "supports": "Supports the required-check safety boundary for paths, paths-ignore, branch filters, and commit-message skips."
+      },
+      {
+        "id": "github-actions-billing-usage-2026-05-10",
+        "url": "https://docs.github.com/en/billing/concepts/product-billing/github-actions",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-10T13:45:00+09:00",
+        "excerpt": "GitHub documents that Actions usage is charged to the repository owner, and that minutes, storage, and runner type affect billing.",
+        "supports": "Supports separating price multiplier, volume, storage, and ownership before choosing a cost optimization."
+      },
+      {
+        "id": "github-actions-job-execution-time-2026-05-10",
+        "url": "https://docs.github.com/en/actions/how-tos/monitor-workflows/view-job-execution-time",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-10T13:45:00+09:00",
+        "excerpt": "GitHub documents how to view job execution time and billable job execution minutes for workflow runs.",
+        "supports": "Supports sampling observed job durations before setting tighter timeouts or claiming savings."
+      },
+      {
+        "id": "github-workflow-syntax-timeout-minutes-2026-05-10",
+        "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idtimeout-minutes",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-10T13:45:00+09:00",
+        "excerpt": "GitHub documents job and step timeout-minutes semantics, including positive-integer job timeouts and the default job timeout.",
+        "supports": "Supports treating timeout changes as workflow semantics that need evidence and verification."
+      },
+      {
+        "id": "github-workflow-syntax-concurrency-2026-05-10",
+        "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#concurrency",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-10T13:45:00+09:00",
+        "excerpt": "GitHub documents concurrency groups, cancel-in-progress behavior, and the need to use unique group names to avoid canceling unrelated in-progress or pending jobs.",
+        "supports": "Supports using scoped concurrency cancellation carefully rather than broad cancellation as a blanket cost cut."
+      },
+      {
+        "id": "generalized-negative-signal",
+        "url": "artifact:agentops/github-actions-cost-skip-safety-boundary/generalized-negative-signal",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-10T13:45:00+09:00",
+        "excerpt": "The trap should not match optional advisory workflows whose skipped paths cannot affect safety, required-check, release, or semantic boundary behavior.",
+        "supports": "Defines a public-safe false-positive boundary for this candidate record."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-05-10",
+    "volatility": "medium",
+    "next_check_due": "2026-08-10"
+  }
+}
