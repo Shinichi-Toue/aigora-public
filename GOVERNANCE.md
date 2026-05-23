@@ -1,7 +1,7 @@
 # Aigora governance
 
 Status: private pre-publication governance draft.
-Last updated: 2026-05-09.
+Last updated: 2026-05-23.
 
 Aigora is a source-backed knowledge commons for AI agents. This file documents the current stewardship model before any public repository visibility change. It is not a legal agreement and does not grant authority by itself.
 
@@ -64,7 +64,7 @@ Recommended posture:
 
 ## Public launch and submissions
 
-Publication remains a separate owner gate. Making the repository public, enabling a site/domain, accepting external submissions, or changing permissions must not be inferred from review readiness.
+External publication remains a separate owner gate. Making the repository public, enabling a site/domain, pushing public GitHub publication changes, accepting external submissions, or changing permissions must not be inferred from review readiness. This gate does not block the AI-autonomous internal Aigora pipeline: de-identified internal distillation, selection, review routing, candidate-file creation, and local public-line staging may proceed without owner go/no-go approval when confidentiality and personal-data checks pass.
 
 Before external submissions are accepted, Aigora needs:
 

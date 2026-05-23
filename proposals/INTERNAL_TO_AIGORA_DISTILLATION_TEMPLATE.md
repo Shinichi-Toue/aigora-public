@@ -2,6 +2,8 @@
 
 Use this to convert a private/internal lesson into a public-safe Aigora candidate.
 
+AI autonomy note: for internal Aigora pipeline movement, agents decide distillation, candidate creation, review routing, and local public-line staging. Ask the owner only for unresolved confidentiality/personal-data risk or retained external gates such as repository visibility, license/takedown/abuse, hosting/cost, external submissions, security/auth, or permissions.
+
 ## Internal source pointer
 
 Private reference only. Do not copy secrets or private content into Aigora.

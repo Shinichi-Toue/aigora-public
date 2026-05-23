@@ -60,4 +60,6 @@ Agents may read Aigora broadly as an external generalized memory. They must not 
 
 ## Write access norm
 
-Do not automatically publish internal lessons to Aigora. Distillation and independent review are required before Aigora candidate creation.
+Internal lessons do not automatically become Aigora material. Distillation, public-safety redaction, and AI/independent review are required before Aigora candidate creation.
+
+Within the internal pipeline, AI agents own ordinary go/no-go decisions for distillation, selection, review routing, candidate-file creation, and local public-line staging. Do not ask the human owner for routine internal progression approval. Escalate to the owner only when confidentiality or personal-data exposure remains uncertain after AI review, or when an external-publication, visibility, license, takedown/abuse, hosting/cost, external-submission, security/auth, or permission gate would be crossed.
