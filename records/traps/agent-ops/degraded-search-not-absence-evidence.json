@@ -1,0 +1,257 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.degraded-search-not-absence-evidence",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-05-25T07:45:00Z",
+  "updated_at": "2026-05-25T07:45:00Z",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Degraded semantic search is not evidence that a rule or spec is absent",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "common-ai-mistake",
+    "safe-recovery",
+    "retrieval",
+    "rag",
+    "vector-search",
+    "semantic-search",
+    "epistemics",
+    "degraded-mode"
+  ],
+  "summary": "When a retrieval, vector, or semantic search reports degradation - embedding-generation failure, an unbuilt or stale approximate index, a fallback to keyword-only, a shard failure, a timeout, or partial results - an agent must not treat an empty or irrelevant result as proof that a rule, spec, doc, or prior decision does not exist. Empty-under-degradation is a recall artifact, not verified absence. The safe next action is layered deterministic lookup (recent-changes index, changelog, exact-slug or exact-id fetch, alias or translated probes) and reporting 'not found while degraded' distinctly from 'verified absent'.",
+  "ai_value": "Prevents agents from implementing from memory, re-deriving an existing policy, or violating a durable rule because retrieval was silently degraded. It also draws the opposite boundary so the agent can stop doubting: when search is healthy and a deterministic path agrees, an empty result is legitimately 'verified absent'.",
+  "applies_to": {
+    "ecosystem": "retrieval/RAG knowledge access",
+    "contexts": [
+      "an agent queries a vector, semantic, or RAG knowledge base or doc portal to find operating rules, specs, runbooks, or prior decisions before acting",
+      "the retrieval layer can degrade independently of the underlying data (embedding-generation failure, unbuilt or stale approximate index, fallback to keyword-only, shard failure, query timeout, or partial results)",
+      "the search response can carry an in-band health or partiality signal (a warning flag, a timed_out field, shard-failure counts, or a fallback/partial/degraded marker)",
+      "a deterministic lookup path exists alongside semantic search: an exact-slug or exact-id fetch from an authoritative store, an append-only recent-changes or changelog index, a table of contents, or a file listing"
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The search response carries any in-band degradation or partiality signal. The exact wording is system-specific; treat these as examples of the class, not literal strings to match: embedding generation failed, index stale or not built, fallback search, partial results, shard failure, timed_out, degraded mode, or missing vector.",
+      "pattern": "embedding.*fail|stale.?index|not.?built|fallback|partial.?results|timed_out|shard.*fail|degraded|missing.?vector",
+      "agent_interpretation": "Recall is impaired. An empty or thin result is 'not found while degraded', not verified absence. Lower retrieval confidence and switch to deterministic lookup before concluding anything.",
+      "detectable_by": [
+        "search response health/status fields",
+        "shard-failure section of the response",
+        "warning or log fields",
+        "result metadata"
+      ]
+    },
+    {
+      "description": "A natural-language semantic query returns nothing for a topic that very likely has durable rules or prior decisions, with no degradation flag present. This is a lower-confidence recall-gap signal, not the core degradation trap.",
+      "agent_interpretation": "Treat as a recall-gap hypothesis to test with one deterministic probe, not as proof of absence. Do not escalate indefinitely.",
+      "detectable_by": [
+        "empty result set",
+        "task-domain prior knowledge"
+      ]
+    },
+    {
+      "description": "The human or handoff uses domain language, feature names, or a non-English alias that differs from stored slugs, titles, or aliases.",
+      "agent_interpretation": "A miss may be vocabulary or language mismatch rather than absence. Re-probe with translated keywords, aliases, and known identifiers.",
+      "detectable_by": [
+        "query vs stored slug comparison",
+        "handoff terms"
+      ]
+    },
+    {
+      "description": "A recently mentioned new rule or operating-surface change cannot be found by semantic search.",
+      "pattern": "new rule|recent change|just added|operating surface",
+      "agent_interpretation": "Fresh content may not be embedded or indexed yet. Check the append-only recent-changes or changelog path directly.",
+      "detectable_by": [
+        "handoff",
+        "changelog",
+        "recent-changes index"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The search self-reports healthy and complete retrieval (no degradation, partiality, or fallback flag; timed_out is false; shards all successful) AND a deterministic path (exact-id, index, changelog, table of contents, or file listing) also returns nothing.",
+      "pattern": "timed_out\\\"?:\\s*false|shards.*successful|no fallback|healthy|complete",
+      "why_it_matters": "Two independent paths agreeing on absence is real evidence of absence. This is the explicit stop-doubting condition; without it the trap would paralyze the agent into distrusting every empty result."
+    },
+    {
+      "description": "An exact-identifier lookup (known slug, id, or filename) against the authoritative store returns a definitive not-found (a 404, not a timeout or error).",
+      "pattern": "404|not.?found|no such (slug|id|page)",
+      "why_it_matters": "A deterministic point lookup that authoritatively says the id does not exist is verified absence even when the semantic layer is degraded; degradation impairs ranking and recall, not exact-key existence."
+    },
+    {
+      "description": "The agent has no prior reason to expect a durable rule, spec, or decision for this query (no handoff mention, no domain convention, a novel one-off topic).",
+      "why_it_matters": "Absence of evidence is only suspicious when the prior probability of a record is non-trivial; otherwise empty is the expected answer and re-probing wastes effort."
+    },
+    {
+      "description": "The degradation flag is for a subsystem unrelated to the lookup actually performed (for example a reranker warning while the keyword index used is healthy).",
+      "why_it_matters": "Prevents treating any warning anywhere in the response as poisoning an otherwise sound deterministic result, which would re-introduce paralysis."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "The search returned no hit, so the rule or spec probably does not exist.",
+    "If semantic search cannot find it, it is safe to proceed from memory.",
+    "An empty vector-search result means the corpus has no match, ignoring that the approximate index may be unbuilt, stale, or low-probe.",
+    "A timeout or partial result is just slowness; the returned subset is the whole answer.",
+    "Keyword fallback covers the same recall as semantic search, so a fallback miss equals absence."
+  ],
+  "first_checks": [
+    {
+      "check": "Inspect the search response for degradation: warning flags, timed_out, shard failures, fallback/partial/degraded markers; record whether retrieval was semantic, keyword-only, or degraded.",
+      "why": "Real engines signal degradation in-band; reading it converts an ambiguous empty result into a known degraded state.",
+      "safe_to_run": true
+    },
+    {
+      "check": "Query the append-only recent-changes index, decision index, changelog, table of contents, or file list directly.",
+      "why": "Deterministic enumeration does not depend on similarity ranking or approximate-index recall, so it can confirm presence the embedding path missed.",
+      "safe_to_run": true
+    },
+    {
+      "check": "Re-probe with concrete slug fragments, translated keywords, aliases, feature names, and known identifiers from the handoff or task brief.",
+      "why": "Many misses are vocabulary or language mismatches rather than absence.",
+      "safe_to_run": true
+    },
+    {
+      "check": "Do an exact-id or exact-slug point fetch against the authoritative store.",
+      "why": "A definitive 404 confirms absence; a timeout or error confirms the lookup itself is still degraded.",
+      "safe_to_run": true
+    },
+    {
+      "check": "If recall still looks broken, label the result 'not found under degraded search' and continue only the reversible part of the task or stop, rather than silently changing behavior.",
+      "why": "Preserves the absence-versus-degraded distinction for the current report and for future agents without unbounded escalation.",
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The search response shows a degradation signal (embedding failure, stale/unbuilt index, fallback, partial results, shard failure, or timed_out) and the result is empty or irrelevant.",
+      "action": "diagnose",
+      "action_detail": "treat_as_not_found_while_degraded_and_run_layered_lookup",
+      "then": "Do not conclude absence. Run deterministic lookups (recent-changes index, changelog, exact-id fetch, alias/translated probes). Only after a healthy path agrees may you reason about absence.",
+      "confidence": "high",
+      "source_ids": [
+        "es-allow-partial",
+        "pgvector-approx-recall",
+        "degraded-search-fixture"
+      ]
+    },
+    {
+      "condition": "A durable rule or spec may exist but retrieval is degraded and unconfirmed, and the next action depends on that rule.",
+      "action": "escalate",
+      "action_detail": "do_not_implement_from_memory_pending_deterministic_confirmation",
+      "then": "Hold the dependent implementation; keep the next action reversible or stop and record a single bounded diagnostic follow-up.",
+      "confidence": "high",
+      "source_ids": [
+        "altman-bland-absence-evidence"
+      ]
+    },
+    {
+      "condition": "Search is healthy (no degradation flags) AND a deterministic path (exact-id 404 or exhaustive bounded index read) both report the item absent.",
+      "action": "reject_trap_match",
+      "action_detail": "treat_as_verified_absent_and_proceed",
+      "then": "Record 'verified absent' with the two confirming paths and proceed normally; this trap does not apply.",
+      "confidence": "high",
+      "source_ids": [
+        "degraded-search-fixture"
+      ]
+    },
+    {
+      "condition": "A healthy search returns empty with no degradation flag, but you have prior reason to expect a record exists.",
+      "action": "diagnose",
+      "action_detail": "one_bounded_recall_gap_probe_then_decide",
+      "then": "Run one deterministic probe (exact-id or recent-changes index). If it also returns nothing, accept absence; do not loop indefinitely. This is a recall-gap branch, lower confidence than the degradation branch.",
+      "confidence": "medium",
+      "source_ids": [
+        "pgvector-approx-recall"
+      ]
+    },
+    {
+      "condition": "The final report will state that a rule, spec, or doc was not found.",
+      "action": "modify_workflow",
+      "action_detail": "label_not_found_while_degraded_vs_verified_absent",
+      "then": "Explicitly tag which it is and name the paths checked, so downstream agents inherit the correct retrieval confidence.",
+      "confidence": "high",
+      "source_ids": [
+        "altman-bland-absence-evidence"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not infer nonexistence from an empty semantic result when the tool reported embedding, index, timeout, or partial-result warnings.",
+    "Do not implement from memory if a durable rule or spec may exist but retrieval is degraded.",
+    "Do not hide degraded search in the final report; future agents need to know lookup confidence was lower.",
+    "Do not broaden implementation scope to compensate for missing context; keep the next action reversible or stop for a bounded diagnostic follow-up.",
+    "Do not treat keyword-fallback recall as equivalent to healthy semantic recall.",
+    "Do not flip into distrusting every empty result; when a healthy path and a deterministic path agree on absence, accept it."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Read the search response's degradation signals; if degraded, run layered deterministic lookup (recent-changes index, exact-id fetch, alias/translated probes) and report 'not found while degraded' rather than 'absent'. Conclude absence only when a healthy path and a deterministic path agree."
+  },
+  "risk": {
+    "level": "low",
+    "human_gate_required": false,
+    "notes": "The trap's safe action is additional read-only lookup and honest reporting, which is low direct risk. Risk becomes high only indirectly when the missed rule governs a hard gate (security, auth, billing, permissions, deploy, or destructive operations); in that case the downstream action carries the gate, not this lookup. This record authorizes extra read-only lookup and accurate reporting only."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "es-allow-partial",
+        "url": "https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-25T07:35:00Z",
+        "excerpt": "If true and there are shard request timeouts or shard failures, the request returns partial results. ... If false, it returns an error with no partial results. ... [timeout] The period of time to wait for a response from each shard. If no response is received before the timeout expires, the request fails and returns an error.",
+        "supports": "Official proof that a healthy-looking search can return partial (incomplete) results on shard timeout or failure, and that this is surfaced in-band. Establishes that an empty or partial result set is not the complete corpus answer."
+      },
+      {
+        "id": "pgvector-approx-recall",
+        "url": "https://github.com/pgvector/pgvector",
+        "type": "official_doc",
+        "retrieved_at": "2026-05-25T07:35:00Z",
+        "excerpt": "Unlike typical indexes, you will see different results for queries after adding an approximate index. ... Create the index after the table has some data. ... [ivfflat.probes] A higher value provides better recall at the cost of speed.",
+        "supports": "Official proof that an approximate vector index legitimately returns different or incomplete results depending on whether the index is built and on probe settings, so 'no vector hit' can be an index-state artifact rather than corpus absence."
+      },
+      {
+        "id": "altman-bland-absence-evidence",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2550545/",
+        "type": "other",
+        "retrieved_at": "2026-05-25T07:35:00Z",
+        "excerpt": "Altman DG, Bland JM. Absence of evidence is not evidence of absence. BMJ. 1995 Aug 19;311(7003):485. A non-significant or null result does not demonstrate that no effect or difference exists; it indicates insufficient evidence to detect one.",
+        "supports": "Neutral, citable grounding for the core epistemic claim: a low-power or degraded probe yields absence of evidence, which must not be reported as evidence of absence."
+      },
+      {
+        "id": "degraded-search-fixture",
+        "url": "artifact:benchmarks/degraded-search-not-absence-evidence/repro.py",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-25T07:38:00Z",
+        "excerpt": "Offline deterministic reproducer over a tiny neutral corpus: three degraded modes (embedding_failed, index_not_built, timeout_partial) each return an empty semantic result with a degradation flag while an exact-id lookup still returns the document; a healthy search plus an authoritative exact-id 404 returns verified_absent; a healthy miss on an existing doc returns recall_gap_not_absent.",
+        "supports": "Public-safe demonstration that empty-under-degradation is not absence, and that the stop-doubting boundary (healthy plus deterministic agreement) yields a legitimate verified-absent verdict."
+      }
+    ],
+    "verification_runs": [
+      {
+        "run_at": "2026-05-25T07:38:00Z",
+        "environment": {
+          "os_context": "local Linux session, no network, no private data",
+          "runtime": {
+            "name": "python",
+            "version": "3.12.3"
+          },
+          "packages": []
+        },
+        "command": "python3 benchmarks/degraded-search-not-absence-evidence/repro.py",
+        "safe_to_rerun": true,
+        "observed_result": "All six checks PASS: the three degraded modes each return verdict=not_found_while_degraded with an empty hit set, a degradation flag set, and a successful exact-id lookup; healthy present-doc returns found; healthy plus exact-id 404 returns verified_absent; healthy miss on an existing doc returns recall_gap_not_absent. RESULT: ALL PASS (exit 0).",
+        "conclusion": "Empty-under-degradation is distinguishable from true absence by an exact-id cross-check, and the verified-absent boundary holds, so an agent can both avoid false-absence conclusions and avoid distrusting every empty result."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-05-25",
+    "volatility": "low",
+    "next_check_due": "2026-11-25"
+  }
+}

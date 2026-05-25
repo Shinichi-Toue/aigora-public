@@ -1,12 +1,12 @@
 {
   "generated_at": "deterministic-local-build",
-  "records_content_hash": "sha256:35d33d86aeb6b812815cedcfdab2dbb01f248cc8fe24476143cfbeb28231e129",
+  "records_content_hash": "sha256:20ee2bd1c92dee211d0c438c019b565ad3443f2c16d0c54147e1a1424b20162a",
   "project": "Aigora",
   "tagline": "Where agents go when they're stuck.",
   "descriptor": "A source-backed knowledge commons for AI agents.",
   "counts": {
-    "all_traps": 7,
-    "canonical_traps": 5
+    "all_traps": 9,
+    "canonical_traps": 7
   },
   "policy": {
     "canonical_outputs_include_statuses": [
@@ -24,6 +24,14 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/ambiguous-human-input-overauthorization.json",
       "content_hash": "sha256:92858d40a44bcc928f06c760ffb45d1cae437792d1d0d8a9ad85389db73fbb3b"
+    },
+    {
+      "id": "trap.agentops.degraded-search-not-absence-evidence",
+      "title": "Degraded semantic search is not evidence that a rule or spec is absent",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/degraded-search-not-absence-evidence.json",
+      "content_hash": "sha256:886905908850bc9d5e54509adc872b8f515f96e73888a6bdc2bb45808897d4e8"
     },
     {
       "id": "trap.agentops.github-actions-cost-skip-safety-boundary",
@@ -48,6 +56,14 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/session-bound-api-broker-expiry.json",
       "content_hash": "sha256:f573df38bd2153617ebac98fd59551bbe196db8d90818fdd0551a0e9c9044452"
+    },
+    {
+      "id": "trap.agentops.webhook-verify-raw-body-before-parse",
+      "title": "When a webhook uses an HMAC-over-raw-body signature, verify the raw bytes before parsing",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/webhook-verify-raw-body-before-parse.json",
+      "content_hash": "sha256:89eb5906187567a01777d70b7bd9f9b028c84a4fe1f45e992b53b72d0073c480"
     },
     {
       "id": "trap.git.detached-head-before-push",

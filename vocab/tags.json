@@ -26,5 +26,16 @@
   "agent-ops",
   "human-input",
   "ambiguity",
-  "authorization-gate"
+  "authorization-gate",
+  "webhook",
+  "hmac",
+  "signature-verification",
+  "replay-protection",
+  "web-security",
+  "retrieval",
+  "rag",
+  "vector-search",
+  "semantic-search",
+  "epistemics",
+  "degraded-mode"
 ]
