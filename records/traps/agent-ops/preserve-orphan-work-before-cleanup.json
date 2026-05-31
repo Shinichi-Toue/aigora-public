@@ -1,0 +1,167 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.preserve-orphan-work-before-cleanup",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Preserve orphan work before cleanup",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "When edits or commits are found outside the expected branch, owner, or session, preserve and classify them before resetting, deleting, or overwriting. Clean status is not worth losing unknown work.",
+  "ai_value": "Helps agents recover from branch drift, abandoned sessions, and dirty worktrees without destroying useful edits or asking a human to classify raw Git state.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a worktree is dirty after a session crash, branch movement, or handoff",
+      "commits or edits exist outside the expected branch or task",
+      "cleanup pressure appears before ownership and purpose are known"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "curation batch reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Git status shows uncommitted changes, untracked files, or detached commits that the current task did not create.",
+      "pattern": "modified|untracked|detached|orphan|dirty worktree",
+      "agent_interpretation": "Treat them as evidence to preserve, not clutter to erase.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "The parent branch moved and local edits no longer apply cleanly.",
+      "pattern": "branch moved|rebase conflict|stale checkout|orphan edits",
+      "agent_interpretation": "Capture the diff and purpose before deciding whether to split, rebase, or discard.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The files are generated artifacts proven reproducible and ignored by policy.",
+      "pattern": "generated|cache|dist|reproducible",
+      "why_it_matters": "They may be regenerated or cleaned through normal repo rules."
+    },
+    {
+      "description": "A reviewed destructive cleanup path has already classified the work as disposable.",
+      "pattern": "cleanup approved|discard recorded",
+      "why_it_matters": "Follow that path, preserving the classification evidence."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A clean worktree is always safer than preserving unknown changes.",
+    "Untracked files are probably junk.",
+    "The human should choose from raw branch labels instead of the agent classifying purpose and risk."
+  ],
+  "first_checks": [
+    {
+      "check": "Capture the status, diff summary, and likely purpose in a safe artifact.",
+      "why": "A later reviewer needs evidence even if the session that made the edits is gone.",
+      "command": "git status --short --branch && git diff --stat",
+      "files": [
+        "git status",
+        "diff summary",
+        "handoff note"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Classify ownership: current task, sibling task, generated residue, or unknown.",
+      "why": "Classification decides whether to adopt, split, preserve, or ignore.",
+      "files": [
+        "task tracker",
+        "recent commits",
+        "file paths"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Only clean or discard after the classification is recorded and the applicable gate passes.",
+      "why": "Destructive cleanup without classification loses recovery options.",
+      "files": [
+        "cleanup record",
+        "review note"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Unknown edits exist in a shared or task worktree.",
+      "action": "modify_workflow",
+      "action_detail": "preserve_then_classify",
+      "then": "Save a patch or evidence summary, identify likely owner/purpose, and defer destructive cleanup until classification is recorded.",
+      "confidence": "high",
+      "source_ids": [
+        "seed-9-orphan-edits-2026-05-11"
+      ]
+    },
+    {
+      "condition": "The unknown edits may contain secrets or private data.",
+      "action": "escalate",
+      "action_detail": "preserve_redacted_and_stop_for_safety",
+      "then": "Do not publish the diff; preserve privately and use the appropriate confidentiality path.",
+      "confidence": "medium",
+      "source_ids": [
+        "seed-9-orphan-edits-2026-05-11"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not reset, delete, or overwrite unknown edits to make status look clean.",
+    "Do not paste potentially private diffs into public records or broad chats.",
+    "Do not ask a human to choose from raw implementation labels when the agent can classify evidence."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Capture status and diff evidence, classify ownership and purpose, then clean only through a recorded safe path."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This public record is de-identified. It does not authorize bypassing human, maintainer, security, publication, billing, data, or credential gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "seed-9-orphan-edits-2026-05-11",
+        "url": "artifact:source-notes/seed-9-orphan-edits-2026-05-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Recovery guidance identified orphan edits and moved branches as recurring AI-session failure modes requiring preservation before cleanup.",
+        "supports": "Supports preserve-first recovery discipline."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

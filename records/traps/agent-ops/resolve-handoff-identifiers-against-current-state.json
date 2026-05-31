@@ -1,0 +1,174 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.resolve-handoff-identifiers-against-current-state",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Resolve handoff identifiers against current state",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "Identifiers in handoffs and design notes can go stale. Before attaching work, status, or tests to a task ID, migration filename, issue, or release number, resolve it against the current source of truth.",
+  "ai_value": "Helps agents avoid filing evidence under the wrong anchor or following stale migration numbers after rebases and mainline movement.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a handoff names a task, issue, migration, release, artifact, branch, or other identifier",
+      "mainline advanced after a design note chose a numbered filename or slot",
+      "an agent is about to write status, tests, docs, or artifacts against a named identifier"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "curation batch reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The handoff ID was provisional, old, or copied from a previous session.",
+      "pattern": "provisional ID|old task|handoff ID|stale anchor",
+      "agent_interpretation": "Resolve it in the tracker or source before using it as the work anchor.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "A migration or numbered artifact was planned before rebasing or merging mainline.",
+      "pattern": "migration number|filename changed|main advanced|rebase",
+      "agent_interpretation": "Inspect the final directory and tests before recording the identifier.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The identifier is immutable and has been verified immediately before use.",
+      "pattern": "immutable SHA|current ID verified",
+      "why_it_matters": "Record the verification and proceed."
+    },
+    {
+      "description": "The identifier appears only as historical context, not as an execution anchor.",
+      "pattern": "history only|example",
+      "why_it_matters": "Do not over-process historical references."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A named ID in a handoff is current because it was correct when written.",
+    "Migration numbers in design notes survive rebases unchanged.",
+    "If the title looks similar, the anchor must be the same work item."
+  ],
+  "first_checks": [
+    {
+      "check": "Resolve the ID in the authoritative current system before attaching artifacts.",
+      "why": "This prevents status or files from landing on the wrong work item.",
+      "files": [
+        "task tracker",
+        "issue list",
+        "artifact registry"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "For numbered files or migrations, inspect the directory after rebasing and update tests/docs to the final name.",
+      "why": "The final merged identifier is what future agents will search for.",
+      "files": [
+        "migration directory",
+        "schema tests",
+        "design note"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Record rejected stale IDs when confusion is likely to recur.",
+      "why": "A note prevents the next agent from repeating the same stale-anchor mistake.",
+      "files": [
+        "handoff note",
+        "source note"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A handoff identifier cannot be verified as the current target.",
+      "action": "diagnose",
+      "action_detail": "resolve_or_create_correct_anchor_before_work",
+      "then": "Resolve the current target or create the correct anchor through the normal workflow before writing artifacts or status.",
+      "confidence": "high",
+      "source_ids": [
+        "seed-9-stale-anchor-drift-2026-05-11"
+      ]
+    },
+    {
+      "condition": "A final migration or numbered artifact differs from the design note.",
+      "action": "modify_workflow",
+      "action_detail": "record_final_identifier_after_rebase",
+      "then": "Update handoff/tests/docs to the final merged identifier and preserve the stale number only as historical context.",
+      "confidence": "high",
+      "source_ids": [
+        "marketplace-migration-number-2026-05-14"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not attach work to a task, issue, or migration number solely because a handoff named it.",
+    "Do not leave stale design-note identifiers as the only searchable clue.",
+    "Do not ask a human to choose between IDs until the agent has resolved current status and purpose."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Resolve every execution identifier against current state, then record the final ID and any rejected stale ID before handoff."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This public record is de-identified. It does not authorize bypassing human, maintainer, security, publication, billing, data, or credential gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "seed-9-stale-anchor-drift-2026-05-11",
+        "url": "artifact:source-notes/seed-9-stale-anchor-drift-2026-05-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "AI-session recovery guidance identified stale task anchors and default-mission drift as recurring sources of misplaced work.",
+        "supports": "Supports resolving handoff anchors before execution."
+      },
+      {
+        "id": "marketplace-migration-number-2026-05-14",
+        "url": "artifact:source-notes/marketplace-migration-number-2026-05-14",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "A migration filename can change after rebasing against main; future agents need the final merged identifier, not only the design-time number.",
+        "supports": "Supports final migration identifier recording."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

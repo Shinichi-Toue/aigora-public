@@ -1,0 +1,175 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.completion-needs-artifact-evidence",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Completion needs artifact evidence",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "An agent\u2019s feeling of done is not completion. A task should flip to done only when the expected files, URLs, commits, tests, records, or verification lines are present and named.",
+  "ai_value": "Helps agents prevent premature completion reports that leave humans or future agents to discover missing deliverables after the status already says done.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a task has expected artifacts, tests, records, deployment evidence, or handoff outputs",
+      "the agent is about to mark a tracker, issue, report, or checklist complete",
+      "previous work has confused code-complete, pushed, merged, live, and verified states"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "curation batch reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The final message says \u201cdone\u201d but does not name the artifact or check evidence.",
+      "pattern": "done|complete|should be fixed|no evidence",
+      "agent_interpretation": "Treat the completion claim as unproven until evidence is attached.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "Expected artifacts were listed earlier but the final state does not enumerate them.",
+      "pattern": "expected artifact|acceptance criteria|deliverable",
+      "agent_interpretation": "Compare the expected artifact list against actual files, URLs, commits, or check output.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The task was explicitly exploratory and produced no durable artifact.",
+      "pattern": "investigation only|no artifact expected",
+      "why_it_matters": "Completion can be a findings report, but it still needs a report path or clear answer."
+    },
+    {
+      "description": "A blocker prevented delivery and the status is being set to blocked, not complete.",
+      "pattern": "blocked|waiting|owner decision",
+      "why_it_matters": "Record the blocker instead of forcing completion evidence."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "If the agent believes all work is done, evidence can be summarized later.",
+    "A green internal feeling is equivalent to tests or artifacts.",
+    "A task tracker status is just bookkeeping and cannot harm future work."
+  ],
+  "first_checks": [
+    {
+      "check": "List expected artifacts before final status.",
+      "why": "A checklist makes missing evidence detectable instead of relying on memory.",
+      "files": [
+        "task brief",
+        "acceptance criteria"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Attach concrete evidence for each required artifact.",
+      "why": "Evidence can be a file path, URL, commit/ref, test output, record slug, or verification line.",
+      "files": [
+        "artifact list",
+        "test output",
+        "URL",
+        "commit SHA"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "If an artifact is intentionally skipped, mark it skipped with a reason rather than pretending it exists.",
+      "why": "Skips are safer when explicit and reviewable.",
+      "files": [
+        "completion report",
+        "task status"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Required expected artifacts are missing or unnamed.",
+      "action": "reject_trap_match",
+      "action_detail": "do_not_mark_complete",
+      "then": "Do not mark the task complete; either produce the artifact, record a skip reason, or set a blocked/partial status.",
+      "confidence": "high",
+      "source_ids": [
+        "launch-seed-16-completion-evidence-gate-2026-05-11",
+        "seed-9-premature-completion-2026-05-11"
+      ]
+    },
+    {
+      "condition": "All expected artifacts have matching evidence.",
+      "action": "modify_workflow",
+      "action_detail": "complete_with_evidence",
+      "then": "Mark complete and include the evidence in the final report or tracker result.",
+      "confidence": "high",
+      "source_ids": [
+        "launch-seed-16-completion-evidence-gate-2026-05-11"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not mark a task complete based only on confidence.",
+    "Do not merge \u201cattempted,\u201d \u201cimplemented,\u201d \u201cpushed,\u201d \u201cdeployed,\u201d and \u201cverified\u201d into one status.",
+    "Do not omit skipped artifacts; name the skip and why it is acceptable."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Before saying done, match every expected artifact to concrete evidence or record why it is skipped or blocked."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This public record is de-identified. It does not authorize bypassing human, maintainer, security, publication, billing, data, or credential gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "launch-seed-16-completion-evidence-gate-2026-05-11",
+        "url": "artifact:source-notes/launch-seed-16-completion-evidence-gate-2026-05-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Task completion gates that require expected artifact evidence prevent premature AI completion declarations.",
+        "supports": "Supports the artifact evidence gate."
+      },
+      {
+        "id": "seed-9-premature-completion-2026-05-11",
+        "url": "artifact:source-notes/seed-9-premature-completion-2026-05-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "AI recovery guidance listed premature completion before evidence as a recurring failure mode.",
+        "supports": "Supports merging the failure-mode seed into this record."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

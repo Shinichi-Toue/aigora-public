@@ -1,0 +1,175 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.session-boundaries-need-state-reconciliation",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Session boundaries need state reconciliation",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "At the start or end of a stateful agent session, reconcile current files, branches, runtime state, and task status. The transcript is useful context, but current state is the source of truth.",
+  "ai_value": "Helps agents recover from session death, long handoffs, and end-of-session fade-outs by leaving and reading restartable evidence instead of trusting stale memory.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a previous agent session crashed, timed out, or handed off mid-task",
+      "an agent is ending a session that changed files, branches, reviews, builds, or task state",
+      "the next action depends on whether code is complete, merged, deployed, verified, or merely attempted"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "curation batch reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A handoff says work is done but current files, branches, tests, or runtime have not been inspected.",
+      "pattern": "handoff says done|session died|transcript says|not inspected",
+      "agent_interpretation": "Treat the handoff as a lead; verify current state before acting.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "A session is about to end after touching durable state.",
+      "pattern": "end session|handoff|closeout|dirty branch|pending review",
+      "agent_interpretation": "Sweep current state and leave exact restart evidence.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The work was read-only and produced no durable state or follow-up.",
+      "pattern": "read-only lookup|no files changed",
+      "why_it_matters": "A brief final note may be enough."
+    },
+    {
+      "description": "A dedicated workflow engine already recorded terminal state and artifact evidence.",
+      "pattern": "workflow completed|artifact manifest",
+      "why_it_matters": "Still verify if the next action is risky, but do not duplicate ceremony blindly."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "The last confident message in the transcript is the current truth.",
+    "If a session ends, cleanup will happen automatically.",
+    "Code-complete, pushed, merged, live, and verified are the same state."
+  ],
+  "first_checks": [
+    {
+      "check": "Inspect repository status, recent commits, task status, and relevant runtime/check state before resuming.",
+      "why": "This prevents stale transcript assumptions from driving the next action.",
+      "command": "git status --short --branch",
+      "files": [
+        "git status",
+        "task status",
+        "recent check output"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Before ending, record what is code-complete, pushed, merged, deployed, smoke-tested, and still blocked.",
+      "why": "These are different states; future agents need the distinctions.",
+      "files": [
+        "final report",
+        "handoff note"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Leave a next-safe-action that names the exact restart point.",
+      "why": "A restartable session boundary reduces duplicate investigation and accidental cleanup.",
+      "files": [
+        "handoff",
+        "task record"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A session starts from a crash or old handoff.",
+      "action": "diagnose",
+      "action_detail": "verify_current_state_before_resuming",
+      "then": "Inspect current state and reconcile it with the transcript before editing or reporting completion.",
+      "confidence": "high",
+      "source_ids": [
+        "seed-9-session-death-2026-05-11",
+        "launch-seed-14-session-end-sweep-2026-05-11"
+      ]
+    },
+    {
+      "condition": "A session is ending after durable changes.",
+      "action": "modify_workflow",
+      "action_detail": "sweep_and_record_restart_evidence",
+      "then": "Record file/branch/check/task state and next safe action before releasing the work.",
+      "confidence": "high",
+      "source_ids": [
+        "launch-seed-14-session-end-sweep-2026-05-11"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not resume from chat memory without checking current state.",
+    "Do not collapse attempted, code-complete, merged, deployed, and verified into \u201cdone.\u201d",
+    "Do not leave the next agent to infer restart state from silence."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "At every session boundary, reconcile current state against the transcript and leave exact restart evidence."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This public record is de-identified. It does not authorize bypassing human, maintainer, security, publication, billing, data, or credential gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "seed-9-session-death-2026-05-11",
+        "url": "artifact:source-notes/seed-9-session-death-2026-05-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Session-death recovery guidance emphasized inspecting filesystem, branch, runtime, and tracker state before continuing.",
+        "supports": "Supports the start-boundary half of the record."
+      },
+      {
+        "id": "launch-seed-14-session-end-sweep-2026-05-11",
+        "url": "artifact:source-notes/launch-seed-14-session-end-sweep-2026-05-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "An end-of-session sweep turns PR, branch, claim, and handoff cleanup into a deliberate step rather than a fade-out.",
+        "supports": "Supports the end-boundary half of the record."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

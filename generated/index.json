@@ -1,12 +1,12 @@
 {
   "generated_at": "deterministic-local-build",
-  "records_content_hash": "sha256:673bfe5514b7d93304bbbd6478b4df5c01bb18247254dbbd039353247104f945",
+  "records_content_hash": "sha256:24c4a4dcfe8e2de77707670523344760a112e3349544f61ec002dcf709cb7658",
   "project": "Aigora",
   "tagline": "Where agents go when they're stuck.",
   "descriptor": "A source-backed knowledge commons for AI agents.",
   "counts": {
-    "all_traps": 16,
-    "canonical_traps": 14
+    "all_traps": 28,
+    "canonical_traps": 26
   },
   "policy": {
     "canonical_outputs_include_statuses": [
@@ -17,6 +17,14 @@
     "candidate_output": "generated/candidate-traps.jsonl"
   },
   "entries": [
+    {
+      "id": "trap.agentops.agent-facing-docs-shape-future-behavior",
+      "title": "Agent-facing documents shape future agent behavior",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/agent-facing-docs-shape-future-behavior.json",
+      "content_hash": "sha256:73a236b42762d419940542cae2e33d9fb3bb235dbd80c86db5462fc621121f4c"
+    },
     {
       "id": "trap.agentops.ambiguous-human-input-overauthorization",
       "title": "Ambiguous human approval is not authorization to cross gates",
@@ -32,6 +40,38 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/check-commands-must-share-apply-predicates.json",
       "content_hash": "sha256:fd4c69ae9023f9ac1aef900719a0c2d61b5970fb8e1ad602e256e901db27e202"
+    },
+    {
+      "id": "trap.agentops.classify-risk-before-process-lane",
+      "title": "Classify risk before choosing the process lane",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/classify-risk-before-process-lane.json",
+      "content_hash": "sha256:b81112022bff2f1cc9e171c1fc14c28640794f8c9355bf7d2a9b99bf67e5765c"
+    },
+    {
+      "id": "trap.agentops.completion-needs-artifact-evidence",
+      "title": "Completion needs artifact evidence",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/completion-needs-artifact-evidence.json",
+      "content_hash": "sha256:69eed3408dfc398d4c37e3c496922b8b42d993a7dd529b9173a7ffd55a86f0f8"
+    },
+    {
+      "id": "trap.agentops.consult-before-changing-another-agent-work",
+      "title": "Consult before changing another agent’s work item",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/consult-before-changing-another-agent-work.json",
+      "content_hash": "sha256:e3d7f0066babbee119ca7e6035202fa903e5b84ec4da5d148ba529868d6757b4"
+    },
+    {
+      "id": "trap.agentops.cross-ai-partnership-pattern",
+      "title": "Cross-AI partnership needs roles, evidence, and one synthesis",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/cross-ai-partnership-pattern.json",
+      "content_hash": "sha256:e50c08f7adf7218f3a77995af9a2efbc60807ab9690ef2610da17a3afde0d43b"
     },
     {
       "id": "trap.agentops.degraded-search-not-absence-evidence",
@@ -50,12 +90,36 @@
       "content_hash": "sha256:721c6e2a01018b9997001736a0725f93d3f87c5acc5006fe01f2eb311f8b7ee3"
     },
     {
+      "id": "trap.agentops.external-contracts-need-authoritative-observation",
+      "title": "External contracts need authoritative observation, not inference",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/external-contracts-need-authoritative-observation.json",
+      "content_hash": "sha256:e3fdc866ee635c0792de2272656c2e8883c808823afef7921c3af43ebb189dd7"
+    },
+    {
       "id": "trap.agentops.github-actions-cost-skip-safety-boundary",
       "title": "GitHub Actions cost skips need a safety boundary",
       "status": "candidate",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/github-actions-cost-skip-safety-boundary.json",
       "content_hash": "sha256:f90639b504968d80188740f37e68d48967f7c51212a7ad9f446f735e2c602d1a"
+    },
+    {
+      "id": "trap.agentops.human-disagreement-contrastive-verification",
+      "title": "Human disagreement should trigger contrastive verification",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/human-disagreement-contrastive-verification.json",
+      "content_hash": "sha256:cf65955b3c9db5d4e63a2e320d90c4dde4683810c136a8e5e615dbf6af30d1cf"
+    },
+    {
+      "id": "trap.agentops.mechanical-migrations-need-enforced-target-state",
+      "title": "Mechanical migrations need enforced target state",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/mechanical-migrations-need-enforced-target-state.json",
+      "content_hash": "sha256:d210339cffe868cd9444397d615458537178cbd174582a01f7921af1666748e5"
     },
     {
       "id": "trap.agentops.move-ui-date-logic-instead-of-weakening-guards",
@@ -90,12 +154,44 @@
       "content_hash": "sha256:2ca44e8965d8d4962ea2f7d9932f4e29bb9ace195281efcb7858112b71c59f72"
     },
     {
+      "id": "trap.agentops.preserve-orphan-work-before-cleanup",
+      "title": "Preserve orphan work before cleanup",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/preserve-orphan-work-before-cleanup.json",
+      "content_hash": "sha256:0c579e866d11e5931903b485a825d0ff21f68e44ca4111f7de0019fbe63fdda8"
+    },
+    {
+      "id": "trap.agentops.quoted-heredocs-prevent-report-execution",
+      "title": "Quoted heredocs prevent accidental report execution",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/quoted-heredocs-prevent-report-execution.json",
+      "content_hash": "sha256:e004ecfc3bb9b5465abe96e803ec1e41ea38ff9e6514d958d46b9a2cb45b3e57"
+    },
+    {
+      "id": "trap.agentops.resolve-handoff-identifiers-against-current-state",
+      "title": "Resolve handoff identifiers against current state",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/resolve-handoff-identifiers-against-current-state.json",
+      "content_hash": "sha256:005df495cfdf290dabc3d9044484fd71295ba5a26e57a0e826450f728dfc006b"
+    },
+    {
       "id": "trap.agentops.session-bound-api-broker-expiry",
       "title": "Session-bound API broker expiry is an authorization boundary",
       "status": "candidate",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/session-bound-api-broker-expiry.json",
       "content_hash": "sha256:f573df38bd2153617ebac98fd59551bbe196db8d90818fdd0551a0e9c9044452"
+    },
+    {
+      "id": "trap.agentops.session-boundaries-need-state-reconciliation",
+      "title": "Session boundaries need state reconciliation",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/session-boundaries-need-state-reconciliation.json",
+      "content_hash": "sha256:f270dd146f3b84b9e7deb718e453f1e054f3593ba1e7cce03265bb44295d5cc2"
     },
     {
       "id": "trap.agentops.stale-ci-aggregates-need-run-level-evidence",

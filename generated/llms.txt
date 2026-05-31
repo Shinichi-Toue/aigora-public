@@ -29,14 +29,30 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
 
 ## Current canonical trap records
 
+- trap.agentops.agent-facing-docs-shape-future-behavior (reviewed): Agent-facing documents shape future agent behavior — records/traps/agent-ops/agent-facing-docs-shape-future-behavior.json
+  Next safe action: Before publishing agent-facing docs, classify each behavior claim and rewrite any sentence that would be harmful if a future agent enacted it literally.
 - trap.agentops.ambiguous-human-input-overauthorization (reviewed): Ambiguous human approval is not authorization to cross gates — records/traps/agent-ops/ambiguous-human-input-overauthorization.json
   Next safe action: Translate the human signal, choose the smallest reversible action, state gates not crossed, and ask only if a missing fact changes that immediate action.
 - trap.agentops.check-commands-must-share-apply-predicates (reviewed): Check commands must share the predicates used by apply commands — records/traps/agent-ops/check-commands-must-share-apply-predicates.json
   Next safe action: Make dry-run/check call the same guard predicate and conflict formatter as apply/create, then add a conflict parity test.
+- trap.agentops.classify-risk-before-process-lane (reviewed): Classify risk before choosing the process lane — records/traps/agent-ops/classify-risk-before-process-lane.json
+  Next safe action: Classify reversibility, authority, externality, and protected effects, then choose the lightest process lane that preserves those risks.
+- trap.agentops.completion-needs-artifact-evidence (reviewed): Completion needs artifact evidence — records/traps/agent-ops/completion-needs-artifact-evidence.json
+  Next safe action: Before saying done, match every expected artifact to concrete evidence or record why it is skipped or blocked.
+- trap.agentops.consult-before-changing-another-agent-work (reviewed): Consult before changing another agent’s work item — records/traps/agent-ops/consult-before-changing-another-agent-work.json
+  Next safe action: Before touching another agent’s mutable work item, identify ownership and get a small consultation or leave a narrow handoff instead.
+- trap.agentops.cross-ai-partnership-pattern (reviewed): Cross-AI partnership needs roles, evidence, and one synthesis — records/traps/agent-ops/cross-ai-partnership-pattern.json
+  Next safe action: Use cross-AI work as structured partnership: roles first, evidence preserved, mutable state partitioned, and one accountable synthesis at the end.
 - trap.agentops.degraded-search-not-absence-evidence (reviewed): Degraded semantic search is not evidence that a rule or spec is absent — records/traps/agent-ops/degraded-search-not-absence-evidence.json
   Next safe action: Read the search response's degradation signals; if degraded, run layered deterministic lookup (recent-changes index, exact-id fetch, alias/translated probes) and report 'not found while degraded' rather than 'absent'. Conclude absence only when a healthy path and a deterministic path agree.
 - trap.agentops.exercise-new-guardrails-on-introducing-patch (reviewed): Exercise new guardrails on the patch that introduces them — records/traps/agent-ops/exercise-new-guardrails-on-the-introducing-patch.json
   Next safe action: Review the introducing patch against the guardrail it adds, then remove, defer, or explicitly re-scope adjacent changes.
+- trap.agentops.external-contracts-need-authoritative-observation (reviewed): External contracts need authoritative observation, not inference — records/traps/agent-ops/external-contracts-need-authoritative-observation.json
+  Next safe action: Name the external contract, gather the right authoritative observation for that contract, and only then implement or enable behavior.
+- trap.agentops.human-disagreement-contrastive-verification (reviewed): Human disagreement should trigger contrastive verification — records/traps/agent-ops/human-disagreement-contrastive-verification.json
+  Next safe action: Convert the disagreement into a two-hypothesis check, run the smallest safe observation, and report the surviving explanation.
+- trap.agentops.mechanical-migrations-need-enforced-target-state (reviewed): Mechanical migrations need enforced target state — records/traps/agent-ops/mechanical-migrations-need-enforced-target-state.json
+  Next safe action: Turn the desired migration state into a scoped mechanical check, explain any allowlist, and verify related checkout residue before handoff.
 - trap.agentops.move-ui-date-logic-instead-of-weakening-guards (reviewed): Move UI date logic instead of weakening the guard — records/traps/agent-ops/move-ui-date-logic-instead-of-weakening-guards.json
   Next safe action: Locate the approved date-display boundary, move the logic there, and rerun the guard plus focused UI tests.
 - trap.agentops.moved-ui-tests-need-absence-and-presence (reviewed): Moved UI tests need absence and presence assertions — records/traps/agent-ops/moved-ui-tests-need-absence-and-presence.json
@@ -45,6 +61,14 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
   Next safe action: Read immutable deploy evidence, fetch and compare the target ref immediately before gates, then close the frozen batch or rebuild the review/deploy packet for any moved scope.
 - trap.agentops.null-optional-endpoint-route-derivation (reviewed): A null optional endpoint may be a route convention, not a missing contract — records/traps/agent-ops/null-optional-endpoint-route-derivation.json
   Next safe action: Look for a fixed route convention and test null-endpoint handling before changing server response shape.
+- trap.agentops.preserve-orphan-work-before-cleanup (reviewed): Preserve orphan work before cleanup — records/traps/agent-ops/preserve-orphan-work-before-cleanup.json
+  Next safe action: Capture status and diff evidence, classify ownership and purpose, then clean only through a recorded safe path.
+- trap.agentops.quoted-heredocs-prevent-report-execution (reviewed): Quoted heredocs prevent accidental report execution — records/traps/agent-ops/quoted-heredocs-prevent-report-execution.json
+  Next safe action: Use quoted heredoc delimiters for literal content and re-read the produced file before treating it as evidence.
+- trap.agentops.resolve-handoff-identifiers-against-current-state (reviewed): Resolve handoff identifiers against current state — records/traps/agent-ops/resolve-handoff-identifiers-against-current-state.json
+  Next safe action: Resolve every execution identifier against current state, then record the final ID and any rejected stale ID before handoff.
+- trap.agentops.session-boundaries-need-state-reconciliation (reviewed): Session boundaries need state reconciliation — records/traps/agent-ops/session-boundaries-need-state-reconciliation.json
+  Next safe action: At every session boundary, reconcile current state against the transcript and leave exact restart evidence.
 - trap.agentops.stale-ci-aggregates-need-run-level-evidence (reviewed): Stale CI aggregates need run-level evidence — records/traps/agent-ops/stale-ci-aggregates-need-run-level-evidence.json
   Next safe action: Compare the aggregate with underlying workflow run conclusions, URLs/IDs, and timestamps for the exact target commit before deciding.
 - trap.agentops.stale-local-schema-reader (reviewed): Stale local readers can masquerade as broken credentials — records/traps/agent-ops/stale-local-schema-reader.json

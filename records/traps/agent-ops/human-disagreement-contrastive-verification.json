@@ -1,0 +1,166 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.human-disagreement-contrastive-verification",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Human disagreement should trigger contrastive verification",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "When a human collaborator says the agent\u2019s diagnosis feels wrong, do not blindly agree or defend. Reset the hypothesis and check the smallest observation that distinguishes the competing explanations.",
+  "ai_value": "Helps agents escape sycophancy, self-defense, and repeated retries by turning disagreement into a concrete verification plan.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a human says the agent is looking in the wrong place, misunderstanding a step, or missing old-system parity",
+      "the agent feels tempted to apologize without evidence or argue from its current theory",
+      "retries are consuming budget without a discriminating observation"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "curation batch reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The human says \u201cthis feels wrong,\u201d \u201cthe old system works,\u201d or \u201cyou are checking the wrong step.\u201d",
+      "pattern": "feels wrong|old system works|wrong step|not the issue",
+      "agent_interpretation": "Downgrade the current hypothesis to provisional and compare assumptions.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "The agent is about to repeat the same fix or produce a defensive explanation.",
+      "pattern": "retry|I still think|as I said|you are right",
+      "agent_interpretation": "Stop and design a discriminating observation first.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The human is making an explicit preference choice rather than a factual disagreement.",
+      "pattern": "I prefer|taste|copy choice|business decision",
+      "why_it_matters": "Treat it as preference or business judgment, not a diagnostic hypothesis."
+    },
+    {
+      "description": "The next check would cross a protected gate or cause irreversible effects.",
+      "pattern": "production|live data|credential|destructive|billing",
+      "why_it_matters": "Define stop conditions and use the required gate before checking."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Human disagreement means the agent must immediately concede.",
+    "Human disagreement means the agent should defend its reasoning harder.",
+    "More retries are better than pausing to separate hypotheses."
+  ],
+  "first_checks": [
+    {
+      "check": "Write the human concern, the agent hypothesis, and the observation that would distinguish them.",
+      "why": "This prevents both blind deference and defensive inertia.",
+      "files": [
+        "scratchpad",
+        "status report"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Run the smallest safe check that separates the hypotheses.",
+      "why": "A direct observation is cheaper and more reliable than another broad retry.",
+      "files": [
+        "log line",
+        "screen state",
+        "test result",
+        "current code path"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Report which hypothesis survived and what changed in the plan.",
+      "why": "The human sees evidence instead of apology theatre or argument.",
+      "files": [
+        "final report",
+        "handoff"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A human factual objection conflicts with the agent\u2019s current diagnosis.",
+      "action": "diagnose",
+      "action_detail": "reset_hypothesis_and_check_discriminating_observation",
+      "then": "State that the current hypothesis is provisional, run the smallest safe differentiating check, then continue only from the evidence.",
+      "confidence": "high",
+      "source_ids": [
+        "launch-seed-6-owner-disagreement-reflection-2026-05-11"
+      ]
+    },
+    {
+      "condition": "The discriminating check would touch protected state.",
+      "action": "human_gate",
+      "action_detail": "define_stop_conditions_before_check",
+      "then": "Stop and route through the appropriate safety gate before touching protected state.",
+      "confidence": "medium",
+      "source_ids": [
+        "launch-seed-6-owner-disagreement-reflection-2026-05-11"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not answer disagreement with automatic capitulation.",
+    "Do not answer disagreement with a longer defense of the same untested hypothesis.",
+    "Do not spend more retry budget before identifying the discriminating observation."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Convert the disagreement into a two-hypothesis check, run the smallest safe observation, and report the surviving explanation."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This public record is de-identified. It does not authorize bypassing human, maintainer, security, publication, billing, data, or credential gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "launch-seed-6-owner-disagreement-reflection-2026-05-11",
+        "url": "artifact:source-notes/launch-seed-6-owner-disagreement-reflection-2026-05-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Human disagreement exposed a need for hypothesis reset and contrastive verification rather than blind deference or self-defense.",
+        "supports": "Supports the operational disagreement-handling pattern."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

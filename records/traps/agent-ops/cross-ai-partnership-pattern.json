@@ -1,0 +1,195 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.cross-ai-partnership-pattern",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Cross-AI partnership needs roles, evidence, and one synthesis",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "Multiple AI voices help only when their roles, evidence, mutable-state boundaries, and final synthesis are explicit. Otherwise peer review turns into blurred ownership or approval laundering.",
+  "ai_value": "Helps agents use other agents for review, taste judgment, relay, and risk checking without confusing peer input with authority or hiding dissent.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a task uses more than one AI voice for implementation, review, second opinion, or synthesis",
+      "a human or external relay passes messages between isolated AI instances",
+      "parallel agents might touch the same mutable files, tickets, state, or release decision"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "curation batch reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Several agents are asked to comment on the same decision without named roles.",
+      "pattern": "multi-agent|second opinion|reviewer|synthesizer|relay",
+      "agent_interpretation": "Assign roles before treating the outputs as comparable evidence.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "A peer response is being cited as permission to proceed.",
+      "pattern": "approved by another AI|no objection|peer agreed",
+      "agent_interpretation": "Use peer input as evidence only; authority gates live elsewhere.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "Two agents may edit or interpret the same mutable work item.",
+      "pattern": "shared task|same file|same branch|same state",
+      "agent_interpretation": "Partition ownership or serialize the mutable part before parallel work.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The task is simple, sequential, and has no independent review need.",
+      "pattern": "simple one-step|single file|no review risk",
+      "why_it_matters": "Extra agents may add cost and confusion rather than safety."
+    },
+    {
+      "description": "A required maintainer, owner, legal, security, or publication gate is present.",
+      "pattern": "required approval|legal|security|publication|billing",
+      "why_it_matters": "AI consensus can inform the gate but cannot replace it."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "More AI voices automatically make a decision safer.",
+    "The loudest or majority AI view should win by default.",
+    "A human relay or peer review message is equivalent to authorization."
+  ],
+  "first_checks": [
+    {
+      "check": "Name the roles before review starts: author, reviewer, second opinion, relay, or synthesizer.",
+      "why": "Role names expose conflicts of interest and prevent review from becoming another implementation pass.",
+      "files": [
+        "briefing",
+        "review packet"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Preserve dissent and evidence separately from the final decision.",
+      "why": "The final synthesis should explain why one view won without erasing minority concerns.",
+      "files": [
+        "review notes",
+        "final synthesis"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Define write partitions or serialize shared state before parallel mutation.",
+      "why": "This prevents agents from overwriting each other or laundering ownership.",
+      "files": [
+        "task plan",
+        "git status",
+        "shared tracker"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The work needs independent review or taste judgment and roles can be separated.",
+      "action": "modify_workflow",
+      "action_detail": "separate_roles_and_synthesize_once",
+      "then": "Run bounded multi-voice review, preserve dissent, then produce one accountable synthesis that names accepted and rejected points.",
+      "confidence": "high",
+      "source_ids": [
+        "launch-seed-2-four-voice-review-2026-05-10",
+        "launch-seed-3-human-relay-critique-2026-05-10",
+        "launch-seed-7-cross-actor-review-pairing-2026-05-11"
+      ]
+    },
+    {
+      "condition": "The peer output is being used to cross a protected gate.",
+      "action": "human_gate",
+      "action_detail": "peer_review_is_not_authority",
+      "then": "Stop at the actual authority gate; keep the peer output only as supporting evidence.",
+      "confidence": "high",
+      "source_ids": [
+        "launch-seed-7-cross-actor-review-pairing-2026-05-11"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not treat another AI\u2019s agreement as permission for protected actions.",
+    "Do not run parallel agents on shared mutable state without ownership boundaries.",
+    "Do not hide disagreement; summarize it and decide from evidence."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Use cross-AI work as structured partnership: roles first, evidence preserved, mutable state partitioned, and one accountable synthesis at the end."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This public record is de-identified. It does not authorize bypassing human, maintainer, security, publication, billing, data, or credential gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "launch-seed-2-four-voice-review-2026-05-10",
+        "url": "artifact:source-notes/launch-seed-2-four-voice-review-2026-05-10",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "A multi-voice taste decision was useful because roles and synthesis were explicit, not because the AIs merely voted.",
+        "supports": "Supports the role-and-synthesis pattern."
+      },
+      {
+        "id": "launch-seed-3-human-relay-critique-2026-05-10",
+        "url": "artifact:source-notes/launch-seed-3-human-relay-critique-2026-05-10",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Cross-instance critique mediated through a relay improved roadmap structure when the relay was treated as transport rather than authority.",
+        "supports": "Supports the relay-as-transport and preserved-dissent guidance."
+      },
+      {
+        "id": "launch-seed-7-cross-actor-review-pairing-2026-05-11",
+        "url": "artifact:source-notes/launch-seed-7-cross-actor-review-pairing-2026-05-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Role separation between author, implementer, and reviewer catches motivated-reasoning failures that same-instance reflection misses.",
+        "supports": "Supports the cross-actor review portion of the consolidated pattern."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

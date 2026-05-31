@@ -1,0 +1,166 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.mechanical-migrations-need-enforced-target-state",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Mechanical migrations need enforced target state",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "Large-surface migrations are not done because search and review look clean. Define the target state mechanically, ban old shapes in scope, keep allowlists small, and run checks that prove the migration cannot silently regress.",
+  "ai_value": "Helps agents finish theme, API, schema, naming, and other broad migrations with enforceable checks instead of relying on eyeballing rare paths.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a migration replaces fixed values, old APIs, deprecated names, or scattered patterns across many files",
+      "some surfaces are rarely visited or generated",
+      "a sibling checkout, stale branch, or partial implementation could reintroduce the old shape"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "curation batch reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Review says the migration is complete but there is no lint, test, or generator enforcing the new shape.",
+      "pattern": "migration complete|search passed|manual review|no lint",
+      "agent_interpretation": "Treat completion as fragile until the old pattern is mechanically banned in scope.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "An allowlist exists but has broad paths or unexplained exceptions.",
+      "pattern": "allowlist|exception|ignored path",
+      "agent_interpretation": "Shrink and explain exceptions so they remain debt, not silent permission.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The migration is a one-file obvious rename with a compiler-enforced failure on old usage.",
+      "pattern": "single file|compiler error",
+      "why_it_matters": "A lighter check may be enough."
+    },
+    {
+      "description": "The old shape intentionally remains supported as public compatibility.",
+      "pattern": "backward compatibility|legacy support",
+      "why_it_matters": "Then the target state is coexistence; tests should state the boundary."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Search-and-replace plus review is enough for broad migrations.",
+    "Allowlisted exceptions prove the migration is complete.",
+    "A clean current checkout means stale sibling branches cannot reintroduce old shapes."
+  ],
+  "first_checks": [
+    {
+      "check": "Define the target state and the old patterns banned in the migration scope.",
+      "why": "A check needs an explicit forbidden set and scope.",
+      "files": [
+        "migration plan",
+        "lint config"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Add or run a mechanical check for banned patterns and undefined new references.",
+      "why": "This catches rare screens and stale generated surfaces.",
+      "files": [
+        "lint output",
+        "generator validation",
+        "test output"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Inspect related checkouts or branches before handoff when they may reintroduce the old shape.",
+      "why": "Operational residue can undo a correct migration after merge.",
+      "files": [
+        "git status",
+        "branch list",
+        "handoff note"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A broad migration lacks mechanical enforcement for the target state.",
+      "action": "modify_workflow",
+      "action_detail": "add_migration_check_before_completion",
+      "then": "Add a scoped lint/test/generator check or keep the migration incomplete with explicit debt.",
+      "confidence": "high",
+      "source_ids": [
+        "standalone-theme-token-mechanical-enforcement-2026-05-23"
+      ]
+    },
+    {
+      "condition": "Exceptions are needed.",
+      "action": "diagnose",
+      "action_detail": "keep_allowlist_small_path_specific_and_reasoned",
+      "then": "Keep exceptions narrow, path-specific, and documented with follow-up criteria.",
+      "confidence": "medium",
+      "source_ids": [
+        "standalone-theme-token-mechanical-enforcement-2026-05-23"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not declare broad migration complete from search results alone.",
+    "Do not use broad allowlists as proof of completion.",
+    "Do not ignore stale sibling checkouts that can reintroduce the old shape."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Turn the desired migration state into a scoped mechanical check, explain any allowlist, and verify related checkout residue before handoff."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This public record is de-identified. It does not authorize bypassing human, maintainer, security, publication, billing, data, or credential gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "standalone-theme-token-mechanical-enforcement-2026-05-23",
+        "url": "artifact:source-notes/standalone-theme-token-mechanical-enforcement-2026-05-23",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "A theme-token migration candidate showed that fixed colors, undefined variables, contrast gaps, and stale checkouts require mechanical enforcement, not review alone.",
+        "supports": "Supports the generalized mechanical-migration record."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

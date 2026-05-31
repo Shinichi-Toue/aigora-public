@@ -1,0 +1,198 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.external-contracts-need-authoritative-observation",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "External contracts need authoritative observation, not inference",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "When automating an external UI, one-shot protocol, or partner API, do not infer the contract from memory, public hints, or adjacent examples. Collect live, official, authorized evidence before implementation or enablement.",
+  "ai_value": "Helps agents avoid hallucinated selectors, burned bootstrap tokens, and guessed authenticated fields by insisting on the right evidence source for each external contract.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "browser automation against a third-party single-page UI",
+      "one-shot bootstrap or exchange protocols with credentials or session tokens",
+      "partner, authenticated, or sandbox-only API fields not fully described in public docs"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "curation batch reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The agent is writing selectors for a UI it does not own without a fresh page artifact.",
+      "pattern": "selector|button text|SPA|DOM|locator",
+      "agent_interpretation": "Pause implementation and capture a read-only live UI artifact first.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "A one-shot credential or bootstrap token must be exchanged exactly once.",
+      "pattern": "one-shot|bootstrap|exchange token|session bearer",
+      "agent_interpretation": "Use tested helper code or explicit protocol docs; do not reconstruct the request shape from a short card.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "Required mapper fields are missing from public docs but seem guessable from examples.",
+      "pattern": "partner API|authenticated fields|required field|public docs",
+      "agent_interpretation": "Block enablement until authorized docs or sandbox evidence confirms the fields.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The target contract is owned by the project and covered by current tests or source.",
+      "pattern": "owned UI|local API|unit tests",
+      "why_it_matters": "Use the project source and tests; external-contract recon may not be needed."
+    },
+    {
+      "description": "The work is read-only documentation triage that will not call the external system or enable behavior.",
+      "pattern": "read-only notes|no external calls",
+      "why_it_matters": "Record uncertainty clearly rather than implementing from it."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A prior memory of the UI is good enough for selectors.",
+    "Public examples reveal authenticated partner fields.",
+    "A plausible token exchange shape is safe to try because the credential can be retried."
+  ],
+  "first_checks": [
+    {
+      "check": "Identify the authoritative evidence source for the contract.",
+      "why": "DOM needs live observation; protocols need exact helper/tests; authenticated APIs need official or sandbox evidence.",
+      "files": [
+        "recon artifact",
+        "official docs",
+        "sandbox trace",
+        "helper tests"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Capture or cite the evidence before implementation or enablement.",
+      "why": "The implementation should point to observed selectors, exact protocol fields, or confirmed mapper fields.",
+      "files": [
+        "review packet",
+        "test fixture",
+        "evidence note"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Add tests for the confirmed contract shape and failure modes.",
+      "why": "Tests prevent later agents from re-inventing the same external contract.",
+      "files": [
+        "selector test",
+        "protocol test",
+        "mapper validation test"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A contract is external and volatile or credential-sensitive.",
+      "action": "modify_workflow",
+      "action_detail": "require_authoritative_observation_before_implementation",
+      "then": "Stop guessing; collect the appropriate live, official, authorized, or tested evidence before writing or enabling code.",
+      "confidence": "high",
+      "source_ids": [
+        "launch-seed-8-recon-first-spa-automation-2026-05-11",
+        "standalone-bootstrap-self-inference-2026-05-23",
+        "marketplace-authenticated-mapper-2026-05-14"
+      ]
+    },
+    {
+      "condition": "The first attempt consumed or may consume a one-shot credential.",
+      "action": "human_gate",
+      "action_detail": "stop_after_one_shot_uncertainty",
+      "then": "Do not retry with guessed shapes; preserve redacted evidence and route through the approved credential recovery path.",
+      "confidence": "high",
+      "source_ids": [
+        "standalone-bootstrap-self-inference-2026-05-23"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not write third-party SPA selectors from memory.",
+    "Do not spend one-shot credentials to test plausible request shapes.",
+    "Do not fill authenticated API fields from public examples unless authorized evidence confirms them."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Name the external contract, gather the right authoritative observation for that contract, and only then implement or enable behavior."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This public record is de-identified. It does not authorize bypassing human, maintainer, security, publication, billing, data, or credential gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "launch-seed-8-recon-first-spa-automation-2026-05-11",
+        "url": "artifact:source-notes/launch-seed-8-recon-first-spa-automation-2026-05-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Browser automation against a third-party SPA failed repeatedly when selectors were guessed instead of observed from a live read-only page artifact.",
+        "supports": "Supports the live-recon mechanism."
+      },
+      {
+        "id": "standalone-bootstrap-self-inference-2026-05-23",
+        "url": "artifact:source-notes/standalone-bootstrap-self-inference-2026-05-23",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "A general agent can infer a plausible but wrong one-shot bootstrap exchange and consume the only credential before storing the returned session correctly.",
+        "supports": "Supports helper-first, tested one-shot protocol handling."
+      },
+      {
+        "id": "marketplace-authenticated-mapper-2026-05-14",
+        "url": "artifact:source-notes/marketplace-authenticated-mapper-2026-05-14",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Authenticated provider mapper fields may be absent from public docs; guessing required fields risks incorrect enablement.",
+        "supports": "Supports authorized-docs or sandbox-evidence requirements."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.consult-before-changing-another-agent-work",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Consult before changing another agent\u2019s work item",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "In shared agent workflows, another agent\u2019s task, claim, or status is mutable ownership state. Before materially changing it, consult or record a handoff instead of silently editing across actor boundaries.",
+  "ai_value": "Helps agents avoid ownership drift, duplicate work, and invisible scope expansion when multiple agents share a task tracker or coordination surface.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a multi-agent project uses shared tickets, claims, task records, branches, or ownership markers",
+      "one agent wants to update another agent\u2019s work item, scope, status, or expected artifacts",
+      "the change is not a purely mechanical typo or safety-preserving note"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "curation batch reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The target work item is owned by another actor or active session.",
+      "pattern": "assigned to other|active claim|owned by|in progress",
+      "agent_interpretation": "Treat the item as someone else\u2019s mutable state, not shared scratch.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "The proposed edit changes purpose, scope, status, expected artifacts, or priority.",
+      "pattern": "scope update|status change|expected artifact|priority",
+      "agent_interpretation": "Consult before material changes so ownership remains legible.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The change is a harmless typo, broken link repair, or append-only factual evidence with no ownership effect.",
+      "pattern": "typo|dead link|append evidence",
+      "why_it_matters": "A lightweight note may be enough if project rules allow it."
+    },
+    {
+      "description": "Urgent safety preservation requires marking a blocker or stopping a harmful action.",
+      "pattern": "security incident|data loss|active harm",
+      "why_it_matters": "Preserve safety first, then record the reason and notify the owner/agent through the normal path."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Shared task records are safe for any agent to edit because they are shared.",
+    "If the change is helpful, consultation is bureaucracy.",
+    "A status update cannot change ownership."
+  ],
+  "first_checks": [
+    {
+      "check": "Identify the current owner, active session, and material fields before editing.",
+      "why": "This separates safe notes from ownership-changing updates.",
+      "files": [
+        "task record",
+        "claim state",
+        "handoff"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Ask for or record a peer consultation covering the exact intended change.",
+      "why": "A small consultation preserves ownership boundaries and catches scope drift.",
+      "files": [
+        "consult note",
+        "coordination message"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "If consultation is impossible, append a narrow blocker or handoff instead of rewriting ownership.",
+      "why": "This preserves evidence without taking over silently.",
+      "files": [
+        "coordination log",
+        "blocker note"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A change would materially alter another agent\u2019s work item.",
+      "action": "modify_workflow",
+      "action_detail": "consult_before_material_cross_actor_edit",
+      "then": "Pause the edit, consult the owner/reviewer actor or record a handoff, and proceed only with the covered change.",
+      "confidence": "high",
+      "source_ids": [
+        "launch-seed-12-cross-actor-consultation-2026-05-11"
+      ]
+    },
+    {
+      "condition": "The edit is urgent safety preservation.",
+      "action": "escalate",
+      "action_detail": "make_minimal_safety_note_then_notify",
+      "then": "Make only the minimal safety-preserving note and immediately surface the reason through the coordination path.",
+      "confidence": "medium",
+      "source_ids": [
+        "launch-seed-12-cross-actor-consultation-2026-05-11"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not silently rewrite another agent\u2019s scope, status, or expected artifacts.",
+    "Do not use consultation to launder approval for protected gates.",
+    "Do not block urgent safety preservation on etiquette; record the exception afterward."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Before touching another agent\u2019s mutable work item, identify ownership and get a small consultation or leave a narrow handoff instead."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This public record is de-identified. It does not authorize bypassing human, maintainer, security, publication, billing, data, or credential gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "launch-seed-12-cross-actor-consultation-2026-05-11",
+        "url": "artifact:source-notes/launch-seed-12-cross-actor-consultation-2026-05-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Shared task tracker edits by one AI can cause ownership drift unless peer consultation precedes material changes.",
+        "supports": "Supports the cross-actor ownership-boundary record."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

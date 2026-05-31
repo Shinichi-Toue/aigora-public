@@ -1,0 +1,162 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.quoted-heredocs-prevent-report-execution",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Quoted heredocs prevent accidental report execution",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "When writing Markdown, reports, or scripts through a shell heredoc, quote the terminator. Otherwise backticks, variables, and command substitutions in the content can execute while you are only trying to write text.",
+  "ai_value": "Helps agents avoid turning harmless-looking documentation or handoff text into accidental shell execution, file corruption, or secret exposure.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "an agent writes Markdown, JSON, shell snippets, or handoff reports via heredoc",
+      "the content includes backticks, dollar signs, command substitutions, or examples of shell commands",
+      "the file being written will be trusted as evidence or instructions"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "curation batch reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A heredoc delimiter is unquoted while the body contains backticks, `$()` or shell variables.",
+      "pattern": "<<EOF|`|$\\(|$VAR",
+      "agent_interpretation": "Assume the shell may expand or execute content before it reaches the file.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "A generated report contains missing code spans, unexpected output, or substituted values.",
+      "pattern": "missing backticks|expanded variable|unexpected command output",
+      "agent_interpretation": "Re-read the file and check whether heredoc expansion occurred.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "error output",
+        "review evidence",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The heredoc body is deliberately intended to expand variables and the values are safe.",
+      "pattern": "template expansion|intended variable",
+      "why_it_matters": "Then document that intent and avoid secret-bearing content."
+    },
+    {
+      "description": "A non-shell file writer or safe templating library is used instead.",
+      "pattern": "writeFile|safe writer|no shell",
+      "why_it_matters": "The heredoc-specific trap does not apply."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Markdown code spans inside heredocs are inert.",
+    "A report-writing command cannot execute code because it is not \u201crunning\u201d the report.",
+    "If the command succeeded, the file content must be what was intended."
+  ],
+  "first_checks": [
+    {
+      "check": "Use a quoted terminator such as `<<'EOF'` for literal content.",
+      "why": "This disables shell expansion inside the heredoc body.",
+      "files": [
+        "shell command",
+        "report writer"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Re-read the file after writing.",
+      "why": "Verification catches accidental expansion, truncation, and formatting damage.",
+      "files": [
+        "written file"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Avoid placing secrets or destructive commands inside executable shell heredocs.",
+      "why": "If quoting is wrong, sensitive content or commands can leak or run.",
+      "files": [
+        "command draft"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A heredoc writes literal documentation, reports, or examples.",
+      "action": "modify_workflow",
+      "action_detail": "quote_heredoc_delimiter_and_reread",
+      "then": "Quote the delimiter, write the file, then re-read the result before claiming the artifact exists.",
+      "confidence": "high",
+      "source_ids": [
+        "seed-9-heredoc-execution-2026-05-11"
+      ]
+    },
+    {
+      "condition": "The heredoc already ran unquoted with shell syntax inside.",
+      "action": "diagnose",
+      "action_detail": "inspect_output_and_rewrite_safely",
+      "then": "Inspect the resulting file and shell output, then rewrite through a quoted delimiter or safer writer.",
+      "confidence": "medium",
+      "source_ids": [
+        "seed-9-heredoc-execution-2026-05-11"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not use unquoted heredocs for literal Markdown containing backticks or `$()` examples.",
+    "Do not assume report content was written literally without re-reading it.",
+    "Do not include secret-bearing examples in a shell-expanded heredoc."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Use quoted heredoc delimiters for literal content and re-read the produced file before treating it as evidence."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": false,
+    "notes": "This public record is de-identified. It does not authorize bypassing human, maintainer, security, publication, billing, data, or credential gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "seed-9-heredoc-execution-2026-05-11",
+        "url": "artifact:source-notes/seed-9-heredoc-execution-2026-05-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "AI recovery guidance identified unquoted heredocs containing shell syntax as a recurring report-writing hazard.",
+        "supports": "Supports the quote-and-reread publication record."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}
