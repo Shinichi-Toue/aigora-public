@@ -1,0 +1,162 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.check-commands-must-share-apply-predicates",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Check commands must share the predicates used by apply commands",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "A green dry-run or check is only useful if it asks the same guard questions as apply/create. Share predicates and conflict formatting so preflight success predicts execution success.",
+  "ai_value": "Helps agents fix false-green preflights by unifying guard logic instead of adding another summary check that cannot catch the conflicts the mutating command will reject.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a command pair has check/dry-run/preflight and apply/create/mutate modes",
+      "apply/create stops on conflicts that check did not report",
+      "guard predicates include stale ownership, broad scope, exclusive claims, collisions, or permission boundaries"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "closeout seeds reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Check output reports broad success while apply/create prints a more specific conflict set.",
+      "pattern": "preflight passed|check passed|apply failed|conflict",
+      "agent_interpretation": "Compare the actual predicates, not just command names.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "The check command has its own simplified query, filter, or formatter.",
+      "pattern": "dry run path|separate predicate|summary only",
+      "agent_interpretation": "Route it through the same guard path used by apply/create.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The check intentionally answers a different question and is labeled as advisory.",
+      "pattern": "advisory check|informational only",
+      "why_it_matters": "Then do not present it as predictive preflight evidence."
+    },
+    {
+      "description": "Apply fails because external state changed after a truly equivalent check.",
+      "pattern": "state changed after check|race",
+      "why_it_matters": "That is a freshness/race problem; re-check immediately before apply."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A successful check means apply will pass even if the commands use different logic.",
+    "Dry-run mode is safe enough because it does not mutate state.",
+    "Conflict formatting can differ without affecting operator trust."
+  ],
+  "first_checks": [
+    {
+      "check": "Trace check/dry-run and apply/create to the guard predicate they call.",
+      "why": "The safest design has one predicate and one conflict formatter shared by both paths.",
+      "files": [
+        "command handlers",
+        "guard helpers"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Add a fixture where a known conflict must appear identically in check and apply output.",
+      "why": "A parity test prevents future drift between preflight and mutation.",
+      "files": [
+        "parity test",
+        "conflict fixture"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "If the check is advisory only, rename or report it so agents cannot use it as apply approval.",
+      "why": "Language should match predictive power.",
+      "files": [
+        "CLI help",
+        "command output"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Check and apply are meant to validate the same operation.",
+      "action": "modify_code",
+      "action_detail": "share_guard_predicate_and_conflict_formatter",
+      "then": "Make check call the same guard path in non-mutating mode, then add a parity fixture.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-b3-check-apply-predicate-parity-2026-05-16"
+      ]
+    },
+    {
+      "condition": "Check answers a narrower advisory question.",
+      "action": "modify_workflow",
+      "action_detail": "label_check_as_non_predictive",
+      "then": "Do not allow it to satisfy apply/create readiness gates.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-b3-check-apply-predicate-parity-2026-05-16"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not let check and apply drift into separate guard predicates.",
+    "Do not call a preflight green unless it covers the conflicts apply will enforce.",
+    "Do not hide stricter apply conflicts behind a broad check summary."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Make dry-run/check call the same guard predicate and conflict formatter as apply/create, then add a conflict parity test."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "Refactoring command predicates is usually safe with tests; changing mutation permission semantics may require review."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "closeout-seed-b3-check-apply-predicate-parity-2026-05-16",
+        "url": "artifact:source-notes/check-commands-must-share-apply-predicates",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Dry-run/check commands must share guard predicates and conflict formatting with apply/create commands so preflight output is predictive.",
+        "supports": "Provides a de-identified internal closeout seed with failure condition, early signs, avoidance, and verification method; Claude and Gemini deliberation on 2026-06-01 judged it public-worthy."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

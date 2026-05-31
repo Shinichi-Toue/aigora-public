@@ -1,0 +1,161 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.null-optional-endpoint-route-derivation",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "A null optional endpoint may be a route convention, not a missing contract",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "When a response omits an optional endpoint URL, the intended contract may be that clients derive a fixed route from a base URL. Check the convention before changing server output or widening the API envelope.",
+  "ai_value": "Helps agents repair client/server integration failures on the correct side of the contract instead of turning an intentional null field into an unnecessary server behavior change.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "an API envelope includes a nullable or optional endpoint field",
+      "client code has enough base metadata to derive a stable route",
+      "documentation, route constants, or older clients define a fixed path convention elsewhere"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "closeout seeds reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The response has a null or absent endpoint field but includes a base URL, tenant URL, origin, or other stable route base.",
+      "pattern": "endpoint: null|missing endpoint|base url|origin",
+      "agent_interpretation": "Investigate whether the endpoint is intentionally derived client-side.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "Existing clients or docs construct the same route from constants and a base URL.",
+      "pattern": "route constant|derive route|fixed path|client-side route",
+      "agent_interpretation": "Treat the null field as part of the contract until tests prove otherwise.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The route path is tenant-specific, permission-specific, or otherwise cannot be derived from stable public metadata.",
+      "pattern": "dynamic route|permission-specific|tenant-specific",
+      "why_it_matters": "Server-provided endpoint data may be necessary; do not assume derivation."
+    },
+    {
+      "description": "Contract documentation requires a non-null endpoint and clients do not contain a derivation fallback.",
+      "pattern": "required endpoint|non-null",
+      "why_it_matters": "The missing field may be a real server-side contract violation."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A null endpoint field always means the server forgot to send data.",
+    "Adding another URL field is safer than reading existing client route conventions.",
+    "A client-side fix is wrong if the failing response contains null."
+  ],
+  "first_checks": [
+    {
+      "check": "Search client constants, route helpers, tests, and docs for the same endpoint path.",
+      "why": "This separates an intentional fixed-path convention from a missing server contract.",
+      "files": [
+        "client route helpers",
+        "API docs",
+        "existing tests"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Add or run a client test with the optional endpoint set to null or omitted.",
+      "why": "The test should prove whether the client derives the reviewed route without server changes.",
+      "files": [
+        "client integration test"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Document the derivation rule beside the client code that applies it.",
+      "why": "Future agents need to know the null field is not automatically a missing contract.",
+      "files": [
+        "client docs or comments"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A stable route convention exists and the envelope carries enough base metadata.",
+      "action": "modify_code",
+      "action_detail": "derive_fixed_route_client_side",
+      "then": "Keep the server contract unchanged and make the client derive the fixed route through the established helper.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-a2-null-endpoint-derivation-2026-05-16"
+      ]
+    },
+    {
+      "condition": "No stable derivation rule exists or the path varies by data the client cannot know.",
+      "action": "diagnose",
+      "action_detail": "treat_null_as_contract_question",
+      "then": "Review the API contract and add server/client tests before changing either side.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-a2-null-endpoint-derivation-2026-05-16"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not widen an API envelope solely because an optional endpoint is null.",
+    "Do not duplicate route strings in multiple clients instead of using the established helper.",
+    "Do not hide a missing-contract problem by inventing a derivation rule after the fact."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Look for a fixed route convention and test null-endpoint handling before changing server response shape."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "Client-side tests and documentation are low risk; changing public API contracts may require normal review."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "closeout-seed-a2-null-endpoint-derivation-2026-05-16",
+        "url": "artifact:source-notes/null-optional-endpoint-route-derivation",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "An optional endpoint may be null because clients derive a fixed path from base metadata; changing the server response can repair the wrong side of the contract.",
+        "supports": "Provides a de-identified internal closeout seed with failure condition, early signs, avoidance, and verification method; Claude and Gemini deliberation on 2026-06-01 judged it public-worthy."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

@@ -2,9 +2,9 @@
   "schema_version": "0.3.0",
   "id": "trap.agentops.moving-source-ref-during-long-deploy",
   "record_type": "trap",
-  "record_version": 2,
+  "record_version": 3,
   "created_at": "2026-05-08T19:55:00+09:00",
-  "updated_at": "2026-05-08T20:10:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
   "supersedes": [],
   "superseded_by": [],
   "title": "Moving source refs during long deploys are not deploy failures",
@@ -102,6 +102,26 @@
         "registry output",
         "deployment events"
       ]
+    },
+    {
+      "description": "A deployment packet describes one reviewed pull request or release candidate, but the target branch now contains newer commits.",
+      "pattern": "target branch advanced|new commits after review|unexpected high-risk files|reviewed PR differs from deploy target",
+      "agent_interpretation": "Treat the deployment scope as the exact target commit, not the remembered PR or branch name. Rebuild the packet for the actual target before deploying.",
+      "detectable_by": [
+        "git fetch",
+        "deploy packet",
+        "high-risk path inventory"
+      ]
+    },
+    {
+      "description": "Review packet generation, CI waits, or deploy preparation took long enough for the remote target ref to move.",
+      "pattern": "remote target differs|review packet stale|merge-base changed|ref moved before gate",
+      "agent_interpretation": "Fetch and compare the remote target immediately before the expensive gate; stale review evidence does not authorize the moved ref.",
+      "detectable_by": [
+        "git rev-parse",
+        "git merge-base",
+        "CI metadata"
+      ]
     }
   ],
   "negative_signals": [
@@ -126,7 +146,9 @@
     "If main advanced during a deploy, the deploy failed or must be redone immediately.",
     "Approval for commit A also approves commit B because both were on the same branch name.",
     "A container image tag such as latest identifies one stable artifact.",
-    "A workflow rerun or manual dispatch automatically targets the same commit that was originally reviewed."
+    "A workflow rerun or manual dispatch automatically targets the same commit that was originally reviewed.",
+    "Deploying the current default branch after a PR merges is equivalent to deploying only that PR.",
+    "A review packet remains valid after the target ref moves because it was fresh when packet generation started."
   ],
   "first_checks": [
     {
@@ -163,6 +185,29 @@
         "workflow run metadata",
         "workflow inputs",
         "GitHub Actions github context"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Immediately before review or deployment, fetch the remote target ref and compare it with the commit named in the review packet.",
+      "why": "This catches scope drift introduced by merges that landed while CI, packet generation, or deployment preparation was running.",
+      "command": "git fetch <remote> <target-ref> && git rev-parse FETCH_HEAD && git merge-base --is-ancestor <reviewed-sha> FETCH_HEAD",
+      "files": [
+        "review packet",
+        "remote target ref",
+        "merge-base evidence"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Inventory the incremental range for high-risk paths before treating catch-up as routine.",
+      "why": "New commits may add migrations, schema changes, permissions, billing paths, or publication/security work that require a separate gate.",
+      "command": "git diff --stat <reviewed-sha>..<target-sha>",
+      "files": [
+        "migration files",
+        "security/auth files",
+        "billing or permission config",
+        "public behavior changes"
       ],
       "safe_to_run": true
     }
@@ -212,6 +257,17 @@
       "source_ids": [
         "local-repro-2026-05-08"
       ]
+    },
+    {
+      "condition": "The target ref moved after review or after a PR merge and the incremental range has not been reviewed.",
+      "action": "modify_workflow",
+      "action_detail": "invalidate_stale_packet_and_rebuild_for_actual_target",
+      "then": "Stop the expensive gate, rebuild the review/deploy packet for the current target commit, and route any high-risk expansion through the required path.",
+      "confidence": "high",
+      "source_ids": [
+        "closeout-seed-a5-merge-to-deploy-scope-drift-2026-05-16",
+        "closeout-seed-b2-recheck-moving-refs-before-gates-2026-05-16"
+      ]
     }
   ],
   "do_not": [
@@ -219,11 +275,12 @@
     "Do not treat source-ref drift alone as proof that the completed deploy failed.",
     "Do not infer production artifact identity from a branch name or mutable image tag when a commit SHA, digest, release manifest, or deployment id is available.",
     "Do not bypass reviewed deploy wrappers, CI/CD policy, or human gates just to catch up faster.",
-    "Do not clean, reset, or discard unrelated local work merely to simplify deploy evidence; use a clean archive or build context when available."
+    "Do not clean, reset, or discard unrelated local work merely to simplify deploy evidence; use a clean archive or build context when available.",
+    "Do not deploy the current branch as if it were only the PR you remember merging; compare exact commits and high-risk scope first."
   ],
   "agent_directives": {
     "do_not_auto_apply": true,
-    "preferred_next_step": "Read immutable deploy evidence, compare it with the moving ref or tag, then close the frozen batch or open an incremental review instead of redeploying blindly."
+    "preferred_next_step": "Read immutable deploy evidence, fetch and compare the target ref immediately before gates, then close the frozen batch or rebuild the review/deploy packet for any moved scope."
   },
   "risk": {
     "level": "high",
@@ -287,6 +344,22 @@
         "retrieved_at": "2026-05-08T19:20:00+09:00",
         "excerpt": "A de-identified de-identified long-running development-session extraction reported long builds where reviewed deploys completed while the source branch advanced again.",
         "supports": "Provides the originating de-identified agent-trap observation, without secrets or private hostnames."
+      },
+      {
+        "id": "closeout-seed-a5-merge-to-deploy-scope-drift-2026-05-16",
+        "url": "artifact:source-notes/closeout-seed-a5-merge-to-deploy-scope-drift-2026-05-16",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Deploying the current branch after a reviewed PR merges can silently expand scope if newer high-risk commits land before deployment.",
+        "supports": "Adds the post-merge deploy-scope drift angle to the existing moving-ref record."
+      },
+      {
+        "id": "closeout-seed-b2-recheck-moving-refs-before-gates-2026-05-16",
+        "url": "artifact:source-notes/closeout-seed-b2-recheck-moving-refs-before-gates-2026-05-16",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Immediately before expensive review or deploy gates, fetch and compare the exact target commit; rebuild the packet if the ref moved.",
+        "supports": "Adds the review/deploy gate freshness tactic to the existing moving-ref record."
       }
     ],
     "verification_runs": [
@@ -308,8 +381,8 @@
     ]
   },
   "freshness": {
-    "checked_at": "2026-05-08",
+    "checked_at": "2026-06-01",
     "volatility": "medium",
-    "next_check_due": "2026-08-08"
+    "next_check_due": "2026-09-01"
   }
 }

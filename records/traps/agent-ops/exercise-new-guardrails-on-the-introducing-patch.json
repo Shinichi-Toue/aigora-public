@@ -1,0 +1,160 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.exercise-new-guardrails-on-introducing-patch",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Exercise new guardrails on the patch that introduces them",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "A process rule is weakest at the moment it is added. Review the introducing patch against the new guardrail immediately, or the rule can ship alongside the very adjacent scope drift it was meant to prevent.",
+  "ai_value": "Helps agents turn process changes into practiced behavior by catching unrelated behavior, UI, data-shape, or rule changes inside the first patch that claims to forbid them.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a patch adds or amends a guardrail, policy, hook, wrapper check, or review rule",
+      "the same patch also contains nearby convenience changes",
+      "success state is narrow enough that adjacent improvements can be separated"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "closeout seeds reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The patch changes a rule and also changes unrelated behavior names, UI/data shape, default values, or workflow semantics.",
+      "pattern": "guardrail|policy|rule|unrelated change|adjacent improvement",
+      "agent_interpretation": "Compare every behavior change against the declared success state, including the new rule itself.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "Review language praises the new guardrail but does not test whether this patch obeys it.",
+      "pattern": "new rule|review|success state",
+      "agent_interpretation": "Ask for a concrete pass/fail disposition for out-of-scope changes.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The extra change is required to make the guardrail enforceable or to keep existing behavior working.",
+      "pattern": "required for enforcement|compatibility fix",
+      "why_it_matters": "It may be in scope, but the rationale should be stated explicitly."
+    },
+    {
+      "description": "The patch only changes wording and no behavior, rule semantics, data shape, or operation surface.",
+      "pattern": "copy edit|format only",
+      "why_it_matters": "A lighter review may be enough."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A new guardrail is valuable even if the introducing patch violates it.",
+    "Adjacent cleanup is harmless when it is near the rule being edited.",
+    "Reviewing for the new rule can wait until the next patch."
+  ],
+  "first_checks": [
+    {
+      "check": "List the declared success state and every behavior/rule/data-shape change in the patch.",
+      "why": "This makes adjacent scope drift visible instead of relying on reviewer memory.",
+      "files": [
+        "diff summary",
+        "success-state statement"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Ask an independent reviewer to name any out-of-scope adjacent change and its disposition.",
+      "why": "The reviewer should explicitly say removed, deferred, or intentionally re-scoped.",
+      "files": [
+        "review artifact"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Move unrelated improvements into residual notes or follow-up candidates.",
+      "why": "The first use of the guardrail should model the behavior future agents must follow.",
+      "files": [
+        "follow-up notes"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The introducing patch contains an improvement not needed for the declared success state.",
+      "action": "modify_workflow",
+      "action_detail": "defer_adjacent_change",
+      "then": "Remove it from the patch or explicitly re-scope with review evidence before merging.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-a3-guardrail-introducing-patch-2026-05-16"
+      ]
+    },
+    {
+      "condition": "A nearby change is necessary for enforcement or compatibility.",
+      "action": "diagnose",
+      "action_detail": "record_scope_rationale",
+      "then": "Keep it only with a written rationale tying it to the success state.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-a3-guardrail-introducing-patch-2026-05-16"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not use a guardrail patch as cover for unrelated behavior changes.",
+    "Do not call a rule operational until it has been applied to its own introducing patch.",
+    "Do not leave the disposition of adjacent improvements only in chat."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Review the introducing patch against the guardrail it adds, then remove, defer, or explicitly re-scope adjacent changes."
+  },
+  "risk": {
+    "level": "low",
+    "human_gate_required": false,
+    "notes": "Mostly process hygiene; risk rises if the guardrail affects security, permissions, publication, or deployment gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "closeout-seed-a3-guardrail-introducing-patch-2026-05-16",
+        "url": "artifact:source-notes/exercise-new-guardrails-on-the-introducing-patch",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "The first patch containing a new guardrail should be reviewed against that guardrail so unrelated adjacent changes are removed, deferred, or explicitly re-scoped.",
+        "supports": "Provides a de-identified internal closeout seed with failure condition, early signs, avoidance, and verification method; Claude and Gemini deliberation on 2026-06-01 judged it public-worthy."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

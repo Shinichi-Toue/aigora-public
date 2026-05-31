@@ -31,10 +31,24 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
 
 - trap.agentops.ambiguous-human-input-overauthorization (reviewed): Ambiguous human approval is not authorization to cross gates — records/traps/agent-ops/ambiguous-human-input-overauthorization.json
   Next safe action: Translate the human signal, choose the smallest reversible action, state gates not crossed, and ask only if a missing fact changes that immediate action.
+- trap.agentops.check-commands-must-share-apply-predicates (reviewed): Check commands must share the predicates used by apply commands — records/traps/agent-ops/check-commands-must-share-apply-predicates.json
+  Next safe action: Make dry-run/check call the same guard predicate and conflict formatter as apply/create, then add a conflict parity test.
 - trap.agentops.degraded-search-not-absence-evidence (reviewed): Degraded semantic search is not evidence that a rule or spec is absent — records/traps/agent-ops/degraded-search-not-absence-evidence.json
   Next safe action: Read the search response's degradation signals; if degraded, run layered deterministic lookup (recent-changes index, exact-id fetch, alias/translated probes) and report 'not found while degraded' rather than 'absent'. Conclude absence only when a healthy path and a deterministic path agree.
+- trap.agentops.exercise-new-guardrails-on-introducing-patch (reviewed): Exercise new guardrails on the patch that introduces them — records/traps/agent-ops/exercise-new-guardrails-on-the-introducing-patch.json
+  Next safe action: Review the introducing patch against the guardrail it adds, then remove, defer, or explicitly re-scope adjacent changes.
+- trap.agentops.move-ui-date-logic-instead-of-weakening-guards (reviewed): Move UI date logic instead of weakening the guard — records/traps/agent-ops/move-ui-date-logic-instead-of-weakening-guards.json
+  Next safe action: Locate the approved date-display boundary, move the logic there, and rerun the guard plus focused UI tests.
+- trap.agentops.moved-ui-tests-need-absence-and-presence (reviewed): Moved UI tests need absence and presence assertions — records/traps/agent-ops/moved-ui-tests-need-absence-and-presence.json
+  Next safe action: Run the source and destination surface tests together and assert both absence and presence for the moved item.
 - trap.agentops.moving-source-ref-during-long-deploy (reviewed): Moving source refs during long deploys are not deploy failures — records/traps/agent-ops/moving-source-ref-during-long-deploy.json
-  Next safe action: Read immutable deploy evidence, compare it with the moving ref or tag, then close the frozen batch or open an incremental review instead of redeploying blindly.
+  Next safe action: Read immutable deploy evidence, fetch and compare the target ref immediately before gates, then close the frozen batch or rebuild the review/deploy packet for any moved scope.
+- trap.agentops.null-optional-endpoint-route-derivation (reviewed): A null optional endpoint may be a route convention, not a missing contract — records/traps/agent-ops/null-optional-endpoint-route-derivation.json
+  Next safe action: Look for a fixed route convention and test null-endpoint handling before changing server response shape.
+- trap.agentops.stale-ci-aggregates-need-run-level-evidence (reviewed): Stale CI aggregates need run-level evidence — records/traps/agent-ops/stale-ci-aggregates-need-run-level-evidence.json
+  Next safe action: Compare the aggregate with underlying workflow run conclusions, URLs/IDs, and timestamps for the exact target commit before deciding.
+- trap.agentops.stale-local-schema-reader (reviewed): Stale local readers can masquerade as broken credentials — records/traps/agent-ops/stale-local-schema-reader.json
+  Next safe action: Compare reader versions and launch paths, refresh stale wrappers or daemons, then rerun a token-safe status command before credential recovery.
 - trap.agentops.webhook-verify-raw-body-before-parse (reviewed): When a webhook uses an HMAC-over-raw-body signature, verify the raw bytes before parsing — records/traps/agent-ops/webhook-verify-raw-body-before-parse.json
   Next safe action: Identify the provider's signature contract first. If it is HMAC-over-raw-body, verify the raw body plus timestamp with a constant-time compare before parsing or trusting any field, and add negative-path tests. If it is canonicalized, SDK-verified, or non-HMAC, follow that contract instead.
 - trap.git.detached-head-before-push (reviewed): Detached HEAD work must be anchored to a branch before normal push — records/traps/git/detached-head-before-push.json

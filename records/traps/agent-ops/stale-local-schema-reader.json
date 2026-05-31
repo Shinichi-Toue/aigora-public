@@ -1,0 +1,164 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.stale-local-schema-reader",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Stale local readers can masquerade as broken credentials",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "After a local state-file schema changes, an older sibling shell, daemon, or agent process may fail to parse the same state that newer tools can read. Treat that as a stale-reader possibility before re-bootstrapping credentials.",
+  "ai_value": "Helps agents avoid unnecessary credential resets, token exposure risk, and operator interruption when the real fix is refreshing wrapper code or restarting a long-lived reader.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a local state or session file recently gained a new schema version",
+      "one process can read or renew local state while another reports an unsupported schema or parse failure",
+      "wrappers, symlinks, background daemons, MCP servers, or agent sessions may still be running old reader code"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "closeout seeds reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "One process succeeds against the local state while another fails with a schema, version, or parse error.",
+      "pattern": "schema version|unsupported schema|parse failed|one session succeeds|one session fails",
+      "agent_interpretation": "Compare reader versions before treating the state as corrupt or credentials as expired.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "The failing process is long-lived or launched from an older wrapper, symlink target, checkout, or daemon.",
+      "pattern": "daemon|old wrapper|stale symlink|pre-update checkout|long-lived process",
+      "agent_interpretation": "Refresh or restart the reader path before asking for new credentials.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "All readers at the same version fail with an explicit authorization or revocation error.",
+      "pattern": "authorization failed|revoked|expired token|401",
+      "why_it_matters": "That points to a real credential/session problem rather than only a stale reader."
+    },
+    {
+      "description": "The state file was manually edited, truncated, or fails an integrity check in every reader.",
+      "pattern": "truncated|checksum mismatch|invalid json",
+      "why_it_matters": "Handle state corruption directly; refreshing code alone may not recover it."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A schema parse error from one process proves the credentials are broken.",
+    "If one shell fails, every active reader must be using the same code.",
+    "Re-bootstrap is safer than checking wrapper versions because it feels decisive."
+  ],
+  "first_checks": [
+    {
+      "check": "Run the token-safe status or validation command from a freshly updated reader.",
+      "why": "This proves whether the newer reader can parse and renew the same local state without printing secrets.",
+      "command": "project-approved status command; do not print token material",
+      "files": [
+        "token-safe status command",
+        "wrapper version output"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Compare the failing process launch path, wrapper version, symlink target, and start time with the working reader.",
+      "why": "A version or launch-path mismatch explains why two processes disagree about the same state.",
+      "command": "check process metadata and wrapper/version output",
+      "files": [
+        "process list",
+        "wrapper install path",
+        "symlink target"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Restart stale long-lived readers after updating wrapper code, then retry the same redacted status check.",
+      "why": "The correct fix should make the stale-reader error disappear without credential replacement.",
+      "files": [
+        "daemon or MCP server restart evidence"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A newer reader succeeds but an older long-lived process fails on schema/version parsing.",
+      "action": "diagnose",
+      "action_detail": "refresh_reader_before_rebootstrap",
+      "then": "Refresh the wrapper/checkout/symlink target, restart stale processes, and retry the token-safe status command before requesting new credentials.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-a1-stale-local-schema-reader-2026-05-16"
+      ]
+    },
+    {
+      "condition": "All refreshed readers fail with the same credential-specific authorization error.",
+      "action": "escalate",
+      "action_detail": "treat_as_credential_or_session_boundary",
+      "then": "Stop at the normal credential/session recovery boundary and preserve only redacted evidence.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-a1-stale-local-schema-reader-2026-05-16"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not print or copy token material while comparing reader behavior.",
+    "Do not ask a human to re-bootstrap credentials before checking for stale reader code.",
+    "Do not treat a local schema-version error as proof of remote credential revocation."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Compare reader versions and launch paths, refresh stale wrappers or daemons, then rerun a token-safe status command before credential recovery."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": true,
+    "notes": "Read-only version and status checks are low risk. Credential re-bootstrap or secret handling remains gated."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "closeout-seed-a1-stale-local-schema-reader-2026-05-16",
+        "url": "artifact:source-notes/stale-local-schema-reader",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "A stale process can report unsupported schema or parse failure while a refreshed reader handles the same local state successfully; credential re-bootstrap should be a later fallback.",
+        "supports": "Provides a de-identified internal closeout seed with failure condition, early signs, avoidance, and verification method; Claude and Gemini deliberation on 2026-06-01 judged it public-worthy."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

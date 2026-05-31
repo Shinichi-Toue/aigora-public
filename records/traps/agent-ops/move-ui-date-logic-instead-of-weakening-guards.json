@@ -1,0 +1,163 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.move-ui-date-logic-instead-of-weakening-guards",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Move UI date logic instead of weakening the guard",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "When a UI guard rejects inline date construction or formatting, the fix is usually to move date-sensitive logic to the approved helper or boundary, not to broaden the exception until the warning disappears.",
+  "ai_value": "Helps agents fix hydration, locale, timezone, and deterministic-rendering problems without silencing the project rule that was created to prevent them.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "browser-rendered UI source has a guard against inline date/time constructors or formatters",
+      "the change computes today, local dates, relative labels, or formatted timestamps near render code",
+      "the project already has helper, server-side, or explicit client-local display patterns"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "closeout seeds reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A lint, CI, or review guard flags date/time construction or formatting inside UI rendering code.",
+      "pattern": "Date\\(|new Date|Intl.DateTimeFormat|toLocale|timezone|hydration",
+      "agent_interpretation": "Move the logic to the approved layer before considering a guard exception.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "The UI change computes today, local date labels, or timezone-sensitive text directly in a component.",
+      "pattern": "today|local date|formatted label|timezone",
+      "agent_interpretation": "Check existing date-display patterns for deterministic or intentionally client-local rendering.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The component is explicitly the approved client-local date display boundary.",
+      "pattern": "client-local date display|approved component",
+      "why_it_matters": "The guard may not apply if this is the documented boundary."
+    },
+    {
+      "description": "The value is static build-time content with no locale or timezone behavior.",
+      "pattern": "static date|build time",
+      "why_it_matters": "Inline rendering may be acceptable under project rules."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "The fastest fix is to add another exception to the guard.",
+    "Date formatting near the UI is harmless if tests pass locally.",
+    "Hydration and timezone problems can be reviewed later."
+  ],
+  "first_checks": [
+    {
+      "check": "Find the project-approved date helper, server-side formatter, or client-local display component.",
+      "why": "Using the existing boundary preserves the rule instead of weakening it.",
+      "files": [
+        "date helper",
+        "UI guard documentation",
+        "display component"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Move the date-only or timezone-sensitive logic to that boundary.",
+      "why": "The UI component should receive a safe value or intentionally client-local display wrapper.",
+      "files": [
+        "UI component",
+        "date helper"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Rerun the failing guard and the relevant UI/unit tests.",
+      "why": "Passing both proves the architecture and behavior survived the move.",
+      "files": [
+        "lint/guard command",
+        "UI tests"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A guard flags inline date/time logic in ordinary browser-rendered UI.",
+      "action": "modify_code",
+      "action_detail": "relocate_date_logic_to_approved_boundary",
+      "then": "Move the logic into the existing helper/server/client-local pattern, then rerun the guard.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-a4-ui-date-guardrail-2026-05-16"
+      ]
+    },
+    {
+      "condition": "No approved boundary exists and the feature truly needs client-local time.",
+      "action": "escalate",
+      "action_detail": "define_date_display_pattern_before_exception",
+      "then": "Create or review a narrow display pattern rather than weakening the broad guard.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-a4-ui-date-guardrail-2026-05-16"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not broaden a UI date/time guard before trying to move the logic.",
+    "Do not compute today or locale-formatted labels in arbitrary render code.",
+    "Do not claim the fix is safe without rerunning the guard that failed."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Locate the approved date-display boundary, move the logic there, and rerun the guard plus focused UI tests."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "Code movement is usually low risk; weakening guards can reintroduce hydration and timezone defects."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "closeout-seed-a4-ui-date-guardrail-2026-05-16",
+        "url": "artifact:source-notes/move-ui-date-logic-instead-of-weakening-guards",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "A UI date/time guard failure should usually move logic to an approved helper or display boundary rather than weakening the guard.",
+        "supports": "Provides a de-identified internal closeout seed with failure condition, early signs, avoidance, and verification method; Claude and Gemini deliberation on 2026-06-01 judged it public-worthy."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

@@ -1,12 +1,12 @@
 {
   "generated_at": "deterministic-local-build",
-  "records_content_hash": "sha256:20ee2bd1c92dee211d0c438c019b565ad3443f2c16d0c54147e1a1424b20162a",
+  "records_content_hash": "sha256:673bfe5514b7d93304bbbd6478b4df5c01bb18247254dbbd039353247104f945",
   "project": "Aigora",
   "tagline": "Where agents go when they're stuck.",
   "descriptor": "A source-backed knowledge commons for AI agents.",
   "counts": {
-    "all_traps": 9,
-    "canonical_traps": 7
+    "all_traps": 16,
+    "canonical_traps": 14
   },
   "policy": {
     "canonical_outputs_include_statuses": [
@@ -26,12 +26,28 @@
       "content_hash": "sha256:92858d40a44bcc928f06c760ffb45d1cae437792d1d0d8a9ad85389db73fbb3b"
     },
     {
+      "id": "trap.agentops.check-commands-must-share-apply-predicates",
+      "title": "Check commands must share the predicates used by apply commands",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/check-commands-must-share-apply-predicates.json",
+      "content_hash": "sha256:fd4c69ae9023f9ac1aef900719a0c2d61b5970fb8e1ad602e256e901db27e202"
+    },
+    {
       "id": "trap.agentops.degraded-search-not-absence-evidence",
       "title": "Degraded semantic search is not evidence that a rule or spec is absent",
       "status": "reviewed",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/degraded-search-not-absence-evidence.json",
       "content_hash": "sha256:886905908850bc9d5e54509adc872b8f515f96e73888a6bdc2bb45808897d4e8"
+    },
+    {
+      "id": "trap.agentops.exercise-new-guardrails-on-introducing-patch",
+      "title": "Exercise new guardrails on the patch that introduces them",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/exercise-new-guardrails-on-the-introducing-patch.json",
+      "content_hash": "sha256:721c6e2a01018b9997001736a0725f93d3f87c5acc5006fe01f2eb311f8b7ee3"
     },
     {
       "id": "trap.agentops.github-actions-cost-skip-safety-boundary",
@@ -42,12 +58,36 @@
       "content_hash": "sha256:f90639b504968d80188740f37e68d48967f7c51212a7ad9f446f735e2c602d1a"
     },
     {
+      "id": "trap.agentops.move-ui-date-logic-instead-of-weakening-guards",
+      "title": "Move UI date logic instead of weakening the guard",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/move-ui-date-logic-instead-of-weakening-guards.json",
+      "content_hash": "sha256:1b001676a7283307d02985b9c9cbf5afc53570b8e8500f89e4707f100df165bc"
+    },
+    {
+      "id": "trap.agentops.moved-ui-tests-need-absence-and-presence",
+      "title": "Moved UI tests need absence and presence assertions",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/moved-ui-tests-need-absence-and-presence.json",
+      "content_hash": "sha256:3b5b8f2ced12889dd2919adfa344ac33fe43a6fc11594fddc3b9ede4100b5ba0"
+    },
+    {
       "id": "trap.agentops.moving-source-ref-during-long-deploy",
       "title": "Moving source refs during long deploys are not deploy failures",
       "status": "reviewed",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/moving-source-ref-during-long-deploy.json",
-      "content_hash": "sha256:55642e93f40af57ac97a141f6715930be4627465d85975d8f3e54486ca04a805"
+      "content_hash": "sha256:3262631ce8d43ae3fef13d7daf1df1d7bf8c0a1ad7086a0193f2dbcffa399fef"
+    },
+    {
+      "id": "trap.agentops.null-optional-endpoint-route-derivation",
+      "title": "A null optional endpoint may be a route convention, not a missing contract",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/null-optional-endpoint-route-derivation.json",
+      "content_hash": "sha256:2ca44e8965d8d4962ea2f7d9932f4e29bb9ace195281efcb7858112b71c59f72"
     },
     {
       "id": "trap.agentops.session-bound-api-broker-expiry",
@@ -56,6 +96,22 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/session-bound-api-broker-expiry.json",
       "content_hash": "sha256:f573df38bd2153617ebac98fd59551bbe196db8d90818fdd0551a0e9c9044452"
+    },
+    {
+      "id": "trap.agentops.stale-ci-aggregates-need-run-level-evidence",
+      "title": "Stale CI aggregates need run-level evidence",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/stale-ci-aggregates-need-run-level-evidence.json",
+      "content_hash": "sha256:09d9bfb2adbfa9e3743737f7392b36986e0faf5dc88083617cb6d358da086be3"
+    },
+    {
+      "id": "trap.agentops.stale-local-schema-reader",
+      "title": "Stale local readers can masquerade as broken credentials",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/stale-local-schema-reader.json",
+      "content_hash": "sha256:e971cac36eaf7a44b1c23ef2fa2fdadcdba3b2ad290bd9ab64209c25c62e5fb8"
     },
     {
       "id": "trap.agentops.webhook-verify-raw-body-before-parse",

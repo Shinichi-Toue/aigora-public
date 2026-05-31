@@ -1,0 +1,162 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.moved-ui-tests-need-absence-and-presence",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Moved UI tests need absence and presence assertions",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "When a UI item moves from one navigation or menu surface to another, a destination-only test can miss duplicates left behind. Prove both presence in the new place and absence from the old one.",
+  "ai_value": "Helps agents avoid partial UI move verification where a component appears in the new location but stale source-surface rendering or expectations remain.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a navigation item, menu entry, button, link, or panel moves between UI surfaces",
+      "separate components or tests render the old and new surfaces",
+      "the visible diff touches one component but related tests still encode old grouping"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "closeout seeds reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A test or snapshot only asserts the item appears in its new surface.",
+      "pattern": "appears in new location|destination test|navigation move",
+      "agent_interpretation": "Add a source-surface absence assertion before calling the move complete.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "CI fails in a related menu/sidebar/nav test that was not edited.",
+      "pattern": "sidebar|menu|nav|snapshot|old grouping",
+      "agent_interpretation": "Treat it as evidence that the move spans multiple surfaces.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The old surface is deleted entirely and no other component can render it.",
+      "pattern": "component removed|surface deleted",
+      "why_it_matters": "Absence may be covered by removal, but still check imports/routes for stale render paths."
+    },
+    {
+      "description": "The move is intentionally a duplication or cross-list alias.",
+      "pattern": "duplicate intentionally|alias",
+      "why_it_matters": "Then tests should state both expected locations explicitly."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "If the new location test passes, the old location cannot still show the item.",
+    "Only the component touched in the diff needs tests.",
+    "Snapshot failures in old surfaces are unrelated cleanup."
+  ],
+  "first_checks": [
+    {
+      "check": "Identify every UI surface that can render the moved item.",
+      "why": "Moves often cross component boundaries; the source and destination both need evidence.",
+      "files": [
+        "navigation components",
+        "menu/sidebar tests"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Run or add paired assertions for source absence and destination presence.",
+      "why": "This catches both missing moves and accidental duplicates.",
+      "files": [
+        "source-surface test",
+        "destination-surface test"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Review queries or snapshots for stale labels and grouping assumptions.",
+      "why": "Old test expectations can preserve the pre-move model even when the UI changed intentionally.",
+      "files": [
+        "snapshots",
+        "testing-library queries"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The item should move, not duplicate.",
+      "action": "modify_code",
+      "action_detail": "assert_absence_and_presence",
+      "then": "Update tests so the destination contains the item and the source no longer does.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-b1-moved-ui-tests-2026-05-16"
+      ]
+    },
+    {
+      "condition": "The item should intentionally appear in both places.",
+      "action": "diagnose",
+      "action_detail": "document_duplicate_intent_in_tests",
+      "then": "Make both presence assertions explicit and name the product reason for duplication.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-b1-moved-ui-tests-2026-05-16"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not verify a move with destination-only assertions.",
+    "Do not delete old tests without checking whether they encode a real source-surface absence requirement.",
+    "Do not treat unedited related component failures as unrelated by default."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Run the source and destination surface tests together and assert both absence and presence for the moved item."
+  },
+  "risk": {
+    "level": "low",
+    "human_gate_required": false,
+    "notes": "Focused UI test changes are low risk; product decisions about intentional duplication may need normal review."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "closeout-seed-b1-moved-ui-tests-2026-05-16",
+        "url": "artifact:source-notes/moved-ui-tests-need-absence-and-presence",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "Move-related UI tests should assert both presence in the new location and absence from the old location.",
+        "supports": "Provides a de-identified internal closeout seed with failure condition, early signs, avoidance, and verification method; Claude and Gemini deliberation on 2026-06-01 judged it public-worthy."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

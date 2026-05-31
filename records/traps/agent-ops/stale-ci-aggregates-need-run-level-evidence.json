@@ -1,0 +1,161 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.stale-ci-aggregates-need-run-level-evidence",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Stale CI aggregates need run-level evidence",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "Aggregate CI status can lag or disagree with underlying workflow runs after merges and transitions. Before waiting, failing, or reporting success, inspect the concrete run conclusions, URLs, IDs, and timestamps.",
+  "ai_value": "Helps agents avoid unnecessary waiting loops and false status reports when a pull request or branch aggregate is stale but individual CI runs have already concluded.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a pull request, branch, or merge queue aggregate shows pending, stale, or inconsistent CI status",
+      "individual workflow runs or jobs may have newer conclusions than the aggregate",
+      "an agent is deciding whether to wait, rerun, merge, deploy, or report a block"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "closeout seeds reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Aggregate check status remains pending or stale after a workflow run appears complete.",
+      "pattern": "pending|stale aggregate|checks pending|workflow complete",
+      "agent_interpretation": "Inspect the underlying run details before declaring a block.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "Different CI surfaces disagree about the same commit or pull request.",
+      "pattern": "aggregate disagrees|run conclusion|status mismatch",
+      "agent_interpretation": "Prefer concrete run IDs and timestamps as evidence.",
+      "detectable_by": [
+        "error output",
+        "review evidence",
+        "test output",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "Underlying runs are also pending, queued, or missing for the target commit.",
+      "pattern": "queued|in progress|no run for commit",
+      "why_it_matters": "Waiting or triggering the expected run may be correct."
+    },
+    {
+      "description": "A required check is genuinely absent because a workflow was skipped by path, branch, or policy filters.",
+      "pattern": "skipped|required check missing|path filter",
+      "why_it_matters": "That is a required-check semantics problem, not just aggregate lag."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "The aggregate status is always fresher than the workflow run page.",
+    "A pending aggregate means no useful CI evidence exists.",
+    "A green individual job means the required check policy is satisfied without checking the target commit."
+  ],
+  "first_checks": [
+    {
+      "check": "Open or query the individual workflow runs for the exact target commit.",
+      "why": "Run-level conclusion and timestamp reveal whether the aggregate is merely stale.",
+      "files": [
+        "workflow run list",
+        "target commit SHA"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Record run conclusion, run URL or ID, and completion timestamp in the gate evidence.",
+      "why": "Concrete evidence prevents vague \"CI seems stuck\" reports.",
+      "files": [
+        "CI evidence packet"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Compare required-check names against the runs you inspected.",
+      "why": "A completed run only satisfies the gate if it corresponds to the required check for the target commit.",
+      "files": [
+        "required checks",
+        "run metadata"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Aggregate status is stale but underlying required runs for the exact target commit have succeeded.",
+      "action": "diagnose",
+      "action_detail": "use_run_level_evidence_and_refresh_aggregate",
+      "then": "Report the run-level evidence and refresh/retry the aggregate query before waiting longer.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-b4-stale-ci-aggregate-2026-05-16"
+      ]
+    },
+    {
+      "condition": "Aggregate is pending because required runs are skipped or absent.",
+      "action": "escalate",
+      "action_detail": "treat_as_required_check_semantics",
+      "then": "Do not bypass the gate; inspect workflow trigger/required-check configuration through the normal review path.",
+      "confidence": "medium",
+      "source_ids": [
+        "closeout-seed-b4-stale-ci-aggregate-2026-05-16"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not wait indefinitely on a stale aggregate without checking underlying runs.",
+    "Do not report CI green from an underlying run unless it matches the exact target commit and required check.",
+    "Do not bypass required checks because an aggregate UI looks confused."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Compare the aggregate with underlying workflow run conclusions, URLs/IDs, and timestamps for the exact target commit before deciding."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "Read-only CI inspection is low risk. Reruns, required-check changes, and merge/deploy decisions follow normal gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "closeout-seed-b4-stale-ci-aggregate-2026-05-16",
+        "url": "artifact:source-notes/stale-ci-aggregates-need-run-level-evidence",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "When aggregate CI status and individual workflow run state disagree, inspect concrete run conclusion, URL/id, and timestamp before deciding.",
+        "supports": "Provides a de-identified internal closeout seed with failure condition, early signs, avoidance, and verification method; Claude and Gemini deliberation on 2026-06-01 judged it public-worthy."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}
