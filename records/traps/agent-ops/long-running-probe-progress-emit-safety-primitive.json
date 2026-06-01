@@ -1,0 +1,174 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.long-running-probe-progress-emit-safety-primitive",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-05-10T07:30:00+09:00",
+  "updated_at": "2026-05-10T07:30:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Long-running probes need safe progress output",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "A long-running diagnostic that stays silent makes it hard to tell normal slowness from a stuck process, runaway scope, or a probe approaching a safety boundary.",
+  "ai_value": "Helps agents design diagnostic probes that remain observable, bounded, and safe for handoff without exposing sensitive data.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a diagnostic scans many records, files, pages, or remote responses",
+      "runtime is uncertain and another actor may need to decide whether to wait or stop",
+      "the probe is part of a safe halt or approval-sensitive investigation",
+      "progress evidence must be shareable without leaking sensitive values"
+    ],
+    "tools": [
+      {
+        "name": "agent-workflow-orchestration",
+        "version_range": "general AI operations capability",
+        "observed_versions": [
+          "de-identified 2026 agent safety and recovery sessions"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The probe may run long enough that silence could be mistaken for a hang.",
+      "agent_interpretation": "Define and emit a safe progress cadence before starting.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "handoff notes"
+      ]
+    },
+    {
+      "description": "The next decision depends on whether the probe is still within bounded read-only or dry-run scope.",
+      "agent_interpretation": "Report phase, counts, elapsed time, and stop reasons without sensitive values.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "handoff notes"
+      ]
+    },
+    {
+      "description": "Another agent or human may take over while the probe is running.",
+      "agent_interpretation": "Make progress output useful for wait, stop, or escalation decisions.",
+      "detectable_by": [
+        "task brief",
+        "agent plan",
+        "handoff notes"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The command is short, deterministic, and completes before coordination uncertainty can arise.",
+      "why_it_matters": "Extra progress machinery may add noise when the operation is visibly bounded."
+    },
+    {
+      "description": "Progress output would require exposing sensitive records and the probe cannot aggregate safely.",
+      "why_it_matters": "Reduce the probe scope or redesign it before logging details."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "No errors means a long-running probe is still making progress.",
+    "Progress logs are only convenience, not safety evidence.",
+    "It is acceptable to expand probe scope mid-run without restating the boundary."
+  ],
+  "first_checks": [
+    {
+      "check": "State probe mode before launch: read-only, dry-run, or mutating.",
+      "why": "Mode controls whether the agent may proceed or must stop at a gate.",
+      "files": [
+        "command plan"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Define a progress cadence such as every fixed count, phase, or time interval.",
+      "why": "A cadence makes stalls visible without guesswork.",
+      "files": [
+        "probe script",
+        "run notes"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Emit only aggregate progress and safe stop reasons.",
+      "why": "Aggregate breadcrumbs preserve observability without leaking sensitive data.",
+      "files": [
+        "stderr logs",
+        "handoff summary"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The probe can report aggregate progress safely.",
+      "action": "diagnose",
+      "action_detail": "run_with_progress_breadcrumbs",
+      "then": "Run the bounded probe and emit phase, count, elapsed time, and stop-condition breadcrumbs.",
+      "confidence": "medium",
+      "source_ids": [
+        "additional-safe-halt-redaction-review-2026-05-10"
+      ]
+    },
+    {
+      "condition": "The probe cannot report progress without exposing sensitive data.",
+      "action": "modify_workflow",
+      "action_detail": "reduce_scope_or_redesign_output",
+      "then": "Reduce scope or redesign logging until progress can be public-safe or appropriately restricted.",
+      "confidence": "medium",
+      "source_ids": [
+        "additional-safe-halt-redaction-review-2026-05-10"
+      ]
+    },
+    {
+      "condition": "Progress stalls past the expected cadence or approaches a mutation, availability, permission, cost, or data-loss boundary.",
+      "action": "escalate",
+      "action_detail": "stop_or_inspect_read_only",
+      "then": "Stop or inspect with read-only process evidence before continuing.",
+      "confidence": "medium",
+      "source_ids": [
+        "additional-safe-halt-redaction-review-2026-05-10"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not run a silent probe over uncertain scope.",
+    "Do not expose sensitive records in progress logs.",
+    "Do not treat lack of errors as evidence of progress.",
+    "Do not extend scope mid-run without making the new boundary explicit."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Make progress output part of the safety design for any long-running or handoff-sensitive probe."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is about workflow safety. It does not authorize bypassing human, maintainer, review, publication, or protected-effect gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "additional-safe-halt-redaction-review-2026-05-10",
+        "url": "reviews/records/trap.agentops.long-running-probe-progress-emit-safety-primitive/redaction-review-2026-05-10.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-10T07:30:00+09:00",
+        "supports": "Independent redaction review approved the de-identified candidate draft as public-safe for canonical promotion."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-05-10",
+    "volatility": "low",
+    "next_check_due": "2026-11-10"
+  }
+}

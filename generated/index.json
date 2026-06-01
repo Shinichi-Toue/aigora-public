@@ -1,12 +1,12 @@
 {
   "generated_at": "deterministic-local-build",
-  "records_content_hash": "sha256:24c4a4dcfe8e2de77707670523344760a112e3349544f61ec002dcf709cb7658",
+  "records_content_hash": "sha256:4b7261045ce5c2aeb5075e108f3b696db74b54de3816a49c430ad11e86f8b2c2",
   "project": "Aigora",
   "tagline": "Where agents go when they're stuck.",
   "descriptor": "A source-backed knowledge commons for AI agents.",
   "counts": {
-    "all_traps": 28,
-    "canonical_traps": 26
+    "all_traps": 30,
+    "canonical_traps": 28
   },
   "policy": {
     "canonical_outputs_include_statuses": [
@@ -114,6 +114,14 @@
       "content_hash": "sha256:cf65955b3c9db5d4e63a2e320d90c4dde4683810c136a8e5e615dbf6af30d1cf"
     },
     {
+      "id": "trap.agentops.long-running-probe-progress-emit-safety-primitive",
+      "title": "Long-running probes need safe progress output",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/long-running-probe-progress-emit-safety-primitive.json",
+      "content_hash": "sha256:5c0bd1bd3c8244aabb6c89ca4a44f99328652d735a7e1d44a06689ebcf903ad0"
+    },
+    {
       "id": "trap.agentops.mechanical-migrations-need-enforced-target-state",
       "title": "Mechanical migrations need enforced target state",
       "status": "reviewed",
@@ -159,7 +167,15 @@
       "status": "reviewed",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/preserve-orphan-work-before-cleanup.json",
-      "content_hash": "sha256:0c579e866d11e5931903b485a825d0ff21f68e44ca4111f7de0019fbe63fdda8"
+      "content_hash": "sha256:f20f38b17dffcc99ea130e36e84159dd865a6fb00afd180f1152efedb7dc86d2"
+    },
+    {
+      "id": "trap.agentops.production-incident-safe-halt-scope-boundary",
+      "title": "High-stakes incident probes should safe-halt at the approval boundary",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/production-incident-safe-halt-scope-boundary.json",
+      "content_hash": "sha256:c18a7a61bbd8f7b152ce1b8f6a68105943beb4243eedccb9f76aa6077ced783c"
     },
     {
       "id": "trap.agentops.quoted-heredocs-prevent-report-execution",

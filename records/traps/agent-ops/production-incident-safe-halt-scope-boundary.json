@@ -1,0 +1,269 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.production-incident-safe-halt-scope-boundary",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-05-10T01:10:00+09:00",
+  "updated_at": "2026-05-10T01:10:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "High-stakes incident probes should safe-halt at the approval boundary",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "authorization-gate",
+    "common-ai-mistake"
+  ],
+  "summary": "When an agent investigating a high-stakes data or operations incident reaches live data, destructive recovery, deployment, permission, publication, or other irreversible boundaries, the correct next deliverable is often a safe halt with evidence rather than an improvised fix.",
+  "ai_value": "Helps autonomous agents preserve trust during urgent investigations by distinguishing read-only or reversible probe work from actions that require a fresh owner, maintainer, or independent-review gate.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "an agent is debugging a production, production-like, or customer-impacting data-system inconsistency",
+      "a probe starts read-only or dry-run but uncovers database rows, rollback steps, deployments, access changes, publication, billing, or irreversible recovery actions",
+      "multiple infrastructure layers appear relevant and the agent is tempted to keep fixing the next layer without rechecking authorization",
+      "an orchestrator or reviewer must decide whether the next action is still inside the approved probe scope"
+    ],
+    "tools": [
+      {
+        "name": "agent-incident-investigation",
+        "version_range": "general AI operations capability",
+        "observed_versions": [
+          "de-identified 2026 high-stakes data-system safe-halt session"
+        ]
+      },
+      {
+        "name": "agent-review-orchestration",
+        "version_range": "general AI review/orchestration capability",
+        "observed_versions": [
+          "de-identified 2026 cross-agent review session"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The task begins as a read-only, dry-run, rollback-probe, or consistency investigation but the next tempting action would change live state or external visibility.",
+      "pattern": "dry[- ]?run|read[- ]?only|probe|rollback|consistency|live data|deploy|publish|permission|migration|delete|write|irreversible",
+      "agent_interpretation": "Classify the next action before running it; a mutation or visibility change is not automatically covered by probe authorization.",
+      "detectable_by": [
+        "task brief",
+        "runbook",
+        "command plan",
+        "review notes"
+      ]
+    },
+    {
+      "description": "The agent has enough partial evidence to explain a likely fault but not enough authorization to mutate live data, deploy, publish, or perform recovery.",
+      "pattern": "likely root cause|evidence points|probably fixed by|just run|apply rollback|make live",
+      "agent_interpretation": "Evidence can justify a handoff or approval request; it does not by itself grant authority for irreversible action.",
+      "detectable_by": [
+        "agent summary",
+        "handoff draft",
+        "review discussion"
+      ]
+    },
+    {
+      "description": "Several infrastructure layers surface in sequence, such as application behavior, persistent state, automation wrappers, operational preflights, and review or rollback tooling.",
+      "pattern": "layer|wrapper|preflight|database|application|automation|review|rollback|tooling",
+      "agent_interpretation": "Map layers and apply narrow fixes only within the currently approved effect boundary; do not treat adjacent layers as implicit approval expansion.",
+      "detectable_by": [
+        "incident notebook",
+        "commit sequence",
+        "review thread",
+        "postmortem"
+      ]
+    },
+    {
+      "description": "A long-running diagnostic is silent or nearly silent, making observers uncertain whether it is stuck, safe, or crossing a boundary.",
+      "pattern": "no output|silent|stalled|long[- ]running|hang|strace|progress",
+      "agent_interpretation": "Emit safe progress breadcrumbs so humans and other agents can decide whether to wait, review, or stop without guessing.",
+      "detectable_by": [
+        "terminal output",
+        "logs",
+        "observer notes"
+      ]
+    },
+    {
+      "description": "The same approval is being stretched from one target class or operation class to a related but not explicitly approved target or operation.",
+      "pattern": "same issue|related target|adjacent|also fix|while here|same approval",
+      "agent_interpretation": "Treat target-set or operation-class expansion as a new scope decision unless the original gate explicitly covered it.",
+      "detectable_by": [
+        "scope notes",
+        "agent plan",
+        "review comments"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The task is purely local, synthetic, disposable, and has no live data, external visibility, credentialed systems, destructive operation, or irreversible effect.",
+      "pattern": "local-only|synthetic|fixture|sandbox|disposable|no live data|no external effect",
+      "why_it_matters": "Normal reversible coding and testing can continue when no high-stakes boundary is present."
+    },
+    {
+      "description": "A reviewed runbook or explicit owner/maintainer decision already grants the exact live mutation, target set, and recovery action being taken.",
+      "pattern": "approved live runbook|explicit approval|exact target set|reviewed rollback|authorized mutation",
+      "why_it_matters": "The trap is unauthorized boundary expansion, not execution of a precise reviewed live action."
+    },
+    {
+      "description": "The agent is only drafting a de-identified retrospective, candidate lesson, or local handoff and is not touching live systems or external publication paths.",
+      "pattern": "retrospective|candidate lesson|handoff|de-identified|local draft",
+      "why_it_matters": "Drafting generic learning artifacts can be safe when sensitive details and publication gates are respected."
+    },
+    {
+      "description": "The next action is read-only and explicitly inside the approved target class and operation class.",
+      "pattern": "read-only|inside scope|approved probe|no mutation",
+      "why_it_matters": "The correct response may be to continue the narrow probe while preserving evidence and progress logs."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Emergency context means the agent may keep escalating until the system is fixed.",
+    "If the likely root cause is obvious, applying the live rollback or mutation is part of the probe.",
+    "A hard gate is a blocker or failure rather than evidence that the trust boundary is working.",
+    "Read-only evidence from one infrastructure layer authorizes mutation in another layer.",
+    "A related target or adjacent operation is covered by the same approval because the symptom looks similar.",
+    "Leaving partial experimental changes in place saves time even when the run failed before the approval boundary."
+  ],
+  "first_checks": [
+    {
+      "check": "Restate the approved scope in generic terms: environment class, target class, allowed operation class, and explicit non-goals.",
+      "why": "Scope language prevents discovery momentum from turning into unapproved mutation or target expansion.",
+      "files": [
+        "task brief",
+        "runbook",
+        "handoff notes"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Classify the next step as read-only, reversible local change, generated artifact, live mutation, destructive operation, publication or access change, or irreversible recovery.",
+      "why": "The classification determines whether the agent can proceed, needs independent review, or must ask for a gate.",
+      "files": [
+        "command plan",
+        "review checklist"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "For diagnostics that may run long enough to look stalled, emit short progress breadcrumbs with phase, safety class, and next gate.",
+      "why": "Progress logs let other agents and humans decide whether to wait, stop, or review without resorting to unsafe guesses.",
+      "files": [
+        "stderr logs",
+        "operation log"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Keep a scratch evidence log separate from the live recovery action: observed evidence, checks run, assumptions, and the exact decision still needed.",
+      "why": "A separate evidence log preserves progress without converting investigation notes into unapproved execution.",
+      "files": [
+        "incident notebook",
+        "handoff artifact"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "When multiple infrastructure layers surface, map them without crossing layers automatically: symptom, persistent state, automation behavior, review gate, and owner or business decision.",
+      "why": "Layer mapping supports narrow fixes while avoiding the false inference that one layer's evidence authorizes every adjacent fix.",
+      "files": [
+        "postmortem draft",
+        "review summary"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Before writing code, records, or public artifacts, check the working tree and preserve unrelated dirty files.",
+      "why": "High-stakes incidents often leave many artifacts; publication or code fixes must not mix unrelated local work.",
+      "command": "git status --short --branch",
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The next action is read-only and inside the approved target class and operation class.",
+      "action": "diagnose",
+      "action_detail": "continue_narrow_probe_with_progress_logs",
+      "then": "Run the diagnostic, emit a brief phase/progress line if it may look stalled, and preserve evidence for the handoff.",
+      "confidence": "medium",
+      "source_ids": [
+        "deidentified-safe-halt-redaction-review-2026-05-10"
+      ]
+    },
+    {
+      "condition": "The next action is local-only and reversible, such as drafting a handoff, review packet, or public-safe candidate lesson.",
+      "action": "modify_workflow",
+      "action_detail": "proceed_with_preservation_and_redaction",
+      "then": "Check the working tree, modify only scoped artifacts, avoid sensitive identifiers, and route publication or canonical promotion through an independent review gate.",
+      "confidence": "medium",
+      "source_ids": [
+        "deidentified-safe-halt-redaction-review-2026-05-10"
+      ]
+    },
+    {
+      "condition": "The next action would mutate live data, deploy, apply schema changes, change access or publication, incur material cost, or perform irreversible recovery.",
+      "action": "human_gate",
+      "action_detail": "safe_halt_for_exact_approval_boundary",
+      "then": "Stop before mutation and produce the smallest approval request containing evidence, uncertainty, scope, and the default-safe state.",
+      "confidence": "high",
+      "source_ids": [
+        "deidentified-safe-halt-redaction-review-2026-05-10"
+      ]
+    },
+    {
+      "condition": "The agent is unsure whether the next action is read-only, reversible, live, destructive, publication-related, or irreversible.",
+      "action": "escalate",
+      "action_detail": "treat_ambiguous_action_as_higher_risk_class",
+      "then": "Do not run the action while ambiguous. Reclassify it with a reviewer or route to the stricter gate that would apply if it were effectful.",
+      "confidence": "high",
+      "source_ids": [
+        "deidentified-safe-halt-redaction-review-2026-05-10"
+      ]
+    },
+    {
+      "condition": "The investigation has multiple active AI participants or touches high-risk operational boundaries.",
+      "action": "modify_workflow",
+      "action_detail": "separate_author_and_reviewer_roles",
+      "then": "Have one agent author the probe or handoff and a different agent review the scope, boundary, evidence, and redaction before risky next steps or publication.",
+      "confidence": "medium",
+      "source_ids": [
+        "deidentified-safe-halt-redaction-review-2026-05-10"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not mutate live databases, apply migrations, deploy, publish, change permissions, incur material cost, or trigger irreversible recovery under probe-only approval.",
+    "Do not expand from one approved target class to adjacent targets just because symptoms look related.",
+    "Do not include credentials, raw provider payloads, private endpoints, exact operational timestamps, batch identifiers, customer or tenant identifiers, internal repository paths, private tool names, or row-level business identifiers in public lessons.",
+    "Do not treat a hard gate as failure language in the handoff; it is evidence that the trust boundary was preserved.",
+    "Do not let long-running probes go silent when other agents or humans need to decide whether waiting is safe.",
+    "Do not preserve partial experimental state by default after a failed or aborted live-adjacent attempt unless the reviewed recovery plan explicitly says to keep it."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "At the first live, destructive, publication, access, cost, or irreversible boundary, stop before effectful action and produce a scoped evidence handoff; continue only with exact review or owner authorization for that boundary."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This record concerns high-stakes operational boundaries. It should make agents more conservative about effectful actions, not more confident to self-authorize them."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "deidentified-safe-halt-redaction-review-2026-05-10",
+        "url": "reviews/records/trap.agentops.production-incident-safe-halt-scope-boundary/redaction-review-2026-05-10.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-05-10T01:10:00+09:00",
+        "supports": "Independent redaction review found the source lesson public-safe and approved publication with non-blocking polish notes that were reflected in the canonical record."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-05-10",
+    "volatility": "low",
+    "next_check_due": "2026-11-10"
+  }
+}

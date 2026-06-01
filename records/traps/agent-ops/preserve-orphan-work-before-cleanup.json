@@ -16,7 +16,7 @@
     "safe-recovery",
     "common-ai-mistake"
   ],
-  "summary": "When edits or commits are found outside the expected branch, owner, or session, preserve and classify them before resetting, deleting, or overwriting. Clean status is not worth losing unknown work.",
+  "summary": "When edits or commits are found outside the expected branch, owner, or session, preserve and classify them before cleanup. Only clearly agent-owned, local, reversible partial state should be narrowly reverted or neutralized.",
   "ai_value": "Helps agents recover from branch drift, abandoned sessions, and dirty worktrees without destroying useful edits or asking a human to classify raw Git state.",
   "applies_to": {
     "ecosystem": "agent-ops",
@@ -130,6 +130,16 @@
       "source_ids": [
         "seed-9-orphan-edits-2026-05-11"
       ]
+    },
+    {
+      "condition": "The partial state is clearly agent-owned, local, reversible, and inside the approved scope.",
+      "action": "modify_workflow",
+      "action_detail": "revert_or_neutralize_agent_owned_partial_state",
+      "then": "Prefer a narrow revert or neutralization that returns the scope to a known-safe state; preserve and report anything with unknown ownership, evidence value, or protected effects.",
+      "confidence": "medium",
+      "source_ids": [
+        "revert-by-default-trust-contract-2026-05-10"
+      ]
     }
   ],
   "do_not": [
@@ -155,6 +165,14 @@
         "retrieved_at": "2026-06-01T00:00:00+09:00",
         "excerpt": "Recovery guidance identified orphan edits and moved branches as recurring AI-session failure modes requiring preservation before cleanup.",
         "supports": "Supports preserve-first recovery discipline."
+      },
+      {
+        "id": "revert-by-default-trust-contract-2026-05-10",
+        "url": "artifact:source-notes/revert-by-default-trust-contract",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "excerpt": "A recovery candidate distinguished agent-owned reversible cleanup from unknown or other-actor state that must be preserved and reported.",
+        "supports": "Adds the narrow revert-or-neutralize branch to the preserve-orphan-work cleanup record."
       }
     ],
     "verification_runs": []

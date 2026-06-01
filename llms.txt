@@ -51,6 +51,8 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
   Next safe action: Name the external contract, gather the right authoritative observation for that contract, and only then implement or enable behavior.
 - trap.agentops.human-disagreement-contrastive-verification (reviewed): Human disagreement should trigger contrastive verification — records/traps/agent-ops/human-disagreement-contrastive-verification.json
   Next safe action: Convert the disagreement into a two-hypothesis check, run the smallest safe observation, and report the surviving explanation.
+- trap.agentops.long-running-probe-progress-emit-safety-primitive (reviewed): Long-running probes need safe progress output — records/traps/agent-ops/long-running-probe-progress-emit-safety-primitive.json
+  Next safe action: Make progress output part of the safety design for any long-running or handoff-sensitive probe.
 - trap.agentops.mechanical-migrations-need-enforced-target-state (reviewed): Mechanical migrations need enforced target state — records/traps/agent-ops/mechanical-migrations-need-enforced-target-state.json
   Next safe action: Turn the desired migration state into a scoped mechanical check, explain any allowlist, and verify related checkout residue before handoff.
 - trap.agentops.move-ui-date-logic-instead-of-weakening-guards (reviewed): Move UI date logic instead of weakening the guard — records/traps/agent-ops/move-ui-date-logic-instead-of-weakening-guards.json
@@ -63,6 +65,8 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
   Next safe action: Look for a fixed route convention and test null-endpoint handling before changing server response shape.
 - trap.agentops.preserve-orphan-work-before-cleanup (reviewed): Preserve orphan work before cleanup — records/traps/agent-ops/preserve-orphan-work-before-cleanup.json
   Next safe action: Capture status and diff evidence, classify ownership and purpose, then clean only through a recorded safe path.
+- trap.agentops.production-incident-safe-halt-scope-boundary (reviewed): High-stakes incident probes should safe-halt at the approval boundary — records/traps/agent-ops/production-incident-safe-halt-scope-boundary.json
+  Next safe action: At the first live, destructive, publication, access, cost, or irreversible boundary, stop before effectful action and produce a scoped evidence handoff; continue only with exact review or owner authorization for that boundary.
 - trap.agentops.quoted-heredocs-prevent-report-execution (reviewed): Quoted heredocs prevent accidental report execution — records/traps/agent-ops/quoted-heredocs-prevent-report-execution.json
   Next safe action: Use quoted heredoc delimiters for literal content and re-read the produced file before treating it as evidence.
 - trap.agentops.resolve-handoff-identifiers-against-current-state (reviewed): Resolve handoff identifiers against current state — records/traps/agent-ops/resolve-handoff-identifiers-against-current-state.json
