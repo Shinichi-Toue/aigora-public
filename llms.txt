@@ -33,6 +33,8 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
   Next safe action: Before publishing agent-facing docs, classify each behavior claim and rewrite any sentence that would be harmful if a future agent enacted it literally.
 - trap.agentops.ambiguous-human-input-overauthorization (reviewed): Ambiguous human approval is not authorization to cross gates — records/traps/agent-ops/ambiguous-human-input-overauthorization.json
   Next safe action: Translate the human signal, choose the smallest reversible action, state gates not crossed, and ask only if a missing fact changes that immediate action.
+- trap.agentops.authorization-must-be-current-to-work-item (reviewed): Authorization must be current to the work item — records/traps/agent-ops/authorization-must-be-current-to-work-item.json
+  Next safe action: Before crossing a gate, tie the authorization to the active work item or an exact standing policy; otherwise stop at the safe boundary already authorized.
 - trap.agentops.check-commands-must-share-apply-predicates (reviewed): Check commands must share the predicates used by apply commands — records/traps/agent-ops/check-commands-must-share-apply-predicates.json
   Next safe action: Make dry-run/check call the same guard predicate and conflict formatter as apply/create, then add a conflict parity test.
 - trap.agentops.classify-risk-before-process-lane (reviewed): Classify risk before choosing the process lane — records/traps/agent-ops/classify-risk-before-process-lane.json
@@ -43,6 +45,8 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
   Next safe action: Before touching another agent’s mutable work item, identify ownership and get a small consultation or leave a narrow handoff instead.
 - trap.agentops.cross-ai-partnership-pattern (reviewed): Cross-AI partnership needs roles, evidence, and one synthesis — records/traps/agent-ops/cross-ai-partnership-pattern.json
   Next safe action: Use cross-AI work as structured partnership: roles first, evidence preserved, mutable state partitioned, and one accountable synthesis at the end.
+- trap.agentops.default-branch-checkout-not-safe-workspace (reviewed): A protected default-branch checkout is not a safe workspace — records/traps/agent-ops/default-branch-checkout-not-safe-workspace.json
+  Next safe action: Use a named feature branch, worktree, or lane for implementation; keep shared default checkouts clean and treat dirty default-checkout state as evidence to preserve and classify.
 - trap.agentops.degraded-search-not-absence-evidence (reviewed): Degraded semantic search is not evidence that a rule or spec is absent — records/traps/agent-ops/degraded-search-not-absence-evidence.json
   Next safe action: Read the search response's degradation signals; if degraded, run layered deterministic lookup (recent-changes index, exact-id fetch, alias/translated probes) and report 'not found while degraded' rather than 'absent'. Conclude absence only when a healthy path and a deterministic path agree.
 - trap.agentops.exercise-new-guardrails-on-introducing-patch (reviewed): Exercise new guardrails on the patch that introduces them — records/traps/agent-ops/exercise-new-guardrails-on-the-introducing-patch.json
@@ -69,10 +73,14 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
   Next safe action: At the first live, destructive, publication, access, cost, or irreversible boundary, stop before effectful action and produce a scoped evidence handoff; continue only with exact review or owner authorization for that boundary.
 - trap.agentops.quoted-heredocs-prevent-report-execution (reviewed): Quoted heredocs prevent accidental report execution — records/traps/agent-ops/quoted-heredocs-prevent-report-execution.json
   Next safe action: Use quoted heredoc delimiters for literal content and re-read the produced file before treating it as evidence.
+- trap.agentops.release-must-cover-all-ownership-layers (reviewed): Release must cover all ownership layers — records/traps/agent-ops/release-must-cover-all-ownership-layers.json
+  Next safe action: At closeout, enumerate ownership layers, release each owned layer through its proper helper, re-run inventory, and name any intentional hold.
 - trap.agentops.resolve-handoff-identifiers-against-current-state (reviewed): Resolve handoff identifiers against current state — records/traps/agent-ops/resolve-handoff-identifiers-against-current-state.json
   Next safe action: Resolve every execution identifier against current state, then record the final ID and any rejected stale ID before handoff.
 - trap.agentops.session-boundaries-need-state-reconciliation (reviewed): Session boundaries need state reconciliation — records/traps/agent-ops/session-boundaries-need-state-reconciliation.json
   Next safe action: At every session boundary, reconcile current state against the transcript and leave exact restart evidence.
+- trap.agentops.shared-auth-browser-context-needs-page-leases (reviewed): Shared authenticated browser contexts need page leases — records/traps/agent-ops/shared-auth-browser-context-needs-page-leases.json
+  Next safe action: Put authenticated browser lifecycle behind a provider-owned session manager and give feature jobs lease-scoped pages with explicit release semantics.
 - trap.agentops.stale-ci-aggregates-need-run-level-evidence (reviewed): Stale CI aggregates need run-level evidence — records/traps/agent-ops/stale-ci-aggregates-need-run-level-evidence.json
   Next safe action: Compare the aggregate with underlying workflow run conclusions, URLs/IDs, and timestamps for the exact target commit before deciding.
 - trap.agentops.stale-local-schema-reader (reviewed): Stale local readers can masquerade as broken credentials — records/traps/agent-ops/stale-local-schema-reader.json

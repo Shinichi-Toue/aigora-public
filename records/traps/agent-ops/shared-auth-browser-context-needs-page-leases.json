@@ -1,0 +1,192 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.shared-auth-browser-context-needs-page-leases",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Shared authenticated browser contexts need page leases",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "browser-automation",
+    "concurrency",
+    "external-systems"
+  ],
+  "summary": "When browser automations share authenticated state, feature jobs should lease pages or tabs from a provider-owned context instead of closing the shared context from consumer cleanup.",
+  "ai_value": "Helps agents prevent overlapping UI automations from killing each other while preserving narrow concurrency around provider-side jobs and authenticated-session lifecycle.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "scheduled or parallel browser automations reuse a saved login, storage state, profile, or authenticated context",
+      "feature code receives browser context or page objects and owns cleanup",
+      "external provider UI operations overlap in time"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "final stale proposal reconcile reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "One browser job closes a context or browser shortly before a sibling job reports a closed page, closed context, navigation abort, or unknown browser crash.",
+      "agent_interpretation": "Suspect consumer-owned cleanup of a shared authenticated resource.",
+      "pattern": "page closed|context closed|browser closed|navigation abort",
+      "detectable_by": [
+        "automation logs",
+        "timeline"
+      ]
+    },
+    {
+      "description": "Feature callers receive a shared context or page and call close in their own cleanup.",
+      "agent_interpretation": "Move lifecycle ownership back to the session provider and expose per-job leases.",
+      "pattern": "context.close|browser.close|page.close",
+      "detectable_by": [
+        "source review",
+        "cleanup code"
+      ]
+    },
+    {
+      "description": "A proposed fix serializes all browser automation because one provider-side report or download is ambiguous.",
+      "agent_interpretation": "Separate page/context sharing from the narrow provider job that may need its own mutex.",
+      "pattern": "serialize all|single browser job|report job",
+      "detectable_by": [
+        "design notes",
+        "runbook"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "Each automation owns a fresh isolated browser profile or context and no authenticated state is shared.",
+      "why_it_matters": "The lease/refcount pattern is less relevant when there is no shared lifecycle."
+    },
+    {
+      "description": "The external provider requires full serial execution for every operation and that contract is documented.",
+      "why_it_matters": "In that case a broader queue may be correct, though mutation readback still matters."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Sharing a saved login means sharing one page is safe.",
+    "The caller that acquired a context may close the whole context on cleanup.",
+    "Serializing every browser job is the only durable fix.",
+    "If an edited field still shows the typed value, the provider accepted the mutation."
+  ],
+  "first_checks": [
+    {
+      "check": "Build an overlap timeline for acquisition, page creation, provider requests, cleanup, context close, and sibling failure.",
+      "why": "The timeline distinguishes browser lifecycle bugs from provider-side concurrency limits.",
+      "safe_to_run": true,
+      "files": [
+        "job logs",
+        "browser traces"
+      ]
+    },
+    {
+      "check": "Audit cleanup ownership: consumers release page leases; the provider owns context and browser retirement.",
+      "why": "A lease boundary prevents one job from killing another job’s authenticated state.",
+      "safe_to_run": true,
+      "files": [
+        "browser session provider",
+        "feature cleanup code"
+      ]
+    },
+    {
+      "check": "Verify external mutation by reload, reopen, or provider-rendered readback.",
+      "why": "Reading the same edited DOM can confirm only local typing, not provider acceptance.",
+      "safe_to_run": true,
+      "files": [
+        "provider UI",
+        "readback evidence"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Multiple automations share authenticated browser state.",
+      "action": "modify_code",
+      "action_detail": "introduce_page_leases",
+      "then": "Return a new page or tab lease per automation, refcount active leases, and close the shared context only when the provider-owned retirement policy allows it.",
+      "confidence": "high",
+      "source_ids": [
+        "final-six-shared-browser-2026-06-01"
+      ]
+    },
+    {
+      "condition": "Only one provider-side report, download, or mutation is ambiguous while other page flows are independent.",
+      "action": "modify_workflow",
+      "action_detail": "use_narrow_operation_key",
+      "then": "Protect the ambiguous provider job with a narrow mutex rather than serializing unrelated browser flows.",
+      "confidence": "medium",
+      "source_ids": [
+        "final-six-shared-browser-2026-06-01"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not hand the same page object to independent automations.",
+    "Do not let feature cleanup close a shared authenticated context or browser.",
+    "Do not log cookies, storage state, raw provider payloads, or credentials while diagnosing.",
+    "Do not infer provider acceptance from the same editable DOM after typing."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Put authenticated browser lifecycle behind a provider-owned session manager and give feature jobs lease-scoped pages with explicit release semantics."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record concerns browser automation safety. It does not authorize bypassing provider terms, credential handling rules, or external mutation gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "final-six-shared-browser-2026-06-01",
+        "url": "artifact:aigora-final-six/shared-browser-context-needs-page-leases",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "supports": "Claude and Gemini both identified the page-lease boundary as a novel public-worthy trap, with a caveat to include a neutral reproducer."
+      },
+      {
+        "id": "neutral-page-lease-reproducer-2026-06-01",
+        "url": "reviews/records/trap.agentops.shared-auth-browser-context-needs-page-leases/page-lease-reproducer.mjs",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "supports": "A neutral JavaScript reproducer demonstrates that closing a shared context from one consumer breaks a sibling page, while page lease release avoids context retirement until all leases release."
+      }
+    ],
+    "verification_runs": [
+      {
+        "run_at": "2026-06-01T00:00:00+09:00",
+        "environment": {
+          "os_context": "local public-safe Node.js simulation",
+          "runtime": {
+            "name": "node",
+            "version": "22"
+          },
+          "packages": []
+        },
+        "command": "node reviews/records/trap.agentops.shared-auth-browser-context-needs-page-leases/page-lease-reproducer.mjs",
+        "safe_to_rerun": true,
+        "observed_result": "The script showed consumer cleanup closing a shared context breaks the sibling page, then showed lease release keeps the context alive until all pages release.",
+        "conclusion": "The lifecycle failure is reproducible without provider-specific details."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

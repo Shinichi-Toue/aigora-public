@@ -2,7 +2,7 @@
   "schema_version": "0.3.0",
   "id": "trap.agentops.completion-needs-artifact-evidence",
   "record_type": "trap",
-  "record_version": 1,
+  "record_version": 2,
   "created_at": "2026-06-01T00:00:00+09:00",
   "updated_at": "2026-06-01T00:00:00+09:00",
   "supersedes": [],
@@ -16,14 +16,15 @@
     "safe-recovery",
     "common-ai-mistake"
   ],
-  "summary": "An agent\u2019s feeling of done is not completion. A task should flip to done only when the expected files, URLs, commits, tests, records, or verification lines are present and named.",
+  "summary": "An agent’s feeling of done is not completion. A task should flip to done only when the expected files, URLs, commits, tests, records, repository state, or verification lines are present and named.",
   "ai_value": "Helps agents prevent premature completion reports that leave humans or future agents to discover missing deliverables after the status already says done.",
   "applies_to": {
     "ecosystem": "agent-ops",
     "contexts": [
       "a task has expected artifacts, tests, records, deployment evidence, or handoff outputs",
       "the agent is about to mark a tracker, issue, report, or checklist complete",
-      "previous work has confused code-complete, pushed, merged, live, and verified states"
+      "previous work has confused code-complete, pushed, merged, live, and verified states",
+      "a merge, deploy, lane release, desk reuse, or claim release entrypoint would make work appear free or done"
     ],
     "tools": [
       {
@@ -37,7 +38,7 @@
   },
   "trigger_signals": [
     {
-      "description": "The final message says \u201cdone\u201d but does not name the artifact or check evidence.",
+      "description": "The final message says “done” but does not name the artifact or check evidence.",
       "pattern": "done|complete|should be fixed|no evidence",
       "agent_interpretation": "Treat the completion claim as unproven until evidence is attached.",
       "detectable_by": [
@@ -59,6 +60,25 @@
         "review evidence",
         "workflow logs"
       ]
+    },
+    {
+      "description": "A finish, merge, deploy, lane-release, or claim-release entrypoint would proceed from a handoff flag without re-reading repository state.",
+      "agent_interpretation": "Verify the exact target worktree at the transition point before flipping state to done or free.",
+      "pattern": "ready to merge|release lane|deploy handoff|claim release|finish command",
+      "detectable_by": [
+        "workflow wrapper",
+        "git status",
+        "handoff"
+      ]
+    },
+    {
+      "description": "Git intermediate-state metadata exists near a claimed completion point.",
+      "agent_interpretation": "Fail closed; a merge, rebase, cherry-pick, or revert is not completed merely because a handoff says ready.",
+      "pattern": "MERGE_HEAD|CHERRY_PICK_HEAD|REVERT_HEAD|rebase-merge|rebase-apply",
+      "detectable_by": [
+        ".git metadata",
+        "git status"
+      ]
     }
   ],
   "negative_signals": [
@@ -76,7 +96,8 @@
   "common_wrong_assumptions": [
     "If the agent believes all work is done, evidence can be summarized later.",
     "A green internal feeling is equivalent to tests or artifacts.",
-    "A task tracker status is just bookkeeping and cannot harm future work."
+    "A task tracker status is just bookkeeping and cannot harm future work.",
+    "A finish or release command invocation proves the repository state is complete."
   ],
   "first_checks": [
     {
@@ -107,6 +128,12 @@
         "task status"
       ],
       "safe_to_run": true
+    },
+    {
+      "check": "For repository/lane/deploy completion, re-read the target worktree and Git state at the entrypoint that flips status.",
+      "why": "The coordinating checkout or stale handoff may not reflect the physical state being released, merged, or deployed.",
+      "safe_to_run": true,
+      "command": "git status --short --branch && test ! -e .git/MERGE_HEAD && test ! -e .git/CHERRY_PICK_HEAD && test ! -e .git/REVERT_HEAD && test ! -d .git/rebase-merge && test ! -d .git/rebase-apply"
     }
   ],
   "decision_rules": [
@@ -130,12 +157,23 @@
       "source_ids": [
         "launch-seed-16-completion-evidence-gate-2026-05-11"
       ]
+    },
+    {
+      "condition": "The target repository is dirty or has merge, rebase, cherry-pick, or revert metadata at completion entrypoint.",
+      "action": "reject_trap_match",
+      "action_detail": "fail_closed_and_keep_ownership",
+      "then": "Do not mark complete, release the lane, or free the claim. Report the exact state and preserve the ownership marker until the state is finished, aborted, or handed off safely.",
+      "confidence": "high",
+      "source_ids": [
+        "final-six-completion-entrypoints-2026-06-01"
+      ]
     }
   ],
   "do_not": [
     "Do not mark a task complete based only on confidence.",
-    "Do not merge \u201cattempted,\u201d \u201cimplemented,\u201d \u201cpushed,\u201d \u201cdeployed,\u201d and \u201cverified\u201d into one status.",
-    "Do not omit skipped artifacts; name the skip and why it is acceptable."
+    "Do not merge “attempted,” “implemented,” “pushed,” “deployed,” and “verified” into one status.",
+    "Do not omit skipped artifacts; name the skip and why it is acceptable.",
+    "Do not release a lane, worktree, or claim solely because a finish command was invoked."
   ],
   "agent_directives": {
     "do_not_auto_apply": false,
@@ -163,6 +201,14 @@
         "retrieved_at": "2026-06-01T00:00:00+09:00",
         "excerpt": "AI recovery guidance listed premature completion before evidence as a recurring failure mode.",
         "supports": "Supports merging the failure-mode seed into this record."
+      },
+      {
+        "id": "final-six-completion-entrypoints-2026-06-01",
+        "url": "artifact:aigora-final-six/completion-entrypoints-must-recheck-repository-state",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "supports": "Final six-candidate review merged the repository-state entrypoint check into this record rather than creating a near-duplicate standalone slug.",
+        "excerpt": "Completion entrypoints must recheck repository state before merge, deploy, lane reuse, lane release, or claim release."
       }
     ],
     "verification_runs": []

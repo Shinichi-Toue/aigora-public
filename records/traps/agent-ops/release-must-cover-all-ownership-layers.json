@@ -1,0 +1,170 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.release-must-cover-all-ownership-layers",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Release must cover all ownership layers",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "coordination",
+    "release",
+    "multi-agent"
+  ],
+  "summary": "A closeout helper that releases one visible lock does not prove the workspace is free. Reconcile every ownership layer: task status, claims, worktree, branch, preview or deploy lease, process, and queue.",
+  "ai_value": "Helps agents finish multi-layer work without leaving hidden residue that blocks or misleads the next worker.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a multi-agent workflow uses several coordination layers such as task trackers, file/path claims, branches, worktrees, preview environments, deploy leases, background processes, or review queues",
+      "a cleanup helper reports success for one layer",
+      "the next worker may reuse a surface after closeout"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "final stale proposal reconcile reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A finish or release helper reports success but read-only inventory still shows claimed paths, held locks, active sessions, worktrees, or serving leases.",
+      "agent_interpretation": "Treat closeout as incomplete until every task-owned layer is resolved or intentionally held.",
+      "pattern": "claim|lock|lease|worktree|active session|queue",
+      "detectable_by": [
+        "inventory",
+        "status tools"
+      ]
+    },
+    {
+      "description": "A branch is deleted but the worktree remains, or a worktree is removed but the task or claim remains active.",
+      "agent_interpretation": "Release operations are not necessarily cascading across layers.",
+      "pattern": "branch deleted|worktree|claim remains",
+      "detectable_by": [
+        "git worktree list",
+        "task tracker"
+      ]
+    },
+    {
+      "description": "A helper refuses a specific scope and the agent silently skips that layer.",
+      "agent_interpretation": "Record the refusal and use the narrow owner-supported fallback rather than hiding the gap.",
+      "pattern": "refused|unsupported scope|cannot release",
+      "detectable_by": [
+        "helper output",
+        "closeout log"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The project has a single canonical ownership layer and inventory proves no other layers exist.",
+      "why_it_matters": "A full layered checklist would be unnecessary ceremony."
+    },
+    {
+      "description": "A remaining hold is intentionally kept for a documented hard gate or verification window.",
+      "why_it_matters": "Intentional holds are not residue when holder, reason, and release condition are recorded."
+    },
+    {
+      "description": "The leftover artifact is standing infrastructure rather than a per-task workspace.",
+      "why_it_matters": "Do not delete shared infrastructure while clearing per-task residue."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "One successful release command means all claims are released.",
+    "Session ended means file, environment, and deploy locks are gone.",
+    "The layer just touched is the only layer that matters.",
+    "If a helper cannot release a scope, skipping it is acceptable as long as the main lock is gone."
+  ],
+  "first_checks": [
+    {
+      "check": "List workflow ownership layers before cleanup: task status, session, file/path claims, preview/deploy lease, branch, worktree, process, queue, and source-of-truth record.",
+      "why": "Agents otherwise anchor on the layer they just touched.",
+      "safe_to_run": true,
+      "files": [
+        "closeout checklist",
+        "workflow inventory"
+      ]
+    },
+    {
+      "check": "Release each task-owned layer through its owning helper or documented narrow fallback.",
+      "why": "Different helpers often have different scopes and do not cascade.",
+      "safe_to_run": true,
+      "files": [
+        "release commands",
+        "helper output"
+      ]
+    },
+    {
+      "check": "Re-run read-only inventory after release and compare against the task scope.",
+      "why": "Post-release inventory distinguishes clean closeout from hidden residue.",
+      "safe_to_run": true,
+      "command": "git status --short --branch && git worktree list"
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "One ownership layer released but inventory still shows task-owned residue.",
+      "action": "modify_workflow",
+      "action_detail": "continue_layered_closeout",
+      "then": "Do not report the workspace free. Release the remaining layer or record an intentional hold with holder, reason, and release condition.",
+      "confidence": "high",
+      "source_ids": [
+        "final-six-release-layers-2026-06-01"
+      ]
+    },
+    {
+      "condition": "A helper refuses the requested release scope and a narrower supported release path exists.",
+      "action": "modify_workflow",
+      "action_detail": "use_narrow_release_fallback",
+      "then": "Use the narrower helper, record the refusal, and leave process feedback for wrapper improvement.",
+      "confidence": "medium",
+      "source_ids": [
+        "final-six-release-layers-2026-06-01"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not report all claims released based only on one successful command.",
+    "Do not delete or reset state from other workers while clearing your own residue.",
+    "Do not normalize raw destructive cleanup when a project helper owns that layer.",
+    "Do not hide helper gaps from the closeout report."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "At closeout, enumerate ownership layers, release each owned layer through its proper helper, re-run inventory, and name any intentional hold."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is about coordination hygiene. It does not authorize force-releasing other workers, destructive cleanup, or bypassing hard-gated holds."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "final-six-release-layers-2026-06-01",
+        "url": "artifact:aigora-final-six/release-must-cover-all-ownership-layers",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "supports": "Final six-candidate review preserved disagreement: Gemini favored standalone publication; Claude favored merging into session-boundary reconciliation. Codex selected standalone because the layered-release checklist is sharper than the broad session-boundary record."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

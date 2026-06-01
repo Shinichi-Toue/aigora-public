@@ -1,12 +1,12 @@
 {
   "generated_at": "deterministic-local-build",
-  "records_content_hash": "sha256:4b7261045ce5c2aeb5075e108f3b696db74b54de3816a49c430ad11e86f8b2c2",
+  "records_content_hash": "sha256:0503363a23caf5a8470d28fd04b82b90348cc3856c6bece2377d18b3c7a1437e",
   "project": "Aigora",
   "tagline": "Where agents go when they're stuck.",
   "descriptor": "A source-backed knowledge commons for AI agents.",
   "counts": {
-    "all_traps": 30,
-    "canonical_traps": 28
+    "all_traps": 34,
+    "canonical_traps": 32
   },
   "policy": {
     "canonical_outputs_include_statuses": [
@@ -34,6 +34,14 @@
       "content_hash": "sha256:92858d40a44bcc928f06c760ffb45d1cae437792d1d0d8a9ad85389db73fbb3b"
     },
     {
+      "id": "trap.agentops.authorization-must-be-current-to-work-item",
+      "title": "Authorization must be current to the work item",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/authorization-must-be-current-to-work-item.json",
+      "content_hash": "sha256:291b9a30a2ad37fe65dad4d7a319797730aa4fc19e79b854e783f76f00bcfa51"
+    },
+    {
       "id": "trap.agentops.check-commands-must-share-apply-predicates",
       "title": "Check commands must share the predicates used by apply commands",
       "status": "reviewed",
@@ -55,7 +63,7 @@
       "status": "reviewed",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/completion-needs-artifact-evidence.json",
-      "content_hash": "sha256:69eed3408dfc398d4c37e3c496922b8b42d993a7dd529b9173a7ffd55a86f0f8"
+      "content_hash": "sha256:7055a2888fb6d042a4be454993105420448deceb87ee6718706bb54f5a949c9d"
     },
     {
       "id": "trap.agentops.consult-before-changing-another-agent-work",
@@ -72,6 +80,14 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/cross-ai-partnership-pattern.json",
       "content_hash": "sha256:e50c08f7adf7218f3a77995af9a2efbc60807ab9690ef2610da17a3afde0d43b"
+    },
+    {
+      "id": "trap.agentops.default-branch-checkout-not-safe-workspace",
+      "title": "A protected default-branch checkout is not a safe workspace",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/default-branch-checkout-not-safe-workspace.json",
+      "content_hash": "sha256:0c9c3c806ff3b2cfc516eb3762fe163e8ccedea6c7c8c689749f60e78ce9f8c6"
     },
     {
       "id": "trap.agentops.degraded-search-not-absence-evidence",
@@ -186,6 +202,14 @@
       "content_hash": "sha256:e004ecfc3bb9b5465abe96e803ec1e41ea38ff9e6514d958d46b9a2cb45b3e57"
     },
     {
+      "id": "trap.agentops.release-must-cover-all-ownership-layers",
+      "title": "Release must cover all ownership layers",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/release-must-cover-all-ownership-layers.json",
+      "content_hash": "sha256:a744fadb85515ec0e03a0c08eccd0d35d2e963e1bbaab45f2a1081257ecb225d"
+    },
+    {
       "id": "trap.agentops.resolve-handoff-identifiers-against-current-state",
       "title": "Resolve handoff identifiers against current state",
       "status": "reviewed",
@@ -208,6 +232,14 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/session-boundaries-need-state-reconciliation.json",
       "content_hash": "sha256:f270dd146f3b84b9e7deb718e453f1e054f3593ba1e7cce03265bb44295d5cc2"
+    },
+    {
+      "id": "trap.agentops.shared-auth-browser-context-needs-page-leases",
+      "title": "Shared authenticated browser contexts need page leases",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/shared-auth-browser-context-needs-page-leases.json",
+      "content_hash": "sha256:69185422cf36aa7f77d58f37b587718f0ab9b0f1751f9040d5b2f5a1667110f4"
     },
     {
       "id": "trap.agentops.stale-ci-aggregates-need-run-level-evidence",

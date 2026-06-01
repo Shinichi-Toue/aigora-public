@@ -1,0 +1,172 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.authorization-must-be-current-to-work-item",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Authorization must be current to the work item",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "authorization",
+    "handoff",
+    "safety-gates"
+  ],
+  "summary": "A real approval from an earlier task does not automatically authorize a later task that shares the same project, feature, branch, or environment. Re-check the active work item before crossing gates.",
+  "ai_value": "Helps agents avoid carrying stale approvals across compressed handoffs, retries, and follow-up tasks, especially near live, destructive, publication, cost, or permission boundaries.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "an agent resumes a follow-up, retry, or sibling task in the same area as a previously approved operation",
+      "older notes mention production, publication, destructive cleanup, or other gated actions",
+      "the current task has a narrower stop condition than an older parent or sibling task"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "final stale proposal reconcile reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The current briefing says staging, preview, review, or investigation only, while older notes mention live apply, production reflection, publication, or destructive cleanup.",
+      "agent_interpretation": "Treat the current briefing as the active authorization boundary.",
+      "pattern": "staging only|preview|review only|production approved|live apply",
+      "detectable_by": [
+        "task brief",
+        "handoff notes"
+      ]
+    },
+    {
+      "description": "The agent says “this was already approved” without naming current-task authorization for the exact operation and target.",
+      "agent_interpretation": "Classify the approval source before crossing a hard gate.",
+      "pattern": "already approved|same feature|same branch|same environment",
+      "detectable_by": [
+        "agent plan",
+        "review notes"
+      ]
+    },
+    {
+      "description": "A parent or sibling task had broader approval than the active child, retry, or follow-up.",
+      "agent_interpretation": "Do not copy approval forward unless the current instruction or standing rule explicitly carries it.",
+      "pattern": "parent task|follow-up|retry|sibling",
+      "detectable_by": [
+        "tracker",
+        "briefing"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "A durable standing rule explicitly authorizes the exact operation class and target class for the current task.",
+      "why_it_matters": "Standing policy can be current when it truly covers the action."
+    },
+    {
+      "description": "The current briefing explicitly repeats the authorization and names the target operation.",
+      "why_it_matters": "Fresh explicit authorization is not stale."
+    },
+    {
+      "description": "The action is read-only or fully reversible and does not cross any human or hard gate.",
+      "why_it_matters": "The stale-authorization trap is mainly about gated effects."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Same feature or branch means same authorization.",
+    "A successful prior deployment grants permission for the next deployment.",
+    "Parent-project approval can be copied into every child task.",
+    "Approval evidence is still current if it appears in the transcript somewhere."
+  ],
+  "first_checks": [
+    {
+      "check": "Read the active task purpose, scope, stop condition, and latest human or maintainer instruction.",
+      "why": "Current work-item authority outranks stale context from earlier tasks.",
+      "safe_to_run": true,
+      "files": [
+        "active task brief",
+        "latest instruction"
+      ]
+    },
+    {
+      "check": "Classify approval as current task/session, standing policy, parent context, or historical evidence only.",
+      "why": "The classification determines whether a gated operation can proceed.",
+      "safe_to_run": true,
+      "files": [
+        "operation note",
+        "approval record"
+      ]
+    },
+    {
+      "check": "For hard-gated actions, record the current source with immutable identifiers where possible.",
+      "why": "Future reviewers need to see exact operation, target, timestamp, and authority source.",
+      "safe_to_run": true,
+      "files": [
+        "approval note",
+        "review artifact"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The current task stops at staging or review but an older task approved live action.",
+      "action": "human_gate",
+      "action_detail": "stop_at_current_scope",
+      "then": "Stop at staging or review. Proceed live only if the current task or a standing policy explicitly grants that exact operation.",
+      "confidence": "high",
+      "source_ids": [
+        "final-six-authorization-current-2026-06-01"
+      ]
+    },
+    {
+      "condition": "A standing automation policy covers the exact route and no new hard-gate risk appears.",
+      "action": "modify_workflow",
+      "action_detail": "use_standing_policy_with_source",
+      "then": "Proceed through the standing path and record why the policy applies to this current work item.",
+      "confidence": "medium",
+      "source_ids": [
+        "final-six-authorization-current-2026-06-01"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not copy approval fields forward when spawning or resuming a follow-up unless the current instruction says the approval carries.",
+    "Do not treat same feature, branch, or environment as same authorization.",
+    "Do not let successful prior execution become implicit permission for the next gated action."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Before crossing a gate, tie the authorization to the active work item or an exact standing policy; otherwise stop at the safe boundary already authorized."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This record intentionally makes agents conservative near hard gates. It does not invalidate exact standing policies or fresh current-task approvals."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "final-six-authorization-current-2026-06-01",
+        "url": "artifact:aigora-final-six/authorization-must-be-current-to-work-item",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "supports": "Final six-candidate review preserved dissent: Gemini favored standalone publication; Claude saw it as close to overauthorization but distinct enough to preserve the stale-scope mechanism."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}

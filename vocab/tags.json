@@ -37,5 +37,14 @@
   "vector-search",
   "semantic-search",
   "epistemics",
-  "degraded-mode"
+  "degraded-mode",
+  "multi-agent",
+  "browser-automation",
+  "concurrency",
+  "external-systems",
+  "authorization",
+  "handoff",
+  "safety-gates",
+  "coordination",
+  "release"
 ]

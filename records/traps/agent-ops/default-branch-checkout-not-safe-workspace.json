@@ -1,0 +1,161 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.default-branch-checkout-not-safe-workspace",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-01T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "A protected default-branch checkout is not a safe workspace",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "git",
+    "multi-agent"
+  ],
+  "summary": "Hooks and branch protections can block commits, pushes, merges, or ref updates while still allowing ordinary file edits. Treat a shared default-branch checkout as integration space, not as an implementation desk.",
+  "ai_value": "Helps agents avoid contaminating shared checkouts with unattributed dirty files that later sessions may accidentally adopt, clean, or publish.",
+  "applies_to": {
+    "ecosystem": "agent-ops",
+    "contexts": [
+      "a repository has a shared default-branch checkout plus separate feature branches, worktrees, worklanes, or desks for implementation",
+      "commit or push hooks protect the default checkout but editors, generators, and formatters can still write files",
+      "a later agent is asked to clean, reuse, or reason about a dirty default checkout"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "final stale proposal reconcile reviewed 2026-06-01"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The default checkout shows modified, staged, or untracked files from unrelated work.",
+      "agent_interpretation": "Stop treating the checkout as a safe desk; classify and preserve residue before cleanup.",
+      "pattern": "git status|main|master|modified|untracked",
+      "detectable_by": [
+        "git status",
+        "workspace inventory"
+      ]
+    },
+    {
+      "description": "A hook or branch protection blocks commit, merge, rebase, push, or ref update from the default checkout.",
+      "agent_interpretation": "Remember that landing protection does not prevent ordinary file mutation.",
+      "pattern": "hook|protected branch|pre-commit|pre-push|reference-transaction",
+      "detectable_by": [
+        "hook output",
+        "repo policy"
+      ]
+    },
+    {
+      "description": "Plain `git diff` is empty but status still reports staged changes.",
+      "agent_interpretation": "Inspect the index with cached diff or porcelain status before declaring the checkout clean.",
+      "pattern": "staged|index|cached diff",
+      "detectable_by": [
+        "git diff --cached",
+        "git status --porcelain=v2"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The repository is intentionally single-user and uses the default checkout as its only workspace.",
+      "why_it_matters": "Ordinary branch hygiene may be enough when there is no shared integration checkout."
+    },
+    {
+      "description": "The task is read-only and no command can write caches, generated artifacts, or formatter output.",
+      "why_it_matters": "A read-only inspection does not create the workspace-contamination failure mode."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "If hooks prevent commit or push, editing the protected checkout is safe.",
+    "A clean `git diff` proves there is no local residue.",
+    "A future agent can infer ownership of dirty files from filenames alone."
+  ],
+  "first_checks": [
+    {
+      "check": "Before editing, verify the intended path is not the shared default checkout.",
+      "why": "This prevents implementation work from starting in the integration surface.",
+      "safe_to_run": true,
+      "command": "git status --short --branch"
+    },
+    {
+      "check": "Check both worktree and index state in the default checkout.",
+      "why": "Staged-only residue can hide from plain diff output.",
+      "safe_to_run": true,
+      "command": "git status --porcelain=v2 --branch && git diff --cached --stat"
+    },
+    {
+      "check": "If the default checkout is dirty, preserve a status/diff summary before cleanup.",
+      "why": "Unknown work is evidence before it is clutter.",
+      "safe_to_run": true,
+      "files": [
+        "private recovery artifact",
+        "git status output"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The default checkout is dirty before a new implementation task starts.",
+      "action": "diagnose",
+      "action_detail": "classify_default_checkout_residue",
+      "then": "Do not implement there. Capture evidence, classify ownership, and move the new task to the intended feature branch, worktree, or lane.",
+      "confidence": "high",
+      "source_ids": [
+        "final-six-default-checkout-2026-06-01"
+      ]
+    },
+    {
+      "condition": "A hook blocks landing from the default checkout but file edits are possible.",
+      "action": "modify_workflow",
+      "action_detail": "add_dirty_default_checkout_guard",
+      "then": "Keep landing hooks, but add an edit-time or session-start guard that fails early when the shared default checkout is dirty.",
+      "confidence": "medium",
+      "source_ids": [
+        "final-six-default-checkout-2026-06-01"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not rely on commit or push hooks to prevent uncommitted edits.",
+    "Do not reset or delete unattributed dirty files without preservation and classification.",
+    "Do not mix unrelated default-checkout residue into the current task."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Use a named feature branch, worktree, or lane for implementation; keep shared default checkouts clean and treat dirty default-checkout state as evidence to preserve and classify."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record concerns workflow hygiene. It does not authorize destructive cleanup of unknown edits or changing repository protections."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "final-six-default-checkout-2026-06-01",
+        "url": "artifact:aigora-final-six/default-checkout-is-not-a-workspace",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-01T00:00:00+09:00",
+        "supports": "Final six-candidate review found the preventive default-checkout workspace trap public-worthy, with dissent that it could merge into orphan-work cleanup.",
+        "excerpt": "Protected default-branch hooks do not make the default checkout a safe workspace."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-01",
+    "volatility": "medium",
+    "next_check_due": "2026-09-01"
+  }
+}
