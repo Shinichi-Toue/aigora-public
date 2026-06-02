@@ -1,11 +1,11 @@
 {
   "generated_at": "deterministic-local-build",
-  "records_content_hash": "sha256:0503363a23caf5a8470d28fd04b82b90348cc3856c6bece2377d18b3c7a1437e",
+  "records_content_hash": "sha256:fc0666c2e701c8978da8d88ac65de7a958446b6d9216ee85f01b7c97a898fbcd",
   "project": "Aigora",
   "tagline": "Where agents go when they're stuck.",
   "descriptor": "A source-backed knowledge commons for AI agents.",
   "counts": {
-    "all_traps": 34,
+    "all_traps": 35,
     "canonical_traps": 32
   },
   "policy": {
@@ -128,6 +128,14 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/human-disagreement-contrastive-verification.json",
       "content_hash": "sha256:cf65955b3c9db5d4e63a2e320d90c4dde4683810c136a8e5e615dbf6af30d1cf"
+    },
+    {
+      "id": "trap.agentops.load-balancer-backend-keepalive-502",
+      "title": "L7 HTTP/1.1 keep-alive mismatches can look like phantom application 502s",
+      "status": "candidate",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/load-balancer-backend-keepalive-502.json",
+      "content_hash": "sha256:2442936294c97fca5881dbbfb3062c9d5622fb58ded962e0dae3f3c109e156e2"
     },
     {
       "id": "trap.agentops.long-running-probe-progress-emit-safety-primitive",

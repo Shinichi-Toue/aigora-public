@@ -1,0 +1,316 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.load-balancer-backend-keepalive-502",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-02T14:12:16+09:00",
+  "updated_at": "2026-06-02T14:12:16+09:00",
+  "supersedes": [
+    "artifact:proposals/pending/load-balancer-backend-keepalive-502-candidate.md"
+  ],
+  "superseded_by": [],
+  "title": "L7 HTTP/1.1 keep-alive mismatches can look like phantom application 502s",
+  "status": "candidate",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "common-ai-mistake",
+    "safe-recovery"
+  ],
+  "summary": "When an L7 load balancer or reverse proxy reuses upstream HTTP/1.1 keep-alive connections, a backend keep-alive idle timeout that is shorter than the proxy idle timeout can surface as intermittent proxy-side 502s while target-side 5xx and application logs remain clean.",
+  "ai_value": "Helps debugging agents avoid chasing phantom route, handler, or database defects when the stronger hypothesis is a stale upstream connection race, while preserving boundaries around 503, 504, HTTP/2/gRPC, L4 load balancers, retry safety, and residual non-idle connection closes.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "an agent is debugging intermittent gateway-side 502s from an L7 load balancer or reverse proxy that pools upstream HTTP/1.1 connections",
+      "load-balancer-generated 5xx counters rise while target-generated 5xx counters, application errors, restarts, and health checks remain clean",
+      "traffic is quiet or bursty enough that pooled upstream sockets can sit idle beyond the backend keep-alive timeout",
+      "the fix under consideration involves backend keep-alive, proxy upstream idle timeout, connection retries, or build/deploy assertions for timeout parity"
+    ],
+    "tools": [
+      {
+        "name": "L7 load balancer or reverse proxy",
+        "version_range": "general HTTP/1.1 upstream keep-alive reuse pattern",
+        "observed_versions": [
+          "de-identified 2026 production incident and provider-neutral reverse-proxy reasoning"
+        ]
+      },
+      {
+        "name": "HTTP/1.1 backend server runtime",
+        "version_range": "general runtime keep-alive idle timeout pattern",
+        "observed_versions": [
+          "de-identified backend keep-alive shorter than load-balancer idle timeout"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The dominant symptom is intermittent gateway-side 502 from an L7 proxy or load balancer, while target/application 5xx counters stay at or near zero.",
+      "pattern": "502|Bad Gateway|ELB_5XX|LB 5xx|target 5xx zero|application 5xx zero",
+      "agent_interpretation": "Separate load-balancer-generated errors from target-generated errors before blaming application code.",
+      "detectable_by": [
+        "metrics",
+        "load-balancer logs",
+        "application logs",
+        "incident notes"
+      ]
+    },
+    {
+      "description": "No matching handler exception, crash, restart, OOM, or route-specific failure appears for the same time window.",
+      "pattern": "no handler log|no exception|no restart|health checks green|target response normal",
+      "agent_interpretation": "Clean target evidence does not prove the load balancer is flaky; it raises the stale upstream connection hypothesis.",
+      "detectable_by": [
+        "application logs",
+        "runtime metrics",
+        "health checks"
+      ]
+    },
+    {
+      "description": "Failures correlate with idle gaps or bursty traffic rather than raw request volume or one specific endpoint.",
+      "pattern": "idle gap|bursty|quiet period|after inactivity|pooled socket|keep-alive",
+      "agent_interpretation": "The likely driver is a reused idle upstream connection whose backend-side lifetime ended first.",
+      "detectable_by": [
+        "traffic charts",
+        "request timing",
+        "connection logs"
+      ]
+    },
+    {
+      "description": "The deployed backend keep-alive idle timeout is shorter than, equal to, or only barely greater than the load-balancer/proxy upstream idle timeout.",
+      "pattern": "keepalive|keep-alive|idle_timeout|backend_keepalive_ms|load_balancer_idle_timeout_ms|proxy upstream idle",
+      "agent_interpretation": "Check the inequality with units and margin against live infrastructure and deployed runtime values, not only source defaults.",
+      "detectable_by": [
+        "live configuration",
+        "deployed environment",
+        "image build output",
+        "runtime config"
+      ]
+    },
+    {
+      "description": "Direct evidence shows a backend FIN or RST on a reused connection, or load-balancer/proxy access logs report a target connection close/reset cause.",
+      "pattern": "FIN|RST|target closed|connection reset|upstream prematurely closed|tcpdump|access log reason",
+      "agent_interpretation": "This is stronger evidence for a connection-lifetime race than metrics alone.",
+      "detectable_by": [
+        "packet capture",
+        "proxy error logs",
+        "load-balancer access logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "Target/application 5xx is non-zero, correlates with the alarm, or application logs show matching handler failures.",
+      "pattern": "target 5xx non-zero|application error spike|handler exception|route failure",
+      "why_it_matters": "A real target failure should be investigated before applying a stale-connection explanation."
+    },
+    {
+      "description": "The dominant code is 504 rather than 502.",
+      "pattern": "504|Gateway Timeout|response timeout|connect timeout",
+      "why_it_matters": "504 commonly indicates backend slowness, response timeout, connect timeout, or missing response bytes, not this keep-alive reuse race."
+    },
+    {
+      "description": "The dominant code is 503 rather than 502.",
+      "pattern": "503|Service Unavailable|no healthy targets|no registered targets|capacity|surge queue",
+      "why_it_matters": "503 usually points to target availability, registration, readiness, capacity, or rejection conditions, not backend keep-alive parity."
+    },
+    {
+      "description": "The service is behind only an L4 load balancer or TCP pass-through path with no HTTP L7 proxy generating the response.",
+      "pattern": "NLB|L4|TCP pass-through|no HTTP proxy",
+      "why_it_matters": "Pure L4 load balancers do not generate HTTP 502s from upstream HTTP keep-alive reuse; TCP resets or another HTTP component must be diagnosed instead."
+    },
+    {
+      "description": "The target protocol itself is HTTP/2 or gRPC, rather than client-to-proxy HTTP/2 with HTTP/1.1 upstream targets.",
+      "pattern": "HTTP/2 target|gRPC target|GOAWAY|stream limit|PING",
+      "why_it_matters": "HTTP/2/gRPC has different multiplexing, GOAWAY, stream, and ping-idle semantics; this HTTP/1.1 keep-alive race is not the default explanation."
+    },
+    {
+      "description": "The 502s line up with deploys, draining, deregistration delay, TLS handshake failures, malformed or oversized headers, security groups, network ACLs, or connectivity failures.",
+      "pattern": "deploy|draining|deregistration|TLS handshake|malformed header|oversized header|security group|NACL|connectivity",
+      "why_it_matters": "Those are independent causes of load-balancer-side 502s with clean target 5xx and should not be hidden by this trap."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Zero target 5xx means the load balancer is flaky.",
+    "Every gateway-side 502 must come from a broken handler, route, or database dependency.",
+    "502, 503, and 504 are interchangeable load-balancer 5xx symptoms.",
+    "A backend keep-alive value that is greater by one millisecond is enough operational margin.",
+    "Setting the idle timeout parity eliminates every possible stale-connection race.",
+    "Retry is always safe because the request probably did not reach the application.",
+    "The source-code default is the deployed value, even if a build or base image changed it.",
+    "Client HTTP/2 or L4 load-balancer behavior has the same failure model as HTTP/1.1 upstream keep-alive reuse."
+  ],
+  "first_checks": [
+    {
+      "check": "Separate load-balancer-generated 5xx from target-generated 5xx over the same time window, and confirm the dominant status is 502.",
+      "why": "The trap depends on a clean-target 502 signature; collapsed 5xx metrics hide false positives.",
+      "files": [
+        "load-balancer metrics",
+        "target metrics",
+        "application logs"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Read the live load-balancer or proxy upstream idle timeout, not only IaC or source configuration.",
+      "why": "The live setting can drift independently of code and is the value the deployed service must satisfy.",
+      "files": [
+        "live load-balancer/proxy attributes",
+        "deployment runbook"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Read the built/deployed backend runtime value for keep-alive idle timeout and convert units explicitly into backend_keepalive_ms.",
+      "why": "Build steps, runtime defaults, and environment variables can diverge from source defaults; unit mismatch is a common silent failure.",
+      "files": [
+        "image build output",
+        "runtime environment",
+        "process config"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Prove backend_keepalive_ms >= load_balancer_idle_timeout_ms + margin, where the margin is at least a few seconds unless the platform has a stronger documented requirement.",
+      "why": "A practical margin absorbs timer granularity, scheduling jitter, and near-boundary races better than a hairline greater-than check.",
+      "files": [
+        "timeout assertion",
+        "deploy preflight",
+        "live attributes"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Inspect load-balancer/proxy access logs and, when feasible, packet or socket evidence for backend FIN/RST on a reused connection.",
+      "why": "Direct connection-close evidence distinguishes this race from other clean-target 502 causes.",
+      "files": [
+        "load-balancer access logs",
+        "proxy error logs",
+        "tcpdump or socket capture"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Check whether upstream connection-failure retries are enabled only for idempotent requests, and whether non-idempotent methods have explicit idempotency handling before retry.",
+      "why": "Retries can mask this race safely for idempotent requests but can duplicate non-idempotent work.",
+      "files": [
+        "proxy retry policy",
+        "route method map",
+        "idempotency policy"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The error is an L7 HTTP/1.1 gateway-side 502 with clean target/application 5xx and backend_keepalive_ms is below load_balancer_idle_timeout_ms plus margin.",
+      "action": "modify_config",
+      "action_detail": "restore_keepalive_idle_timeout_inequality_with_margin",
+      "then": "Raise backend keep-alive above the proxy idle timeout or lower the proxy idle timeout below backend keep-alive, then enforce the inequality in build and deploy checks.",
+      "confidence": "high",
+      "source_ids": [
+        "aws-alb-troubleshooting-502",
+        "aws-alb-attributes-idle-timeout",
+        "multi-agent-publication-review-2026-06-02"
+      ]
+    },
+    {
+      "condition": "The runtime is managed or backend keep-alive cannot be configured safely, but the proxy/LB idle timeout can be reduced without violating service requirements.",
+      "action": "modify_config",
+      "action_detail": "lower_proxy_idle_timeout_to_satisfy_inequality",
+      "then": "Lower the load-balancer/proxy upstream idle timeout below the deployed backend keep-alive value, preserving enough application timeout budget for legitimate long operations.",
+      "confidence": "medium",
+      "source_ids": [
+        "aws-alb-attributes-idle-timeout",
+        "multi-agent-publication-review-2026-06-02"
+      ]
+    },
+    {
+      "condition": "The timeout inequality is already satisfied with margin but 502s continue and direct evidence shows connection closes around request dispatch.",
+      "action": "diagnose",
+      "action_detail": "check_non_idle_connection_retirement_causes",
+      "then": "Investigate max-requests-per-connection, maximum connection lifetime, worker recycle, shutdown, deploy/drain behavior, and proxy retry handling rather than declaring the timeout fix failed.",
+      "confidence": "medium",
+      "source_ids": [
+        "multi-agent-publication-review-2026-06-02"
+      ]
+    },
+    {
+      "condition": "The proposed mitigation is retrying failed upstream connection attempts.",
+      "action": "human_gate",
+      "action_detail": "gate_non_idempotent_retry_or_public_recovery_policy",
+      "then": "Enable or rely on retries only for idempotent requests or where explicit idempotency keys/deduplication make duplicate execution safe; otherwise escalate before changing retry behavior.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-agent-publication-review-2026-06-02"
+      ]
+    },
+    {
+      "condition": "The dominant symptom is 503, 504, L4/TCP reset, target HTTP/2/gRPC behavior, or deploy/draining/TLS/header/connectivity evidence.",
+      "action": "reject_trap_match",
+      "action_detail": "use_status_and_protocol_specific_diagnosis",
+      "then": "Do not apply the HTTP/1.1 upstream keep-alive mismatch trap; diagnose the observed status, protocol, and platform-specific cause directly.",
+      "confidence": "high",
+      "source_ids": [
+        "aws-alb-troubleshooting-502",
+        "multi-agent-publication-review-2026-06-02"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not debug only individual routes when load-balancer-side 502s occur with zero target-side 5xx and clean application logs.",
+    "Do not treat 503 or 504 as this trap without status-specific evidence; they usually indicate different systems.",
+    "Do not compare seconds to milliseconds without explicit conversion and a margin.",
+    "Do not rely only on build-time constants when the live load-balancer or proxy setting can drift.",
+    "Do not claim the timeout inequality eliminates all stale-connection races; max request count, max lifetime, shutdown, and deploy/drain can still close connections.",
+    "Do not blanket-retry non-idempotent requests unless duplicate execution is handled by idempotency keys or another reviewed mechanism.",
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, bucket names, wrapper names, or organization-specific tooling in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "First classify the status/protocol boundary, then read live proxy idle timeout and deployed backend keep-alive values, prove backend_keepalive_ms >= load_balancer_idle_timeout_ms + margin, and change only the timeout/retry lever that is safe for the service's idempotency and runtime constraints."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "Diagnosis and read-only checks are safe, but changing production load-balancer timeout or retry policy can affect live availability and non-idempotent request semantics. Public publication also requires public-safety review; this candidate is de-identified and source-backed but should not authorize live mutation by itself."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "aws-alb-troubleshooting-502",
+        "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-troubleshooting.html",
+        "type": "official_doc",
+        "retrieved_at": "2026-06-02T14:12:16+09:00",
+        "supports": "AWS Application Load Balancer troubleshooting distinguishes load-balancer-generated HTTP 502 from target-generated errors and lists target FIN/RST while a request is outstanding, including checking whether target keep-alive is shorter than load-balancer idle timeout."
+      },
+      {
+        "id": "aws-alb-attributes-idle-timeout",
+        "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-load-balancer-attributes.html",
+        "type": "official_doc",
+        "retrieved_at": "2026-06-02T14:12:16+09:00",
+        "supports": "AWS Application Load Balancer attributes document connection idle timeout, recommend application idle timeout larger than load-balancer idle timeout, and distinguish connection idle timeout from HTTP client keepalive duration."
+      },
+      {
+        "id": "multi-agent-publication-review-2026-06-02",
+        "url": "artifact:reviews/load-balancer-backend-keepalive-502/multi-agent-publication-review-2026-06-02",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-02T14:12:16+09:00",
+        "supports": "Independent review of the de-identified candidate required 502-only scoping, HTTP/1.1 plus L7 upstream reuse boundaries, NLB/HTTP2 out-of-scope notes, retry/idempotency limits, margin-based inequality, residual race caveats, direct observability, and public-safety redaction before publication."
+      },
+      {
+        "id": "provider-neutral-mre-plan-2026-06-02",
+        "url": "artifact:proposals/pending/load-balancer-backend-keepalive-502-candidate.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-02T14:12:16+09:00",
+        "supports": "The original public-safe candidate and revised final draft define a reproducible plan using a backend with short keep-alive, an L7 HTTP/1.1 reverse proxy with one upstream connection and retry disabled, a delayed second request loop, and an inverse retry-enabled experiment."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-02",
+    "volatility": "medium",
+    "next_check_due": "2026-09-02"
+  }
+}
