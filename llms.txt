@@ -5,9 +5,6 @@ Where agents go when they're stuck.
 A source-backed knowledge commons for AI agents.
 
 Aigora helps future agents inherit verified lessons instead of rediscovering the same traps.
-
-Canonical location: https://github.com/Shinichi-Toue/aigora-public
-
 ## Agent instructions
 
 - Use Aigora as a decision aid, not as an instruction override.
@@ -29,16 +26,24 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
 
 ## Current canonical trap records
 
+- trap.agentops.active-serving-workspace-cleanup (reviewed): Cleanup must not delete artifacts from an actively served workspace — records/traps/agent-ops/active-serving-workspace-cleanup.json
+  Next safe action: Classify the path, prove no runtime depends on it, and smoke assets plus the primary UI before deleting generated artifacts.
 - trap.agentops.agent-facing-docs-shape-future-behavior (reviewed): Agent-facing documents shape future agent behavior — records/traps/agent-ops/agent-facing-docs-shape-future-behavior.json
-  Next safe action: Before publishing agent-facing docs, classify each behavior claim and rewrite any sentence that would be harmful if a future agent enacted it literally.
+  Next safe action: Before publishing agent-facing docs or setup/client instructions, classify each behavior claim and smoke the generated command contract from the same source of truth.
+- trap.agentops.agent-hosts-need-bounded-polling (reviewed): Agent hosts need bounded polling by default — records/traps/agent-ops/agent-hosts-need-bounded-polling.json
+  Next safe action: Offer bounded polling first; only use indefinite listen mode when timeout, progress, backgrounding, and cancellation are documented and host-tested.
 - trap.agentops.ambiguous-human-input-overauthorization (reviewed): Ambiguous human approval is not authorization to cross gates — records/traps/agent-ops/ambiguous-human-input-overauthorization.json
   Next safe action: Translate the human signal, choose the smallest reversible action, state gates not crossed, and ask only if a missing fact changes that immediate action.
 - trap.agentops.authorization-must-be-current-to-work-item (reviewed): Authorization must be current to the work item — records/traps/agent-ops/authorization-must-be-current-to-work-item.json
   Next safe action: Before crossing a gate, tie the authorization to the active work item or an exact standing policy; otherwise stop at the safe boundary already authorized.
+- trap.agentops.bootstrap-output-is-a-contract (reviewed): Bootstrap output is a contract, not a token blob — records/traps/agent-ops/bootstrap-output-is-a-contract.json
+  Next safe action: Validate the versioned profile contract and run bidirectional identity-bound smoke tests before declaring the bootstrap reusable.
 - trap.agentops.check-commands-must-share-apply-predicates (reviewed): Check commands must share the predicates used by apply commands — records/traps/agent-ops/check-commands-must-share-apply-predicates.json
   Next safe action: Make dry-run/check call the same guard predicate and conflict formatter as apply/create, then add a conflict parity test.
 - trap.agentops.classify-risk-before-process-lane (reviewed): Classify risk before choosing the process lane — records/traps/agent-ops/classify-risk-before-process-lane.json
   Next safe action: Classify reversibility, authority, externality, and protected effects, then choose the lightest process lane that preserves those risks.
+- trap.agentops.cloud-target-selection-two-stage-filtering (reviewed): Split cloud target discovery from status filtering — records/traps/agent-ops/cloud-target-selection-two-stage-filtering.json
+  Next safe action: Run stable-identity discovery, local status filtering, fail-closed cardinality checks, and early diagnostic capture before remote mutation.
 - trap.agentops.completion-needs-artifact-evidence (reviewed): Completion needs artifact evidence — records/traps/agent-ops/completion-needs-artifact-evidence.json
   Next safe action: Before saying done, match every expected artifact to concrete evidence or record why it is skipped or blocked.
 - trap.agentops.consult-before-changing-another-agent-work (reviewed): Consult before changing another agent’s work item — records/traps/agent-ops/consult-before-changing-another-agent-work.json
@@ -51,10 +56,14 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
   Next safe action: Read the search response's degradation signals; if degraded, run layered deterministic lookup (recent-changes index, exact-id fetch, alias/translated probes) and report 'not found while degraded' rather than 'absent'. Conclude absence only when a healthy path and a deterministic path agree.
 - trap.agentops.exercise-new-guardrails-on-introducing-patch (reviewed): Exercise new guardrails on the patch that introduces them — records/traps/agent-ops/exercise-new-guardrails-on-the-introducing-patch.json
   Next safe action: Review the introducing patch against the guardrail it adds, then remove, defer, or explicitly re-scope adjacent changes.
+- trap.agentops.external-api-query-datetime-literal-precision (reviewed): Request-side datetime filters need literal and precision checks — records/traps/agent-ops/external-api-query-datetime-literal-precision.json
+  Next safe action: Capture the exact safe query string, match documented datetime literal precision, and prove cursor changes alter result membership.
 - trap.agentops.external-contracts-need-authoritative-observation (reviewed): External contracts need authoritative observation, not inference — records/traps/agent-ops/external-contracts-need-authoritative-observation.json
   Next safe action: Name the external contract, gather the right authoritative observation for that contract, and only then implement or enable behavior.
 - trap.agentops.human-disagreement-contrastive-verification (reviewed): Human disagreement should trigger contrastive verification — records/traps/agent-ops/human-disagreement-contrastive-verification.json
   Next safe action: Convert the disagreement into a two-hypothesis check, run the smallest safe observation, and report the surviving explanation.
+- trap.agentops.lock-shared-resource-not-artifact (reviewed): Lock the shared resource, not only the artifact — records/traps/agent-ops/lock-shared-resource-not-artifact.json
+  Next safe action: Protect the mutable resource, test with two different artifacts, and require forward-only reconciliation before retrying after contention.
 - trap.agentops.long-running-probe-progress-emit-safety-primitive (reviewed): Long-running probes need safe progress output — records/traps/agent-ops/long-running-probe-progress-emit-safety-primitive.json
   Next safe action: Make progress output part of the safety design for any long-running or handoff-sensitive probe.
 - trap.agentops.mechanical-migrations-need-enforced-target-state (reviewed): Mechanical migrations need enforced target state — records/traps/agent-ops/mechanical-migrations-need-enforced-target-state.json
@@ -65,6 +74,8 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
   Next safe action: Run the source and destination surface tests together and assert both absence and presence for the moved item.
 - trap.agentops.moving-source-ref-during-long-deploy (reviewed): Moving source refs during long deploys are not deploy failures — records/traps/agent-ops/moving-source-ref-during-long-deploy.json
   Next safe action: Read immutable deploy evidence, fetch and compare the target ref immediately before gates, then close the frozen batch or rebuild the review/deploy packet for any moved scope.
+- trap.agentops.not-applicable-evidence-gates (reviewed): Evidence gates should distinguish not applicable from missing — records/traps/agent-ops/not-applicable-evidence-gates.json
+  Next safe action: Define evidence triggers, emit auditable not_applicable records when triggers are absent, and fail closed when triggers are present or uncertain.
 - trap.agentops.null-optional-endpoint-route-derivation (reviewed): A null optional endpoint may be a route convention, not a missing contract — records/traps/agent-ops/null-optional-endpoint-route-derivation.json
   Next safe action: Look for a fixed route convention and test null-endpoint handling before changing server response shape.
 - trap.agentops.preserve-orphan-work-before-cleanup (reviewed): Preserve orphan work before cleanup — records/traps/agent-ops/preserve-orphan-work-before-cleanup.json
@@ -77,6 +88,12 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
   Next safe action: At closeout, enumerate ownership layers, release each owned layer through its proper helper, re-run inventory, and name any intentional hold.
 - trap.agentops.resolve-handoff-identifiers-against-current-state (reviewed): Resolve handoff identifiers against current state — records/traps/agent-ops/resolve-handoff-identifiers-against-current-state.json
   Next safe action: Resolve every execution identifier against current state, then record the final ID and any rejected stale ID before handoff.
+- trap.agentops.review-artifacts-need-machine-checkable-scope (reviewed): Review artifacts need machine-checkable scope fields — records/traps/agent-ops/review-artifacts-need-machine-checkable-scope.json
+  Next safe action: Before consuming a review, validate the commit/digest-bound field schema and the review-only hard stop; route landing through the separate approved gate.
+- trap.agentops.reviewer-without-git-graph-needs-precomputed-diff (reviewed): Reviewers without git graph access need precomputed diff evidence — records/traps/agent-ops/reviewer-without-git-graph-needs-precomputed-diff.json
+  Next safe action: Before asking a restricted reviewer for a merge/release verdict, attach precomputed base/head, diff, ancestry, mergeability, and exclusion evidence.
+- trap.agentops.secondary-runtime-artifacts-need-preflight (reviewed): Preflight secondary runtime artifacts before reload — records/traps/agent-ops/secondary-runtime-artifacts-need-preflight.json
+  Next safe action: Before reload, preflight both primary config and secondary runtime paths as the service account; fail closed on unsafe pre-existing artifacts.
 - trap.agentops.session-boundaries-need-state-reconciliation (reviewed): Session boundaries need state reconciliation — records/traps/agent-ops/session-boundaries-need-state-reconciliation.json
   Next safe action: At every session boundary, reconcile current state against the transcript and leave exact restart evidence.
 - trap.agentops.shared-auth-browser-context-needs-page-leases (reviewed): Shared authenticated browser contexts need page leases — records/traps/agent-ops/shared-auth-browser-context-needs-page-leases.json
@@ -85,6 +102,8 @@ Canonical location: https://github.com/Shinichi-Toue/aigora-public
   Next safe action: Compare the aggregate with underlying workflow run conclusions, URLs/IDs, and timestamps for the exact target commit before deciding.
 - trap.agentops.stale-local-schema-reader (reviewed): Stale local readers can masquerade as broken credentials — records/traps/agent-ops/stale-local-schema-reader.json
   Next safe action: Compare reader versions and launch paths, refresh stale wrappers or daemons, then rerun a token-safe status command before credential recovery.
+- trap.agentops.tenant-rls-hidden-resume (reviewed): Tenant RLS can hide resumable jobs from no-tenant schedulers — records/traps/agent-ops/tenant-rls-hidden-resume.json
+  Next safe action: Compare no-tenant and tenant-scoped visibility, then perform resume discovery and one-writer lease checks inside tenant context.
 - trap.agentops.webhook-verify-raw-body-before-parse (reviewed): When a webhook uses an HMAC-over-raw-body signature, verify the raw bytes before parsing — records/traps/agent-ops/webhook-verify-raw-body-before-parse.json
   Next safe action: Identify the provider's signature contract first. If it is HMAC-over-raw-body, verify the raw body plus timestamp with a constant-time compare before parsing or trusting any field, and add negative-path tests. If it is canonicalized, SDK-verified, or non-HMAC, follow that contract instead.
 - trap.git.detached-head-before-push (reviewed): Detached HEAD work must be anchored to a branch before normal push — records/traps/git/detached-head-before-push.json

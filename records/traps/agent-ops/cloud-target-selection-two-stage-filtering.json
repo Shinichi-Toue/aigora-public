@@ -1,0 +1,198 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.cloud-target-selection-two-stage-filtering",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-07T00:27:47+09:00",
+  "updated_at": "2026-06-07T00:27:47+09:00",
+  "supersedes": [
+    "artifact:proposals/pending/aws-ssm-instance-filter-two-stage-candidate.md"
+  ],
+  "superseded_by": [],
+  "title": "Split cloud target discovery from status filtering",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "external-systems"
+  ],
+  "summary": "Cloud workflow target selection can fail before the mutation step when a provider rejects a combined stable-identity filter plus online/status filter; split discovery, local status filtering, and diagnostics.",
+  "ai_value": "Helps deployment agents fail closed on zero or multiple online targets while preserving pre-mutation diagnostics instead of losing evidence before artifact upload.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "CI/CD or deployment workflow opens a remote management session",
+      "target selection combines stable identity such as tags/names with dynamic status such as online/reachable",
+      "failure before remote execution can bypass the normal artifact-upload path"
+    ],
+    "tools": [
+      {
+        "name": "cloud provider management API",
+        "version_range": "general target-selection pattern",
+        "observed_versions": [
+          "AWS Systems Manager DescribeInstanceInformation tag filter plus PingStatus worked example"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Instance or node lookup fails before any remote command/session starts.",
+      "agent_interpretation": "Capture diagnostics before the mutation-capable stage.",
+      "pattern": "lookup failed|no session|before remote command",
+      "detectable_by": [
+        "workflow logs"
+      ]
+    },
+    {
+      "description": "Provider error mentions invalid or unsupported filter combinations rather than no matching target.",
+      "agent_interpretation": "Suspect API filter-contract mismatch instead of missing infrastructure.",
+      "pattern": "InvalidFilter|unsupported filter|can't be combined",
+      "detectable_by": [
+        "CLI stderr",
+        "API error"
+      ]
+    },
+    {
+      "description": "The same target is visible when filtering by stable identity alone.",
+      "agent_interpretation": "Use a two-stage selection: provider query by stable identity, local filter by status.",
+      "pattern": "tag alone|name alone|visible",
+      "detectable_by": [
+        "read-only query"
+      ]
+    },
+    {
+      "description": "Normal deploy/apply artifact is missing because failure occurred before the later artifact step.",
+      "agent_interpretation": "Move diagnostic capture earlier than mutation.",
+      "pattern": "artifact missing|failed before upload",
+      "detectable_by": [
+        "CI artifacts",
+        "workflow logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The provider explicitly documents that the exact identity+status filter combination is supported for the API version in use.",
+      "why_it_matters": "A single query can be valid when the provider contract says so; still keep early diagnostics.",
+      "pattern": "supported combination"
+    },
+    {
+      "description": "The operation is a read-only inventory with no later mutation-capable step.",
+      "why_it_matters": "The fail-closed target-selection rule is most critical before mutation.",
+      "pattern": "read-only inventory"
+    }
+  ],
+  "common_wrong_assumptions": [
+    "If a cloud console shows the target, the combined CLI/API filter must be valid.",
+    "Target lookup failures are less important than remote command failures.",
+    "Zero results and unsupported filters should be handled the same way."
+  ],
+  "first_checks": [
+    {
+      "check": "Query by stable identity first, then locally filter for online/reachable status.",
+      "why": "Stable identity and dynamic liveness often have different provider filter semantics.",
+      "safe_to_run": true,
+      "files": [
+        "target-selection script"
+      ]
+    },
+    {
+      "check": "Fail closed when zero or multiple online targets remain.",
+      "why": "Remote mutation should not proceed against an absent or ambiguous target.",
+      "safe_to_run": true,
+      "files": [
+        "selection result"
+      ]
+    },
+    {
+      "check": "Upload or persist lookup diagnostics before any mutation-capable step.",
+      "why": "Early failures otherwise leave no evidence for the next agent.",
+      "safe_to_run": true,
+      "files": [
+        "diagnostic artifact",
+        "CI logs"
+      ]
+    },
+    {
+      "check": "For AWS Systems Manager, check DescribeInstanceInformation filter constraints before combining tag filters with PingStatus.",
+      "why": "AWS documents that tag filters cannot be combined with other filter types for this API.",
+      "safe_to_run": true,
+      "files": [
+        "AWS SSM API reference"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Provider docs or errors say stable-identity filters cannot be combined with status filters.",
+      "action": "modify_code",
+      "action_detail": "two_stage_target_selection",
+      "then": "Query by stable identity, local-filter for online/reachable state, and fail closed on zero or multiple matches.",
+      "confidence": "high",
+      "source_ids": [
+        "aws-ssm-describe-instance-information",
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "Target lookup can fail before the normal artifact-upload step.",
+      "action": "modify_workflow",
+      "action_detail": "pre_mutation_diagnostic_artifact",
+      "then": "Persist selected target candidates, filter result, and provider error before opening a remote session or running mutations.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not broaden remote-command scope to compensate for a failed lookup.",
+    "Do not ignore zero or multiple online targets.",
+    "Do not put diagnostics only after the mutation step.",
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Run stable-identity discovery, local status filtering, fail-closed cardinality checks, and early diagnostic capture before remote mutation."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This public record is de-identified and does not authorize live mutation, publication, credential, permission, billing, data, or availability changes by itself."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "candidate-cloud-target-selection-2026-06-01",
+        "url": "artifact:proposals/pending/aws-ssm-instance-filter-two-stage-candidate.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Original candidate captured the two-stage target-selection pattern and required public provider documentation before publication."
+      },
+      {
+        "id": "aws-ssm-describe-instance-information",
+        "url": "https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_DescribeInstanceInformation.html",
+        "type": "official_doc",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "AWS Systems Manager DescribeInstanceInformation documents Filters and states that tag filters cannot be combined with other filter types; the response includes PingStatus for local post-filtering."
+      },
+      {
+        "id": "multi-ai-publication-synthesis-2026-06-07",
+        "url": "artifact:reviews/aigora-koinara-2026-06-07/curator-synthesis.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Claude and Gemini independent deliberations plus curator synthesis selected this de-identified record for publication and specified required narrowing, splitting, cross-links, and hold boundaries."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-07",
+    "volatility": "medium",
+    "next_check_due": "2026-09-07"
+  }
+}

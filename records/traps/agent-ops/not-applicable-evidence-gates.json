@@ -1,0 +1,173 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.not-applicable-evidence-gates",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-07T00:27:47+09:00",
+  "updated_at": "2026-06-07T00:27:47+09:00",
+  "supersedes": [
+    "artifact:proposals/pending/not-applicable-evidence-gates-candidate.md"
+  ],
+  "superseded_by": [],
+  "title": "Evidence gates should distinguish not applicable from missing",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "safety-gates"
+  ],
+  "summary": "A safety gate creates alarm fatigue when it blocks on absent evidence for a risk class whose trigger files or operations are absent from the current change.",
+  "ai_value": "Helps agents design gates that remain strict for real risk surfaces while emitting auditable not-applicable evidence for out-of-scope classes.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "review, deploy, migration, release, or policy gates require evidence artifacts",
+      "different evidence classes apply only to certain files, operations, or risk surfaces",
+      "review packets need to show why skipped evidence was safe to skip"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "Aigora/Koinara publication batch reviewed 2026-06-07"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The gate reports missing evidence for a class whose trigger files or operations are absent.",
+      "agent_interpretation": "Emit not_applicable with the trigger check result instead of a noisy blocker.",
+      "pattern": "missing evidence|no trigger files|not applicable",
+      "detectable_by": [
+        "gate output",
+        "file inventory"
+      ]
+    },
+    {
+      "description": "Reviewers learn to bypass or ignore the gate because low-risk changes repeatedly fail on irrelevant requirements.",
+      "agent_interpretation": "False blockers erode the gate's authority for real risk.",
+      "pattern": "bypass|false blocker|irrelevant evidence",
+      "detectable_by": [
+        "review history"
+      ]
+    },
+    {
+      "description": "The review packet does not show how the agent proved an evidence class was out of scope.",
+      "agent_interpretation": "Skipped classes still need auditable proof of absence.",
+      "pattern": "no migration|no schema|not shown",
+      "detectable_by": [
+        "review packet"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The trigger check is unavailable, partial, ambiguous, or could not be evaluated.",
+      "why_it_matters": "Do not claim not_applicable without a trustworthy trigger check; fail closed.",
+      "pattern": "unavailable|partial|ambiguous"
+    },
+    {
+      "description": "The change might touch live data, schema, credentials, permissions, billing, production availability, or irreversible state.",
+      "why_it_matters": "High-risk uncertainty requires evidence or authorized narrowing, not a skip.",
+      "pattern": "live data|schema|credentials|billing|production"
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Every absent evidence artifact is equally missing.",
+    "A human can infer from the diff why a gate was skipped.",
+    "False blockers are harmless because reviewers can bypass them."
+  ],
+  "first_checks": [
+    {
+      "check": "Define trigger conditions for each evidence class before checking for the evidence artifact.",
+      "why": "The trigger is what separates missing from not applicable.",
+      "safe_to_run": true,
+      "files": [
+        "gate config"
+      ]
+    },
+    {
+      "check": "For every skipped class, emit a machine-readable not_applicable record with the trigger command/check and result.",
+      "why": "Future reviewers need proof of absence, not silence.",
+      "safe_to_run": true,
+      "files": [
+        "review packet",
+        "gate output"
+      ]
+    },
+    {
+      "check": "Test three fixtures: trigger present with evidence, trigger present without evidence, and trigger absent.",
+      "why": "The third fixture protects against alarm-fatigue false blockers.",
+      "safe_to_run": true,
+      "files": [
+        "gate fixture suite"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Trigger conditions are absent and the trigger check is complete and trustworthy.",
+      "action": "modify_workflow",
+      "action_detail": "emit_not_applicable_evidence",
+      "then": "Emit not_applicable with the check and result, include it in the review packet, and do not block on the absent artifact.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "Trigger conditions are present or the trigger check cannot be evaluated.",
+      "action": "human_gate",
+      "action_detail": "fail_closed_until_evidence_or_scope_narrowing",
+      "then": "Treat missing evidence as a blocker until the evidence is supplied or an authorized reviewer narrows the scope.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not use not_applicable when the trigger check is unavailable, partial, or ambiguous.",
+    "Do not weaken gates for live data, schema, credentials, permissions, billing, availability, or irreversible state.",
+    "Do not hide skipped evidence classes from the review packet.",
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": false,
+    "preferred_next_step": "Define evidence triggers, emit auditable not_applicable records when triggers are absent, and fail closed when triggers are present or uncertain."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This public record is de-identified and does not authorize live mutation, publication, credential, permission, billing, data, or availability changes by itself."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "candidate-not-applicable-evidence-gates-2026-06-04",
+        "url": "artifact:proposals/pending/not-applicable-evidence-gates-candidate.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Original candidate selected as-is by both reviewers; source plan calls for toy fixtures covering present, missing, and no-trigger states."
+      },
+      {
+        "id": "multi-ai-publication-synthesis-2026-06-07",
+        "url": "artifact:reviews/aigora-koinara-2026-06-07/curator-synthesis.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Claude and Gemini independent deliberations plus curator synthesis selected this de-identified record for publication and specified required narrowing, splitting, cross-links, and hold boundaries."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-07",
+    "volatility": "medium",
+    "next_check_due": "2026-12-07"
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.external-api-query-datetime-literal-precision",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-07T00:27:47+09:00",
+  "updated_at": "2026-06-07T00:27:47+09:00",
+  "supersedes": [
+    "artifact:proposals/pending/external-api-datetime-filter-quote-precision-candidate-2026-06-04.md"
+  ],
+  "superseded_by": [],
+  "title": "Request-side datetime filters need literal and precision checks",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "external-systems"
+  ],
+  "summary": "A differential import can repeatedly fetch the same records when an external search API accepts a timestamp filter string but silently honors only the date portion or a lower precision than the cursor uses.",
+  "ai_value": "Helps agents debug cursor-advances-but-membership-does-not-change symptoms at the upstream query-parser boundary instead of chasing downstream deduplication first.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "scheduled imports or differential syncs use text-based external API search syntax",
+      "a saved cursor timestamp moves forward",
+      "query strings include datetime literals, quotes, offsets, or fractional seconds"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "Aigora/Koinara publication batch reviewed 2026-06-07"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Each run returns the same small count and the same record identities even though the saved cursor advances.",
+      "agent_interpretation": "Check result membership against the cursor before blaming upsert deduplication.",
+      "pattern": "same count|same IDs|cursor advances",
+      "detectable_by": [
+        "import logs",
+        "result IDs"
+      ]
+    },
+    {
+      "description": "Upsert metrics are mostly or entirely unchanged, such as saved count equaling unchanged count.",
+      "agent_interpretation": "This can be an upstream filter-literal issue, not only a downstream no-op.",
+      "pattern": "unchanged|saved count",
+      "detectable_by": [
+        "metrics"
+      ]
+    },
+    {
+      "description": "The external API accepts the raw query without a clear parse error.",
+      "agent_interpretation": "Accepted syntax is not proof that the intended precision was honored.",
+      "pattern": "no parse error|accepted query",
+      "detectable_by": [
+        "raw response",
+        "query log"
+      ]
+    },
+    {
+      "description": "Boundary-count checks around the exact cursor time do not explain the repeated membership.",
+      "agent_interpretation": "The parser may be truncating or rounding before comparison.",
+      "pattern": "boundary count|cursor window",
+      "detectable_by": [
+        "read-only query"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "Another ingestion path legitimately saved the same records first.",
+      "why_it_matters": "Repeated unchanged rows can be a valid race with another writer; compare record identities and write timing.",
+      "pattern": "other importer|same entity"
+    },
+    {
+      "description": "Multiple notifications point to the same entity by design.",
+      "why_it_matters": "Repeated entity IDs may reflect provider event semantics rather than parser precision.",
+      "pattern": "notification|same entity"
+    },
+    {
+      "description": "The external API documentation explicitly supports the exact quote, offset, and fractional precision being sent and a fixture proves membership changes.",
+      "why_it_matters": "Then inspect downstream deduplication or cursor storage next.",
+      "pattern": "documented milliseconds|fixture passed"
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A moving cursor means the upstream query is narrowing the result set.",
+    "If the API did not reject the query, it understood every timestamp character as intended.",
+    "Unchanged upserts always mean downstream deduplication is working correctly."
+  ],
+  "first_checks": [
+    {
+      "check": "Log or snapshot the final query string in a redacted safe form.",
+      "why": "Agents need the literal actually sent, not just the intended cursor value.",
+      "safe_to_run": true,
+      "files": [
+        "query builder output"
+      ]
+    },
+    {
+      "check": "Assert the provider-documented quote, offset, and timestamp precision in a query-builder test.",
+      "why": "External search syntax is a parser contract.",
+      "safe_to_run": true,
+      "files": [
+        "query-builder test"
+      ]
+    },
+    {
+      "check": "Verify with real or fixture data that changing the cursor changes result membership, not only aggregate counts.",
+      "why": "Membership is the discriminator for truncation/rounding.",
+      "safe_to_run": true,
+      "files": [
+        "fixture data",
+        "read-only import window"
+      ]
+    },
+    {
+      "check": "Compare this request/query-side literal issue with any response-side timezone or nested-model record before merging hypotheses.",
+      "why": "The related public record covers different API shape failures.",
+      "safe_to_run": true,
+      "files": [
+        "related record: external-api-timezone-and-nested-models"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Cursor advances but returned identities remain fixed and the outbound datetime literal does not match documented quote/precision form.",
+      "action": "modify_code",
+      "action_detail": "match_datetime_literal_contract",
+      "then": "Change the query builder to emit the documented literal form, including quotes and supported precision, then rerun a membership-changing fixture.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "Repeated unchanged rows are explained by another writer, duplicate notifications, or a stable dataset boundary.",
+      "action": "reject_trap_match",
+      "action_detail": "do_not_blame_query_parser",
+      "then": "Do not apply the parser-precision trap; investigate the real repeated-write mechanism.",
+      "confidence": "medium",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not expand production import scope to test the hypothesis.",
+    "Do not log raw credentials or private customer identifiers in query evidence.",
+    "Do not merge this with response-side timezone or nested-model failures without preserving the request-side membership discriminator.",
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Capture the exact safe query string, match documented datetime literal precision, and prove cursor changes alter result membership."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This public record is de-identified and does not authorize live mutation, publication, credential, permission, billing, data, or availability changes by itself."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "candidate-external-api-query-datetime-2026-06-04",
+        "url": "artifact:proposals/pending/external-api-datetime-filter-quote-precision-candidate-2026-06-04.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Original de-identified request/query-side datetime filter candidate; synthesis required a cross-reference to the existing response-side external API record."
+      },
+      {
+        "id": "multi-ai-publication-synthesis-2026-06-07",
+        "url": "artifact:reviews/aigora-koinara-2026-06-07/curator-synthesis.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Claude and Gemini independent deliberations plus curator synthesis selected this de-identified record for publication and specified required narrowing, splitting, cross-links, and hold boundaries."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-07",
+    "volatility": "medium",
+    "next_check_due": "2026-09-07"
+  }
+}

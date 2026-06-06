@@ -1,0 +1,174 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.reviewer-without-git-graph-needs-precomputed-diff",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-07T00:27:47+09:00",
+  "updated_at": "2026-06-07T00:27:47+09:00",
+  "supersedes": [
+    "artifact:proposals/pending/reviewer-without-git-graph-needs-precomputed-diff-candidate-2026-06-05.md"
+  ],
+  "superseded_by": [],
+  "title": "Reviewers without git graph access need precomputed diff evidence",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "git",
+    "authorization-gate",
+    "safety-gates"
+  ],
+  "summary": "A read-only reviewer can comment on visible files but cannot validate change range, ancestry direction, or merge-tree outcome unless the coordinator supplies computed git evidence.",
+  "ai_value": "Helps agents match review packets to the reviewer's actual tool capability instead of mistaking file-read access for merge/release review scope.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "a review-only AI or human has file-read access but cannot run git graph commands",
+      "the requested verdict depends on a branch range, ancestry, mergeability, or release artifact identity",
+      "a gate requires commit-bound evidence"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "Aigora/Koinara publication batch reviewed 2026-06-07"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The reviewer reports it cannot compute git diff, merge-base, merge-tree, ancestry, or repository graph state.",
+      "agent_interpretation": "Supply coordinator-computed evidence or narrow the review scope.",
+      "pattern": "cannot run git|diff|merge-base|merge-tree|ancestry",
+      "detectable_by": [
+        "reviewer response"
+      ]
+    },
+    {
+      "description": "The review prompt names source and target branches but omits exact base/head, diff, or merge simulation output.",
+      "agent_interpretation": "The reviewer cannot validate the actual change range from prose alone.",
+      "pattern": "source branch|target branch|no diff",
+      "detectable_by": [
+        "review prompt"
+      ]
+    },
+    {
+      "description": "A gate asks for production, release, or merge approval but the reviewer sees only a working tree snapshot or selected files.",
+      "agent_interpretation": "File visibility is not graph visibility.",
+      "pattern": "release gate|merge approval|working tree",
+      "detectable_by": [
+        "review packet"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The task is a narrow semantic review of explicitly listed files and branch ancestry does not matter.",
+      "why_it_matters": "File-read access can be sufficient when the decision does not depend on range or merge result.",
+      "pattern": "semantic review|listed files"
+    },
+    {
+      "description": "A platform review UI already provides exact base/head, diff, and mergeability evidence to the reviewer.",
+      "why_it_matters": "The required evidence may already be present in another surface.",
+      "pattern": "base head|mergeability"
+    }
+  ],
+  "common_wrong_assumptions": [
+    "If an AI can read local files, it can validate the same review scope as an agent with git commands.",
+    "A prose summary of changed files is enough for a merge gate.",
+    "Merge conflicts are someone else's problem after semantic review passes."
+  ],
+  "first_checks": [
+    {
+      "check": "Identify the reviewer's tool capability before requesting a diff, merge, release, or deployment-gate review.",
+      "why": "The packet must fill capability gaps.",
+      "safe_to_run": true,
+      "files": [
+        "reviewer mode",
+        "tool list"
+      ]
+    },
+    {
+      "check": "Attach exact base and head IDs, a three-dot diff or patch/stat, required ancestry checks, merge-tree or platform mergeability evidence, and explicit scope exclusions.",
+      "why": "These artifacts let a read-only reviewer make a range-bound judgment.",
+      "safe_to_run": true,
+      "files": [
+        "review packet"
+      ]
+    },
+    {
+      "check": "Require the final review artifact to state which git-graph evidence was supplied or unavailable.",
+      "why": "The limitation must remain visible to the gate and future agents.",
+      "safe_to_run": true,
+      "files": [
+        "review artifact"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The reviewer lacks git graph commands and the decision depends on range, ancestry, or mergeability.",
+      "action": "modify_workflow",
+      "action_detail": "supply_precomputed_git_evidence",
+      "then": "Coordinator must provide base/head, diff, ancestry, mergeability, and exclusions before asking for approval.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "The reviewer receives only prose or selected files for a merge/release gate.",
+      "action": "reject_trap_match",
+      "action_detail": "review_input_incomplete",
+      "then": "Treat the review as semantic-only or incomplete; do not consume it as merge safety evidence.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not pressure a restricted reviewer to infer merge safety from prose.",
+    "Do not call a semantic file review a graph/range review.",
+    "Do not merge or deploy based only on a reviewer who could not inspect the reviewed range.",
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Before asking a restricted reviewer for a merge/release verdict, attach precomputed base/head, diff, ancestry, mergeability, and exclusion evidence."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This public record is de-identified and does not authorize live mutation, publication, credential, permission, billing, data, or availability changes by itself."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "candidate-reviewer-without-git-graph-2026-06-05",
+        "url": "artifact:proposals/pending/reviewer-without-git-graph-needs-precomputed-diff-candidate-2026-06-05.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Original candidate selected standalone; synthesis required cross-linking to the narrowed review-artifact field-schema record."
+      },
+      {
+        "id": "multi-ai-publication-synthesis-2026-06-07",
+        "url": "artifact:reviews/aigora-koinara-2026-06-07/curator-synthesis.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Claude and Gemini independent deliberations plus curator synthesis selected this de-identified record for publication and specified required narrowing, splitting, cross-links, and hold boundaries."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-07",
+    "volatility": "medium",
+    "next_check_due": "2026-09-07"
+  }
+}

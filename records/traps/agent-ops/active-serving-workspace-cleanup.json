@@ -1,0 +1,180 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.active-serving-workspace-cleanup",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-07T00:27:47+09:00",
+  "updated_at": "2026-06-07T00:27:47+09:00",
+  "supersedes": [
+    "artifact:proposals/pending/active-serving-workspace-cleanup-artifact-deletion-candidate-2026-06-05.md"
+  ],
+  "superseded_by": [],
+  "title": "Cleanup must not delete artifacts from an actively served workspace",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake"
+  ],
+  "summary": "A cleanup helper can break a preview or verification endpoint when it deletes build artifacts from the same workspace that a process, mount, or proxy is still serving.",
+  "ai_value": "Helps agents distinguish disposable worktrees from active serving directories before closeout cleanup, and prevents false confidence from root-HTML-only smoke checks.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "cleanup, closeout, or worklane-finish automation is about to delete generated assets, caches, dependencies, or a worktree",
+      "the same path may be used by a local preview, verification server, container mount, service manager, or reverse proxy",
+      "static assets, hydration, or authentication UI matter to the next operator"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "Aigora/Koinara publication batch reviewed 2026-06-07"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A workspace is both a development desk and the current serving directory for a preview or verification endpoint.",
+      "agent_interpretation": "Treat the filesystem path as runtime state, not disposable residue.",
+      "pattern": "serving directory|preview endpoint|verification server|current working directory|bind mount",
+      "detectable_by": [
+        "process list",
+        "service config",
+        "preview metadata"
+      ]
+    },
+    {
+      "description": "A generic finish wrapper designed for throwaway worktrees is being used on a standing lane, shared desk, or long-lived checkout.",
+      "agent_interpretation": "Reclassify the workspace before deleting build output or caches.",
+      "pattern": "finish|cleanup|standing lane|shared desk|long-lived checkout",
+      "detectable_by": [
+        "task brief",
+        "cleanup script",
+        "worktree inventory"
+      ]
+    },
+    {
+      "description": "After cleanup, root HTML still loads but static assets, hydration, or auth UI fail.",
+      "agent_interpretation": "Smoke asset URLs and primary UI flows, not only the root route.",
+      "pattern": "404|400|hydration|asset missing|login broken",
+      "detectable_by": [
+        "browser smoke",
+        "HTTP logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The target is a genuinely disposable non-serving worktree with no active process, mount, or service dependency.",
+      "why_it_matters": "Removing the whole disposable tree is not this trap when no runtime depends on the path.",
+      "pattern": "no process|no mount|not serving"
+    },
+    {
+      "description": "The serving target has already been switched away and the replacement was rebuilt and smoked.",
+      "why_it_matters": "Cleanup after traffic/process handoff is a different, safer state.",
+      "pattern": "switched target|rebuilt|smoke passed"
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Completed work does not imply its workspace is disposable.",
+    "If the root HTML loads, the preview is healthy.",
+    "A cleanup wrapper is safe everywhere because it was safe for throwaway worktrees."
+  ],
+  "first_checks": [
+    {
+      "check": "Classify the workspace as throwaway, standing, shared default checkout, or active serving directory before deletion.",
+      "why": "The cleanup safety boundary depends on workspace role, not task completion state.",
+      "safe_to_run": true,
+      "files": [
+        "worktree inventory",
+        "closeout note"
+      ]
+    },
+    {
+      "check": "Check processes, service configs, container mounts, and proxy metadata for references to the target path.",
+      "why": "Runtime references turn filesystem cleanup into availability-impacting cleanup.",
+      "safe_to_run": true,
+      "files": [
+        "process list",
+        "service files",
+        "container mounts",
+        "proxy config"
+      ]
+    },
+    {
+      "check": "Smoke static asset URLs and the primary authenticated or hydrated UI path after any reset.",
+      "why": "Root HTML can pass while the actual app is broken.",
+      "safe_to_run": true,
+      "files": [
+        "asset URLs",
+        "primary UI smoke"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A cleanup target is still referenced by a running process, mount, service config, or proxy.",
+      "action": "human_gate",
+      "action_detail": "route_or_stop_before_cleanup",
+      "then": "Do not delete build artifacts; switch or stop the dependent runtime through the approved path, then rebuild and smoke before reporting cleanup complete.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "No active runtime references the disposable worktree and no shared lane uses it.",
+      "action": "modify_workflow",
+      "action_detail": "safe_disposable_worktree_cleanup",
+      "then": "Proceed with normal cleanup and record the classification evidence.",
+      "confidence": "medium",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not delete build output, dependency directories, or framework caches from a long-lived serving workspace as routine closeout.",
+    "Do not release a lease and infer that filesystem artifacts can be removed.",
+    "Do not verify only the root HTML page after cleanup.",
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Classify the path, prove no runtime depends on it, and smoke assets plus the primary UI before deleting generated artifacts."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This public record is de-identified and does not authorize live mutation, publication, credential, permission, billing, data, or availability changes by itself."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "candidate-active-serving-workspace-cleanup-2026-06-05",
+        "url": "artifact:proposals/pending/active-serving-workspace-cleanup-artifact-deletion-candidate-2026-06-05.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Single-incident-derived public-safe candidate with toy-reproducer promotion plan and active-serving cleanup discriminator."
+      },
+      {
+        "id": "multi-ai-publication-synthesis-2026-06-07",
+        "url": "artifact:reviews/aigora-koinara-2026-06-07/curator-synthesis.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Claude and Gemini independent deliberations plus curator synthesis selected this de-identified record for publication and specified required narrowing, splitting, cross-links, and hold boundaries."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-07",
+    "volatility": "medium",
+    "next_check_due": "2026-09-07"
+  }
+}

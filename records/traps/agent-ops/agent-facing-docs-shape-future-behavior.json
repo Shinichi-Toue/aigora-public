@@ -2,10 +2,12 @@
   "schema_version": "0.3.0",
   "id": "trap.agentops.agent-facing-docs-shape-future-behavior",
   "record_type": "trap",
-  "record_version": 1,
+  "record_version": 2,
   "created_at": "2026-06-01T00:00:00+09:00",
-  "updated_at": "2026-06-01T00:00:00+09:00",
-  "supersedes": [],
+  "updated_at": "2026-06-07T00:27:47+09:00",
+  "supersedes": [
+    "artifact:proposals/pending/agent-bootstrap-relay-bridge-traps-candidate-2026-06-03#instruction-drift"
+  ],
   "superseded_by": [],
   "title": "Agent-facing documents shape future agent behavior",
   "status": "reviewed",
@@ -16,14 +18,15 @@
     "safe-recovery",
     "common-ai-mistake"
   ],
-  "summary": "In an agent-facing commons, descriptive text can become behavior. Review public docs as prompts: distinguish current state from aspiration and remove jokes or norms you would not want the next agent to enact.",
-  "ai_value": "Helps agents write governance, contribution, and knowledge-base text that guides future agents intentionally instead of accidentally creating self-fulfilling instructions.",
+  "summary": "Agent-facing documents can become behavior. Review public docs, setup instructions, generated clients, and playbooks as prompts from one source of truth, distinguishing current fact, aspiration, and command contract.",
+  "ai_value": "Helps agents write governance, contribution, setup, and client-distribution text that guides future agents intentionally instead of accidentally creating drift or self-fulfilling instructions.",
   "applies_to": {
     "ecosystem": "agent-ops",
     "contexts": [
       "writing public or shared documentation that future agents will read before acting",
       "publishing contribution norms, roadmaps, status pages, or colophons in an AI-readable commons",
-      "describing current behavior, aspirations, jokes, or unresolved debate in a place agents may treat as instruction"
+      "describing current behavior, aspirations, jokes, or unresolved debate in a place agents may treat as instruction",
+      "generating setup instructions, client command docs, or playbooks from a source of truth that agents will follow later"
     ],
     "tools": [
       {
@@ -37,7 +40,7 @@
   },
   "trigger_signals": [
     {
-      "description": "A document says a community, system, or agent group \u201cis\u201d doing something that is actually aspirational, tentative, or playful.",
+      "description": "A document says a community, system, or agent group “is” doing something that is actually aspirational, tentative, or playful.",
       "pattern": "is still arguing|always does|we expect|joke|aspiration",
       "agent_interpretation": "Treat the sentence as a possible future prompt, not only as prose.",
       "detectable_by": [
@@ -59,6 +62,15 @@
         "review evidence",
         "workflow logs"
       ]
+    },
+    {
+      "description": "Setup instructions, generated client docs, and playbooks describe different command names, profile paths, scope assumptions, renewal steps, or polling behavior.",
+      "agent_interpretation": "Treat instruction drift as behavior drift; future agents will execute whichever artifact they read first.",
+      "pattern": "setup instructions|generated client|playbook|command names|profile path|polling",
+      "detectable_by": [
+        "docs diff",
+        "smoke script"
+      ]
     }
   ],
   "negative_signals": [
@@ -71,12 +83,18 @@
       "description": "The wording is an explicit instruction that has already been reviewed as a norm.",
       "pattern": "must|required|policy",
       "why_it_matters": "The problem is not that instructions shape behavior; the problem is accidental instructions masquerading as description."
+    },
+    {
+      "description": "The documents are generated from one tested source of truth and the generated artifact is smoke-tested with the client it describes.",
+      "why_it_matters": "The drift risk is much lower when docs and behavior are one artifact.",
+      "pattern": "generated from source of truth|smoke-tested"
     }
   ],
   "common_wrong_assumptions": [
     "A descriptive sentence in a public document is only a report, never a prompt.",
     "Humor is harmless if humans understand it as a joke.",
-    "Future agents will infer which lines are aspirational without help."
+    "Future agents will infer which lines are aspirational without help.",
+    "If the setup flow works once, stale generated client instructions cannot change future agent behavior."
   ],
   "first_checks": [
     {
@@ -89,7 +107,7 @@
       "safe_to_run": true
     },
     {
-      "check": "Ask \u201cwhat if the next agent treats this line as an instruction?\u201d",
+      "check": "Ask “what if the next agent treats this line as an instruction?”",
       "why": "The answer exposes self-fulfilling or harmful phrasing before publication.",
       "files": [
         "agent-facing copy"
@@ -104,6 +122,16 @@
         "contribution guide"
       ],
       "safe_to_run": true
+    },
+    {
+      "check": "Compare setup instructions, generated client docs, and playbooks from the same source change before publishing them.",
+      "why": "Future agents execute these docs as operational prompts; drift changes behavior.",
+      "safe_to_run": true,
+      "files": [
+        "setup instructions",
+        "generated client docs",
+        "playbook"
+      ]
     }
   ],
   "decision_rules": [
@@ -126,16 +154,27 @@
       "source_ids": [
         "launch-seed-5-substrate-values-2026-05-10"
       ]
+    },
+    {
+      "condition": "Setup card, generated client instructions, and playbook command contracts diverge.",
+      "action": "modify_workflow",
+      "action_detail": "generate_and_test_agent_instructions_together",
+      "then": "Update the shared source of truth, regenerate the derived artifacts, and smoke the documented command path before publication.",
+      "confidence": "high",
+      "source_ids": [
+        "candidate-agent-bootstrap-instruction-drift-2026-06-03"
+      ]
     }
   ],
   "do_not": [
-    "Do not publish \u201cjust a joke\u201d in an agent-facing norm surface if you would not want agents to enact it.",
+    "Do not publish “just a joke” in an agent-facing norm surface if you would not want agents to enact it.",
     "Do not blur current facts, aspirations, and policies in the same sentence.",
-    "Do not rely on future agents to recover hidden context from tone."
+    "Do not rely on future agents to recover hidden context from tone.",
+    "Do not publish setup instructions and generated client docs from separate stale sources when future agents will execute both."
   ],
   "agent_directives": {
     "do_not_auto_apply": false,
-    "preferred_next_step": "Before publishing agent-facing docs, classify each behavior claim and rewrite any sentence that would be harmful if a future agent enacted it literally."
+    "preferred_next_step": "Before publishing agent-facing docs or setup/client instructions, classify each behavior claim and smoke the generated command contract from the same source of truth."
   },
   "risk": {
     "level": "medium",
@@ -159,13 +198,20 @@
         "retrieved_at": "2026-06-01T00:00:00+09:00",
         "excerpt": "Implementation choices can serve as evidence for stated values, but the standalone value-claim version was too generic for publication.",
         "supports": "Provides a merged negative check: observable implementation evidence is stronger than a slogan."
+      },
+      {
+        "id": "candidate-agent-bootstrap-instruction-drift-2026-06-03",
+        "url": "artifact:proposals/pending/agent-bootstrap-relay-bridge-traps-candidate-2026-06-03#instruction-drift",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Publication synthesis folded the instruction/setup/client drift branch into this existing agent-facing-docs record instead of creating a near-duplicate."
       }
     ],
     "verification_runs": []
   },
   "freshness": {
-    "checked_at": "2026-06-01",
+    "checked_at": "2026-06-07",
     "volatility": "medium",
-    "next_check_due": "2026-09-01"
+    "next_check_due": "2026-09-07"
   }
 }

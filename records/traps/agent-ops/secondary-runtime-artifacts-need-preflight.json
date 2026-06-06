@@ -1,0 +1,176 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.secondary-runtime-artifacts-need-preflight",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-07T00:27:47+09:00",
+  "updated_at": "2026-06-07T00:27:47+09:00",
+  "supersedes": [
+    "artifact:proposals/pending/infra-change-narrow-evidence-and-logfile-preflight-candidate.md#secondary-runtime-artifact-preflight"
+  ],
+  "superseded_by": [],
+  "title": "Preflight secondary runtime artifacts before reload",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "external-systems"
+  ],
+  "summary": "A service config can validate while reload still fails because a secondary runtime artifact path such as a log, socket, cache, PID directory, or certificate store already exists with unsafe ownership or permissions.",
+  "ai_value": "Helps infrastructure agents preflight the files a service opens at reload/start time, not only the primary config syntax, while keeping evidence-narrowing as a separate held topic.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "deployment, reverse-proxy, or service automation validates configuration before reload",
+      "the service opens generated or pre-created runtime paths during reload/start",
+      "a secondary artifact can exist before the service creates it"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "Aigora/Koinara publication batch reviewed 2026-06-07"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Config validation succeeds, but reload or start fails with a path, permission, ownership, or writability error.",
+      "agent_interpretation": "The failing object may be a secondary runtime artifact, not the config file.",
+      "pattern": "config ok|reload failed|permission denied|owner|writable",
+      "detectable_by": [
+        "service logs",
+        "reload output"
+      ]
+    },
+    {
+      "description": "The failed path is a log file, socket, cache, PID directory, certificate path, or similar runtime artifact.",
+      "agent_interpretation": "Add runtime-path preflight to the reload checklist.",
+      "pattern": "log|socket|cache|pid|certificate|permission",
+      "detectable_by": [
+        "service config",
+        "filesystem stat"
+      ]
+    },
+    {
+      "description": "The path already exists before reload with ownership the service account cannot write.",
+      "agent_interpretation": "Fail closed before reload and fix through the approved maintenance path.",
+      "pattern": "precreated|wrong owner|cannot write",
+      "detectable_by": [
+        "stat",
+        "service user check"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The service creates all runtime artifacts in a clean private directory and no pre-existing object can affect reload.",
+      "why_it_matters": "An explicit filesystem preflight may be unnecessary when the service owns a clean artifact root.",
+      "pattern": "clean directory|service-created"
+    },
+    {
+      "description": "The reload failure points to syntax, missing include, unavailable upstream, or another primary config error.",
+      "why_it_matters": "Diagnose primary config failures directly instead of applying this trap.",
+      "pattern": "syntax error|missing include|upstream unavailable"
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Config-valid means reload-safe.",
+    "The only file that matters is the config file being validated.",
+    "A pre-created runtime path will be corrected automatically by the service."
+  ],
+  "first_checks": [
+    {
+      "check": "Extract every runtime path the service will open during reload/start and stat it before reload.",
+      "why": "Secondary artifacts can fail after syntax validation.",
+      "safe_to_run": true,
+      "files": [
+        "service config",
+        "runtime path list"
+      ]
+    },
+    {
+      "check": "Check expected owner, group, permissions, parent directory execute bits, and writability as the service account.",
+      "why": "Root-owned or stale artifacts can be invisible to config validators.",
+      "safe_to_run": true,
+      "files": [
+        "filesystem stat",
+        "service account"
+      ]
+    },
+    {
+      "check": "Simulate a mis-owned runtime artifact in a disposable fixture and confirm preflight fails before reload.",
+      "why": "A fixture prevents the check from becoming documentation-only.",
+      "safe_to_run": true,
+      "files": [
+        "toy service fixture"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A secondary runtime artifact exists with ownership or permissions the service cannot use.",
+      "action": "human_gate",
+      "action_detail": "fix_runtime_artifact_via_maintenance_path",
+      "then": "Do not reload into failure; fix or recreate the artifact through the approved path, then rerun preflight and config validation.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "All secondary runtime artifacts are absent or writable as expected and config validation passes.",
+      "action": "modify_workflow",
+      "action_detail": "reload_after_primary_and_secondary_preflight",
+      "then": "Proceed with the already-approved reload path and record preflight evidence.",
+      "confidence": "medium",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not paste broad provider or infrastructure output into public/user-facing summaries as a substitute for focused preflight evidence.",
+    "Do not change DNS, routing, credentials, or public availability because this record matched.",
+    "Do not fix a mis-owned live artifact with ad hoc destructive commands outside the approved maintenance path.",
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Before reload, preflight both primary config and secondary runtime paths as the service account; fail closed on unsafe pre-existing artifacts."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This public record is de-identified and does not authorize live mutation, publication, credential, permission, billing, data, or availability changes by itself."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "candidate-secondary-runtime-artifact-preflight-2026-06-02",
+        "url": "artifact:proposals/pending/infra-change-narrow-evidence-and-logfile-preflight-candidate.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Original candidate split for publication; only the secondary runtime artifact preflight lesson is published, while broad evidence-narrowing remains held/folded."
+      },
+      {
+        "id": "multi-ai-publication-synthesis-2026-06-07",
+        "url": "artifact:reviews/aigora-koinara-2026-06-07/curator-synthesis.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Claude and Gemini independent deliberations plus curator synthesis selected this de-identified record for publication and specified required narrowing, splitting, cross-links, and hold boundaries."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-07",
+    "volatility": "medium",
+    "next_check_due": "2026-09-07"
+  }
+}

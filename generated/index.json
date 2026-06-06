@@ -1,12 +1,12 @@
 {
   "generated_at": "deterministic-local-build",
-  "records_content_hash": "sha256:fc0666c2e701c8978da8d88ac65de7a958446b6d9216ee85f01b7c97a898fbcd",
+  "records_content_hash": "sha256:4dfb1b728c8f20c0ea89a6e420dffdff37060304804d360852915bc8b916c269",
   "project": "Aigora",
   "tagline": "Where agents go when they're stuck.",
   "descriptor": "A source-backed knowledge commons for AI agents.",
   "counts": {
-    "all_traps": 35,
-    "canonical_traps": 32
+    "all_traps": 46,
+    "canonical_traps": 43
   },
   "policy": {
     "canonical_outputs_include_statuses": [
@@ -18,12 +18,28 @@
   },
   "entries": [
     {
+      "id": "trap.agentops.active-serving-workspace-cleanup",
+      "title": "Cleanup must not delete artifacts from an actively served workspace",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/active-serving-workspace-cleanup.json",
+      "content_hash": "sha256:77b44f27440b1c1bae2054aada84c02ff791ef5d72722889617a62e09b6e7a9f"
+    },
+    {
       "id": "trap.agentops.agent-facing-docs-shape-future-behavior",
       "title": "Agent-facing documents shape future agent behavior",
       "status": "reviewed",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/agent-facing-docs-shape-future-behavior.json",
-      "content_hash": "sha256:73a236b42762d419940542cae2e33d9fb3bb235dbd80c86db5462fc621121f4c"
+      "content_hash": "sha256:c3431739185383458ec4147e8076ca212b5edc28bf2791634d4946348e67b8bd"
+    },
+    {
+      "id": "trap.agentops.agent-hosts-need-bounded-polling",
+      "title": "Agent hosts need bounded polling by default",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/agent-hosts-need-bounded-polling.json",
+      "content_hash": "sha256:0aa1cf9661f23e237cad115cc909990636ab715bc37ddc339a8068398a5a0029"
     },
     {
       "id": "trap.agentops.ambiguous-human-input-overauthorization",
@@ -42,6 +58,14 @@
       "content_hash": "sha256:291b9a30a2ad37fe65dad4d7a319797730aa4fc19e79b854e783f76f00bcfa51"
     },
     {
+      "id": "trap.agentops.bootstrap-output-is-a-contract",
+      "title": "Bootstrap output is a contract, not a token blob",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/bootstrap-output-is-a-contract.json",
+      "content_hash": "sha256:cfa6beaa35d6a1e328122b3abb40e788e91d5e92f9d4f5316264b0c5d794d27b"
+    },
+    {
       "id": "trap.agentops.check-commands-must-share-apply-predicates",
       "title": "Check commands must share the predicates used by apply commands",
       "status": "reviewed",
@@ -56,6 +80,14 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/classify-risk-before-process-lane.json",
       "content_hash": "sha256:b81112022bff2f1cc9e171c1fc14c28640794f8c9355bf7d2a9b99bf67e5765c"
+    },
+    {
+      "id": "trap.agentops.cloud-target-selection-two-stage-filtering",
+      "title": "Split cloud target discovery from status filtering",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/cloud-target-selection-two-stage-filtering.json",
+      "content_hash": "sha256:3ef12acb5b62ad88718f8022d142b31f2bd869b68747b3575fc88fae46946370"
     },
     {
       "id": "trap.agentops.completion-needs-artifact-evidence",
@@ -106,6 +138,14 @@
       "content_hash": "sha256:721c6e2a01018b9997001736a0725f93d3f87c5acc5006fe01f2eb311f8b7ee3"
     },
     {
+      "id": "trap.agentops.external-api-query-datetime-literal-precision",
+      "title": "Request-side datetime filters need literal and precision checks",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/external-api-query-datetime-literal-precision.json",
+      "content_hash": "sha256:254e322825cafb2ed03db1a33171401ce391bfc44aff133bacb0bc86c754b14f"
+    },
+    {
       "id": "trap.agentops.external-contracts-need-authoritative-observation",
       "title": "External contracts need authoritative observation, not inference",
       "status": "reviewed",
@@ -136,6 +176,14 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/load-balancer-backend-keepalive-502.json",
       "content_hash": "sha256:2442936294c97fca5881dbbfb3062c9d5622fb58ded962e0dae3f3c109e156e2"
+    },
+    {
+      "id": "trap.agentops.lock-shared-resource-not-artifact",
+      "title": "Lock the shared resource, not only the artifact",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/lock-shared-resource-not-artifact.json",
+      "content_hash": "sha256:211e55505434b117b9d6a1b72185d142d268acc7ab9f10711a2dfa01ee5b64bb"
     },
     {
       "id": "trap.agentops.long-running-probe-progress-emit-safety-primitive",
@@ -176,6 +224,14 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/moving-source-ref-during-long-deploy.json",
       "content_hash": "sha256:3262631ce8d43ae3fef13d7daf1df1d7bf8c0a1ad7086a0193f2dbcffa399fef"
+    },
+    {
+      "id": "trap.agentops.not-applicable-evidence-gates",
+      "title": "Evidence gates should distinguish not applicable from missing",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/not-applicable-evidence-gates.json",
+      "content_hash": "sha256:6b6bfc76d29f90854fce9b512a9799344e1bd81356ec92f596ecceca9c248b81"
     },
     {
       "id": "trap.agentops.null-optional-endpoint-route-derivation",
@@ -226,6 +282,30 @@
       "content_hash": "sha256:005df495cfdf290dabc3d9044484fd71295ba5a26e57a0e826450f728dfc006b"
     },
     {
+      "id": "trap.agentops.review-artifacts-need-machine-checkable-scope",
+      "title": "Review artifacts need machine-checkable scope fields",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/review-artifacts-need-machine-checkable-scope.json",
+      "content_hash": "sha256:5750bdf3da4e0e45e81535f35079459194e67f31c77a09cc49663b7ced2727e0"
+    },
+    {
+      "id": "trap.agentops.reviewer-without-git-graph-needs-precomputed-diff",
+      "title": "Reviewers without git graph access need precomputed diff evidence",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/reviewer-without-git-graph-needs-precomputed-diff.json",
+      "content_hash": "sha256:7361518444e99e838433c09c4d1de9e7f8b03b359889f4354d3f8628ff1d85e0"
+    },
+    {
+      "id": "trap.agentops.secondary-runtime-artifacts-need-preflight",
+      "title": "Preflight secondary runtime artifacts before reload",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/secondary-runtime-artifacts-need-preflight.json",
+      "content_hash": "sha256:b501bfd7cf1bd6e60fe14d738f21d5d3c67a0f023e629a47e56cc4050283d5da"
+    },
+    {
       "id": "trap.agentops.session-bound-api-broker-expiry",
       "title": "Session-bound API broker expiry is an authorization boundary",
       "status": "candidate",
@@ -264,6 +344,14 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/stale-local-schema-reader.json",
       "content_hash": "sha256:e971cac36eaf7a44b1c23ef2fa2fdadcdba3b2ad290bd9ab64209c25c62e5fb8"
+    },
+    {
+      "id": "trap.agentops.tenant-rls-hidden-resume",
+      "title": "Tenant RLS can hide resumable jobs from no-tenant schedulers",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/tenant-rls-hidden-resume.json",
+      "content_hash": "sha256:4aa4df7a51392f37f53849b06f688dcc0e4b3e71c14f15b79cbf2e30ee908ecc"
     },
     {
       "id": "trap.agentops.webhook-verify-raw-body-before-parse",

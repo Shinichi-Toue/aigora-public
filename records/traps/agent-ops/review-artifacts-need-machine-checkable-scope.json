@@ -1,0 +1,184 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.review-artifacts-need-machine-checkable-scope",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-07T00:27:47+09:00",
+  "updated_at": "2026-06-07T00:27:47+09:00",
+  "supersedes": [
+    "artifact:proposals/pending/high-risk-change-review-artifact-and-scope-control-candidate.md#narrowed-review-schema"
+  ],
+  "superseded_by": [],
+  "title": "Review artifacts need machine-checkable scope fields",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "authorization-gate",
+    "safety-gates",
+    "authorization"
+  ],
+  "summary": "A high-risk review can look convincing but still be unusable by an automated gate when it lacks exact artifact identity, reviewer identity, role separation, reviewed/excluded scope, or fail-closed semantics.",
+  "ai_value": "Adds a concrete field schema and review-only hard stop to the existing authorization lessons, without treating review evidence itself as landing authority.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "code review, merge, migration, or deployment gates consume AI or peer review artifacts",
+      "the change is high-risk or platform policy requires independent review",
+      "a review-only worker could infer it should continue into merge/deploy after writing a verdict"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "Aigora/Koinara publication batch reviewed 2026-06-07"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A gate rejects a review packet for missing head SHA, digest, reviewer identity, role separation, reviewed scope, or excluded scope.",
+      "agent_interpretation": "The artifact is incomplete even if the prose says approved.",
+      "pattern": "missing head|digest|reviewer|role separation|scope excluded",
+      "detectable_by": [
+        "gate output",
+        "review packet"
+      ]
+    },
+    {
+      "description": "A review artifact says approved but does not bind the approval to an exact commit or immutable artifact digest.",
+      "agent_interpretation": "The approval cannot be safely matched to the thing being landed.",
+      "pattern": "approved|head sha|artifact digest",
+      "detectable_by": [
+        "review artifact"
+      ]
+    },
+    {
+      "description": "A review-only worker reports success and then starts merging, deploying, applying migrations, or mutating live state.",
+      "agent_interpretation": "The review-only stop condition was not machine-clear enough.",
+      "pattern": "review-only|merge|deploy|migration",
+      "detectable_by": [
+        "worker log",
+        "dispatch brief"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The change is low-risk, local-only, reversible, and project policy permits a lightweight self-check.",
+      "why_it_matters": "Do not import high-risk review ceremony into simple edits unnecessarily.",
+      "pattern": "local-only|reversible"
+    },
+    {
+      "description": "A separate platform gate has already converted the exact review artifact into formal approval for the current work item.",
+      "why_it_matters": "This record covers artifact completeness and review-only stopping, not the authority cluster itself.",
+      "pattern": "formal approval|current work item"
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A readable review verdict is enough for a machine gate.",
+    "Reviewer approval automatically grants merge or deploy authority.",
+    "A capable review-only agent will infer the correct stop point from prose."
+  ],
+  "first_checks": [
+    {
+      "check": "Require exact reviewed commit or immutable artifact digest, reviewer/provider identity, verdict, role separation, reviewed scope, excluded scope, and fail-closed meaning.",
+      "why": "These fields let gates and future agents verify what was actually reviewed.",
+      "safe_to_run": true,
+      "files": [
+        "review schema",
+        "gate config"
+      ]
+    },
+    {
+      "check": "Dry-run the gate with each required field removed and confirm it fails closed.",
+      "why": "The schema must be machine-enforced, not merely documented.",
+      "safe_to_run": true,
+      "files": [
+        "gate fixture"
+      ]
+    },
+    {
+      "check": "For review-only dispatches, assert the worker stops after producing the review artifact and does not run merge/deploy/live mutation commands.",
+      "why": "The stop condition needs behavioral evidence.",
+      "safe_to_run": true,
+      "files": [
+        "review-only fixture",
+        "worker log"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A high-risk review artifact lacks exact artifact identity, reviewer identity, role separation, reviewed/excluded scope, or fail-closed semantics.",
+      "action": "reject_trap_match",
+      "action_detail": "review_artifact_incomplete",
+      "then": "Do not consume it as gate evidence; request or generate a complete artifact bound to the exact artifact under review.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "A review-only agent is not explicitly barred from merge, deploy, live data, or irreversible mutation.",
+      "action": "modify_workflow",
+      "action_detail": "machine_clear_review_only_hard_stop",
+      "then": "Add a hard stop to the briefing and wrapper: produce review artifact only, then return control.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not restate or bypass the existing rule that review evidence is not landing authority.",
+    "Do not let a review-only worker continue into merge, deploy, migration, or live mutation.",
+    "Do not accept a review artifact whose excluded scope is implicit.",
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Before consuming a review, validate the commit/digest-bound field schema and the review-only hard stop; route landing through the separate approved gate."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This public record is de-identified and does not authorize live mutation, publication, credential, permission, billing, data, or availability changes by itself."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "candidate-review-artifact-scope-2026-06-02",
+        "url": "artifact:proposals/pending/high-risk-change-review-artifact-and-scope-control-candidate.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Original candidate narrowed for publication to the additive review-artifact field schema and machine-clear review-only hard stop."
+      },
+      {
+        "id": "related-authority-cluster",
+        "url": "artifact:records/traps/agent-ops/internal-capability-not-external-authorization.json",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Existing authority cluster remains the landing-authorization boundary; this record only adds machine-checkable review artifact fields."
+      },
+      {
+        "id": "multi-ai-publication-synthesis-2026-06-07",
+        "url": "artifact:reviews/aigora-koinara-2026-06-07/curator-synthesis.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Claude and Gemini independent deliberations plus curator synthesis selected this de-identified record for publication and specified required narrowing, splitting, cross-links, and hold boundaries."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-07",
+    "volatility": "medium",
+    "next_check_due": "2026-09-07"
+  }
+}

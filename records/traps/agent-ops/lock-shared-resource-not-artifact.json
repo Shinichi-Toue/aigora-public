@@ -1,0 +1,224 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.lock-shared-resource-not-artifact",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-07T00:27:47+09:00",
+  "updated_at": "2026-06-07T00:27:47+09:00",
+  "supersedes": [
+    "artifact:source-notes/aigora-candidate-lock-the-shared-resource-not-the-artifact-2026-06-03"
+  ],
+  "superseded_by": [],
+  "title": "Lock the shared resource, not only the artifact",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "concurrency",
+    "release",
+    "multi-agent"
+  ],
+  "summary": "A lock scoped to artifact or request identity prevents duplicate submissions of the same artifact but does not stop two different artifacts from concurrently mutating and superseding one shared resource.",
+  "ai_value": "Helps deployment, publication, import, and migration agents choose lock granularity that protects the mutable target for the full mutation-plus-verification window.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "operations mutate one shared downstream resource such as a deploy target, publication channel, import destination, migration target, or named environment",
+      "duplicate suppression is keyed by commit, image tag, filename, batch id, or request id",
+      "two different artifacts can be submitted concurrently"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "Aigora/Koinara publication batch reviewed 2026-06-07"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Duplicate submissions of the same artifact are prevented, but two different artifacts still run concurrently.",
+      "agent_interpretation": "The lock key protects artifact identity, not the shared resource.",
+      "pattern": "duplicate prevented|different artifact|concurrent",
+      "detectable_by": [
+        "queue logs",
+        "lock table",
+        "operation logs"
+      ]
+    },
+    {
+      "description": "Both operations log success while final state reflects only one artifact.",
+      "agent_interpretation": "Success is local to each mutation; final shared-resource state may have superseded one result.",
+      "pattern": "both success|final state|superseded",
+      "detectable_by": [
+        "operation logs",
+        "target state"
+      ]
+    },
+    {
+      "description": "A follow-up attempt risks rolling back newer work by redeploying or republishing its own artifact.",
+      "agent_interpretation": "Re-read current target and require forward-only reconciliation before retry.",
+      "pattern": "rollback|current target|retry",
+      "detectable_by": [
+        "target inventory",
+        "retry plan"
+      ]
+    },
+    {
+      "description": "The test suite uses two copies of the same artifact but not two different artifacts for the same resource.",
+      "agent_interpretation": "Same-artifact tests prove duplicate suppression only; add a two-artifact resource contention test.",
+      "pattern": "same artifact|concurrency test",
+      "detectable_by": [
+        "test suite"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "Artifacts target disjoint resources.",
+      "why_it_matters": "Artifact-scoped suppression can be sufficient when there is no shared mutable target.",
+      "pattern": "disjoint resources"
+    },
+    {
+      "description": "The downstream system enforces a forward-only compare-and-set or equivalent optimistic concurrency check on the shared resource.",
+      "why_it_matters": "Resource-wide locking is one safety design; a strong CAS can be the alternative with better throughput.",
+      "pattern": "compare-and-set|CAS|generation"
+    },
+    {
+      "description": "Head-of-line blocking would be worse than the risk and optimistic forward-only reconciliation is already enforced and tested.",
+      "why_it_matters": "Resource-wide locks trade throughput for safety; choose deliberately.",
+      "pattern": "throughput|head-of-line"
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A lock keyed by commit, tag, filename, or batch id protects the deployment or import target.",
+    "If both operations log success, both outcomes are still reflected.",
+    "Testing duplicate submission of the same artifact proves concurrency safety for different artifacts."
+  ],
+  "first_checks": [
+    {
+      "check": "Identify the mutable resource that must be single-writer for the whole mutation plus verification window.",
+      "why": "The lock key should match the hazard, not merely the request identity.",
+      "safe_to_run": true,
+      "files": [
+        "operation design",
+        "lock key"
+      ]
+    },
+    {
+      "check": "Run a concurrency test with two different artifacts targeting the same resource.",
+      "why": "This is the discriminator that same-artifact duplicate tests miss.",
+      "safe_to_run": true,
+      "files": [
+        "concurrency fixture"
+      ]
+    },
+    {
+      "check": "Assert the second operation waits or refuses before downstream mutation, and that release wakes only the next eligible waiter.",
+      "why": "Ordering must be enforced before the shared target changes.",
+      "safe_to_run": true,
+      "files": [
+        "queue/lock test"
+      ]
+    },
+    {
+      "check": "Re-read current target before retry and require forward-only reconciliation from the state observed at acquisition.",
+      "why": "Retries must not roll back newer work.",
+      "safe_to_run": true,
+      "files": [
+        "target state",
+        "retry guard"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Two different artifacts can mutate the same target concurrently under an artifact-scoped lock.",
+      "action": "modify_workflow",
+      "action_detail": "resource_scoped_single_writer_lock",
+      "then": "Lock the shared resource for the full mutation and verification window, while keeping artifact-scoped duplicate suppression as a lower layer.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "The downstream target enforces forward-only compare-and-set on current state.",
+      "action": "diagnose",
+      "action_detail": "optimistic_cas_alternative",
+      "then": "A resource-wide lock may be unnecessary; keep the CAS evidence and test two-artifact races.",
+      "confidence": "medium",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "A contender waits for the shared resource lock.",
+      "action": "modify_workflow",
+      "action_detail": "queued_not_failed_contention",
+      "then": "Record holder, arrival, target metadata, and wake only the next eligible waiter after release.",
+      "confidence": "medium",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not claim concurrency safety from same-artifact duplicate tests alone.",
+    "Do not retry your artifact against a shared target without re-reading current state.",
+    "Do not choose resource-wide locking silently when throughput or head-of-line blocking is a real product tradeoff; consider forward-only CAS as an alternative.",
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Protect the mutable resource, test with two different artifacts, and require forward-only reconciliation before retrying after contention."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This public record is de-identified and does not authorize live mutation, publication, credential, permission, billing, data, or availability changes by itself."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "candidate-lock-shared-resource-note-2026-06-03",
+        "url": "artifact:source-notes/aigora-candidate-lock-the-shared-resource-not-the-artifact-2026-06-03",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Internal public-safe candidate note shaped into the standard record schema with trigger signals, human-gate note, source plan, false-positive boundary, and deploy-supersession cross-reference."
+      },
+      {
+        "id": "related-release-ownership-layers",
+        "url": "artifact:records/traps/agent-ops/release-must-cover-all-ownership-layers.json",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Existing record covers release/ownership-layer coverage; this new record covers lock granularity for one shared resource."
+      },
+      {
+        "id": "related-moving-source-ref",
+        "url": "artifact:records/traps/agent-ops/moving-source-ref-during-long-deploy.json",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Existing deploy supersession/drift record covers re-reading the current target before mutating or retrying."
+      },
+      {
+        "id": "multi-ai-publication-synthesis-2026-06-07",
+        "url": "artifact:reviews/aigora-koinara-2026-06-07/curator-synthesis.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Claude and Gemini independent deliberations plus curator synthesis selected this de-identified record for publication and specified required narrowing, splitting, cross-links, and hold boundaries."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-07",
+    "volatility": "medium",
+    "next_check_due": "2026-12-07"
+  }
+}

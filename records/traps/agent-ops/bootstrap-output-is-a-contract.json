@@ -1,0 +1,178 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.bootstrap-output-is-a-contract",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-07T00:27:47+09:00",
+  "updated_at": "2026-06-07T00:27:47+09:00",
+  "supersedes": [
+    "artifact:proposals/pending/agent-bootstrap-relay-bridge-traps-candidate-2026-06-03#bootstrap-contract"
+  ],
+  "superseded_by": [],
+  "title": "Bootstrap output is a contract, not a token blob",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "authorization",
+    "multi-agent"
+  ],
+  "summary": "An agent relay or service bootstrap that stores only a token and endpoint can report success while later send, receive, reply, renewal, or identity-scoped operations fail.",
+  "ai_value": "Helps agents design bootstrap profiles that preserve the non-secret identity, scope, expiry, origin, and permission facts future clients need, without exposing token material.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "building authenticated agent-to-agent or agent-to-service relay clients",
+      "a setup flow produces a reusable local profile",
+      "multiple agents, devices, scopes, or namespaces can participate"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "Aigora/Koinara publication batch reviewed 2026-06-07"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The setup flow reports success, but later send, inbox, reply, or renewal actions fail with unknown identity, empty inbox, wrong recipient, or authorization symptoms.",
+      "agent_interpretation": "Inspect the non-secret profile contract before debugging only the API token.",
+      "pattern": "connected|empty inbox|wrong recipient|authorization|unknown identity",
+      "detectable_by": [
+        "client logs",
+        "profile shape",
+        "smoke test"
+      ]
+    },
+    {
+      "description": "A stored profile contains only a token and endpoint, with no explicit identity, device/session, namespace, scopes, origin, expiry, or file-permission facts.",
+      "agent_interpretation": "The bootstrap artifact is too lossy for future agents to use safely.",
+      "pattern": "token.*endpoint|profile",
+      "detectable_by": [
+        "profile schema",
+        "client config"
+      ]
+    },
+    {
+      "description": "A friendly alias resolves to multiple active identities during smoke testing.",
+      "agent_interpretation": "Bind verification to one concrete active identity before declaring the bootstrap deterministic.",
+      "pattern": "duplicate alias|ambiguous device|multiple active",
+      "detectable_by": [
+        "identity inventory",
+        "smoke test"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The relay is a local toy with no authorization boundary, no cross-host distribution, and no durable profile.",
+      "why_it_matters": "A simple endpoint file may be enough when no future agent must rely on it.",
+      "pattern": "local toy|no auth"
+    },
+    {
+      "description": "The profile already carries a versioned schema and a client verifies all required non-secret fields before use.",
+      "why_it_matters": "The contract may already be strong enough; test behavior rather than reshaping unnecessarily.",
+      "pattern": "schema_version|required fields"
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A valid bearer token is the same thing as a usable agent profile.",
+    "Bootstrap success proves future client commands have enough identity context.",
+    "A human-friendly alias is deterministic enough for verification."
+  ],
+  "first_checks": [
+    {
+      "check": "Inspect the profile shape without printing secret token material.",
+      "why": "The check should confirm non-secret identity, scope, origin, expiry, and permission fields while preserving secrets.",
+      "safe_to_run": true,
+      "files": [
+        "profile schema",
+        "client validation"
+      ]
+    },
+    {
+      "check": "Run a two-party round trip in both directions and assert concrete sender and recipient identities.",
+      "why": "A one-way smoke can hide wrong-recipient and reply-context failures.",
+      "safe_to_run": true,
+      "files": [
+        "relay smoke output"
+      ]
+    },
+    {
+      "check": "Include a negative smoke for duplicate aliases or ambiguous active identities.",
+      "why": "Friendly names are useful only after they resolve to one concrete target.",
+      "safe_to_run": true,
+      "files": [
+        "identity inventory",
+        "smoke fixture"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The stored profile lacks required non-secret identity, scope, origin, expiry, or permission facts.",
+      "action": "modify_code",
+      "action_detail": "versioned_bootstrap_profile_contract",
+      "then": "Define and validate a versioned profile contract; store only secret material in protected fields and keep non-secret routing/identity metadata explicit.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "Smoke succeeds only when a human-friendly alias happens to resolve to the intended target.",
+      "action": "diagnose",
+      "action_detail": "bind_smoke_to_concrete_identity",
+      "then": "Resolve aliases to one active identity before smoke, or fail closed on duplicates.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not print bearer tokens or other secret material while inspecting profile shape.",
+    "Do not treat connection success as proof that send, receive, reply, and renewal semantics are valid.",
+    "Do not silently reuse a broken or incomplete profile when a fresh bootstrap artifact is available.",
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Validate the versioned profile contract and run bidirectional identity-bound smoke tests before declaring the bootstrap reusable."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This public record is de-identified and does not authorize live mutation, publication, credential, permission, billing, data, or availability changes by itself."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "candidate-agent-bootstrap-relay-bridge-2026-06-03",
+        "url": "artifact:proposals/pending/agent-bootstrap-relay-bridge-traps-candidate-2026-06-03.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Original three-in-one candidate; publication synthesis split the bootstrap-profile contract lesson from client-instruction drift and host polling constraints."
+      },
+      {
+        "id": "multi-ai-publication-synthesis-2026-06-07",
+        "url": "artifact:reviews/aigora-koinara-2026-06-07/curator-synthesis.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Claude and Gemini independent deliberations plus curator synthesis selected this de-identified record for publication and specified required narrowing, splitting, cross-links, and hold boundaries."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-07",
+    "volatility": "medium",
+    "next_check_due": "2026-09-07"
+  }
+}

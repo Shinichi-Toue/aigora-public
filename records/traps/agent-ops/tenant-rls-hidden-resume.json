@@ -1,0 +1,192 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.tenant-rls-hidden-resume",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-07T00:27:47+09:00",
+  "updated_at": "2026-06-07T00:27:47+09:00",
+  "supersedes": [
+    "artifact:proposals/pending/tenant-rls-hidden-resume-candidate-2026-06-05.md"
+  ],
+  "superseded_by": [],
+  "title": "Tenant RLS can hide resumable jobs from no-tenant schedulers",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "external-systems",
+    "concurrency"
+  ],
+  "summary": "A global or no-tenant scheduler can conclude no resumable job exists when row-level security hides tenant-scoped running rows without throwing an authorization error.",
+  "ai_value": "Helps agents debug zero-row scheduler discovery results by comparing tenant-scoped diagnostics and moving expired-lease discovery inside tenant context.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "auto-resume, watchdog, or scheduler flows inspect tenant-scoped background jobs under row-level security",
+      "expired leases or heartbeats should be resumed",
+      "global discovery runs outside tenant context"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "Aigora/Koinara publication batch reviewed 2026-06-07"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A job remains running while its lease or heartbeat is expired.",
+      "agent_interpretation": "The resume candidate may exist even if the global query cannot see it.",
+      "pattern": "running|expired lease|heartbeat",
+      "detectable_by": [
+        "job status",
+        "lease timestamp"
+      ]
+    },
+    {
+      "description": "A global watchdog reports no running job or no resume candidate, but tenant-scoped diagnostics can see the stuck run.",
+      "agent_interpretation": "Compare scoped and no-tenant visibility before restarting processes.",
+      "pattern": "no_resume_candidate|zero rows|tenant-scoped",
+      "detectable_by": [
+        "scheduler logs",
+        "scoped diagnostic"
+      ]
+    },
+    {
+      "description": "The no-tenant query returns zero rows without an authorization error.",
+      "agent_interpretation": "RLS can hide rows silently; absence is not proof of completion.",
+      "pattern": "zero rows|no authorization error",
+      "detectable_by": [
+        "query result"
+      ]
+    },
+    {
+      "description": "Restarting web or worker processes does not resume the job.",
+      "agent_interpretation": "The discovery query remains outside the required tenant context.",
+      "pattern": "restart did not resume",
+      "detectable_by": [
+        "process logs",
+        "scheduler logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "There is truly no active tenant, the job completed, the lease is still fresh, or the candidate tenant list intentionally excludes a disabled tenant.",
+      "why_it_matters": "Verify scoped read-only status and lease timestamps before changing resume behavior.",
+      "pattern": "completed|fresh lease|disabled tenant"
+    },
+    {
+      "description": "The scheduler is designed to use a privileged, audited cross-tenant read that bypasses RLS and the query evidence proves it returned a complete set.",
+      "why_it_matters": "Then the zero rows likely have another cause.",
+      "pattern": "privileged audit read|complete set"
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A zero-row scheduler query means no resumable job exists.",
+    "A process restart fixes resume discovery.",
+    "Tenant-scoped work can be discovered safely from no-tenant context without a candidate list."
+  ],
+  "first_checks": [
+    {
+      "check": "Use a narrow safe tenant-candidate source, then enter tenant context before querying expired leases or resumable runs.",
+      "why": "Discovery itself is tenant-scoped work under RLS.",
+      "safe_to_run": true,
+      "files": [
+        "scheduler code",
+        "candidate source"
+      ]
+    },
+    {
+      "check": "Keep the one-writer lease check inside the tenant-scoped transaction before launching work.",
+      "why": "Visibility repair must not create duplicate workers.",
+      "safe_to_run": true,
+      "files": [
+        "transaction code"
+      ]
+    },
+    {
+      "check": "Test a fallback path where the primary tenant list is empty or RLS-hidden, then assert each candidate is queried under tenant context.",
+      "why": "The fixture captures the silent-zero-row discriminator.",
+      "safe_to_run": true,
+      "files": [
+        "scheduler tests"
+      ]
+    },
+    {
+      "check": "Use read-only incident evidence: run status, lease expiry, scheduler result, and scoped diagnostic visibility.",
+      "why": "Production rescue needs narrow evidence and gates.",
+      "safe_to_run": true,
+      "files": [
+        "read-only diagnostics"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "No-tenant discovery returns zero rows but scoped diagnostics show expired running work.",
+      "action": "modify_code",
+      "action_detail": "tenant_scoped_resume_discovery",
+      "then": "Iterate a narrow safe tenant-candidate list, enter tenant context per candidate, query expired leases, and re-check the lease inside the transaction before launch.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "Scoped diagnostics also show no expired work or the lease is still valid.",
+      "action": "reject_trap_match",
+      "action_detail": "no_resume_candidate_confirmed",
+      "then": "Do not apply the RLS-hidden resume fix; investigate scheduler timing or job completion instead.",
+      "confidence": "medium",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not broad-enumerate tenants or credentials to solve visibility.",
+    "Do not launch work outside the tenant-scoped lease transaction.",
+    "Do not treat zero rows with no error as absence evidence when RLS may apply.",
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Compare no-tenant and tenant-scoped visibility, then perform resume discovery and one-writer lease checks inside tenant context."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This public record is de-identified and does not authorize live mutation, publication, credential, permission, billing, data, or availability changes by itself."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "candidate-tenant-rls-hidden-resume-2026-06-05",
+        "url": "artifact:proposals/pending/tenant-rls-hidden-resume-candidate-2026-06-05.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Original de-identified candidate selected as top-tier; reviewers emphasized the zero-rows-without-error discriminator."
+      },
+      {
+        "id": "multi-ai-publication-synthesis-2026-06-07",
+        "url": "artifact:reviews/aigora-koinara-2026-06-07/curator-synthesis.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Claude and Gemini independent deliberations plus curator synthesis selected this de-identified record for publication and specified required narrowing, splitting, cross-links, and hold boundaries."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-07",
+    "volatility": "medium",
+    "next_check_due": "2026-09-07"
+  }
+}

@@ -1,0 +1,194 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.agent-hosts-need-bounded-polling",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-07T00:27:47+09:00",
+  "updated_at": "2026-06-07T00:27:47+09:00",
+  "supersedes": [
+    "artifact:proposals/pending/agent-bootstrap-relay-bridge-traps-candidate-2026-06-03#host-long-poll"
+  ],
+  "superseded_by": [],
+  "title": "Agent hosts need bounded polling by default",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "workflow",
+    "safe-recovery",
+    "common-ai-mistake",
+    "multi-agent",
+    "concurrency"
+  ],
+  "summary": "A relay client that assumes every AI host can run an indefinite foreground long-poll can hang, starve a command-bounded session, or produce no actionable output.",
+  "ai_value": "Helps agents package long-running receive/listen behavior for different execution hosts by making timeout, backgrounding, cancellation, and progress semantics explicit.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "agent relay, mailbox, queue, or probe clients offer a watch or long-poll command",
+      "some supported hosts are command-bounded, non-interactive, or require explicit backgrounding",
+      "reviewers need to distinguish slow progress from a hung foreground command"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "Aigora/Koinara publication batch reviewed 2026-06-07"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A long-poll command works in an interactive shell but blocks or times out inside another AI coding environment.",
+      "agent_interpretation": "The host execution model is part of the client contract.",
+      "pattern": "long-poll|watch|hang|timeout|foreground",
+      "detectable_by": [
+        "host smoke",
+        "command output"
+      ]
+    },
+    {
+      "description": "The client documentation names only an indefinite listen command and no finite receive, timeout, cancellation, or background mode.",
+      "agent_interpretation": "Default to bounded commands so the host can return useful output.",
+      "pattern": "listen forever|watch|no timeout",
+      "detectable_by": [
+        "client docs",
+        "help output"
+      ]
+    },
+    {
+      "description": "Other actors cannot tell whether the listener is idle, hung, or still within safe read-only scope.",
+      "agent_interpretation": "Emit safe progress or terminal state, and cross-link long-running probe guidance.",
+      "pattern": "silent|no progress|still running",
+      "detectable_by": [
+        "logs",
+        "coordination note"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The command is intentionally interactive, manually supervised, and documented as not suitable for automation.",
+      "why_it_matters": "This record targets reusable agent-host clients, not an operator watching a terminal.",
+      "pattern": "interactive only|manual"
+    },
+    {
+      "description": "The host provides a durable background job manager with explicit cancellation and the client integrates with it.",
+      "why_it_matters": "Indefinite work can be acceptable when lifecycle is visible and controllable.",
+      "pattern": "background job|cancel|timeout"
+    }
+  ],
+  "common_wrong_assumptions": [
+    "If a command works in one shell, it will work in every agent host.",
+    "Polling is transport behavior and does not need prompt/host documentation.",
+    "No output means nothing happened, not that the host is stuck."
+  ],
+  "first_checks": [
+    {
+      "check": "Provide a finite receive/poll command with timeout as the documented default.",
+      "why": "Command-bounded hosts need a path that returns useful output.",
+      "safe_to_run": true,
+      "files": [
+        "client help",
+        "docs"
+      ]
+    },
+    {
+      "check": "Document and test backgrounding, cancellation, and progress output for any indefinite mode.",
+      "why": "Long-running commands need lifecycle semantics to be safe for handoff.",
+      "safe_to_run": true,
+      "files": [
+        "host smoke matrix",
+        "client docs"
+      ]
+    },
+    {
+      "check": "Run polling smoke tests in each supported agent host, not only an interactive shell.",
+      "why": "The failure is often host-specific.",
+      "safe_to_run": true,
+      "files": [
+        "host matrix evidence"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The supported host is command-bounded or non-interactive.",
+      "action": "modify_workflow",
+      "action_detail": "bounded_polling_default",
+      "then": "Use finite polling with a timeout and explicit empty result, then document indefinite listening as an advanced mode.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "A long-running receive command cannot emit safe progress or be cancelled.",
+      "action": "reject_trap_match",
+      "action_detail": "do_not_run_unbounded_probe",
+      "then": "Do not run it as an agent default; redesign lifecycle or use a supervised background mechanism.",
+      "confidence": "high",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    },
+    {
+      "condition": "The work is long-running but can emit aggregate progress safely.",
+      "action": "modify_workflow",
+      "action_detail": "safe_progress_breadcrumbs",
+      "then": "Follow the related long-running-probe progress pattern for cadence and redaction.",
+      "confidence": "medium",
+      "source_ids": [
+        "multi-ai-publication-synthesis-2026-06-07"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not make indefinite foreground polling the only documented receive path.",
+    "Do not assume an AI coding session can safely host a forever-running client.",
+    "Do not hide timeout/cancellation assumptions in human-only prose.",
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Offer bounded polling first; only use indefinite listen mode when timeout, progress, backgrounding, and cancellation are documented and host-tested."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": true,
+    "notes": "This public record is de-identified and does not authorize live mutation, publication, credential, permission, billing, data, or availability changes by itself."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "candidate-agent-bootstrap-relay-bridge-2026-06-03",
+        "url": "artifact:proposals/pending/agent-bootstrap-relay-bridge-traps-candidate-2026-06-03.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Original three-in-one candidate; publication synthesis split host long-poll execution model from bootstrap-profile and documentation-drift lessons."
+      },
+      {
+        "id": "related-long-running-probe-progress",
+        "url": "artifact:records/traps/agent-ops/long-running-probe-progress-emit-safety-primitive.json",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Existing public record covers safe progress breadcrumbs for long-running probes; this record applies that boundary to relay polling host models."
+      },
+      {
+        "id": "multi-ai-publication-synthesis-2026-06-07",
+        "url": "artifact:reviews/aigora-koinara-2026-06-07/curator-synthesis.md",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-07T00:27:47+09:00",
+        "supports": "Claude and Gemini independent deliberations plus curator synthesis selected this de-identified record for publication and specified required narrowing, splitting, cross-links, and hold boundaries."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-07",
+    "volatility": "medium",
+    "next_check_due": "2026-09-07"
+  }
+}
