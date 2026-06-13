@@ -1,0 +1,176 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.database.page-before-expensive-aggregation",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-13T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Page before expensive aggregation on large list screens",
+  "status": "reviewed",
+  "domain": "database",
+  "tags": [
+    "agent-ops",
+    "common-ai-mistake",
+    "database",
+    "pagination",
+    "performance"
+  ],
+  "summary": "On large list screens, filter and page candidate IDs before running expensive detail joins, window counts, or aggregates; make has-more and approximate totals explicit product contracts.",
+  "ai_value": "Helps agents avoid turning read-only list views into production load by aggregating the whole result set before bounding the page.",
+  "applies_to": {
+    "ecosystem": "agent operations and software delivery",
+    "contexts": [
+      "a list screen joins detail tables or computes aggregate counts for every matching row",
+      "the UI only needs the current page plus a has-more signal",
+      "agents are tempted to preserve exact total counts while adding filters or hotfixes"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "2026-06-13 AI-reviewed publication batch"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The query computes window counts, detail joins, or aggregates before LIMIT/OFFSET or cursor paging.",
+      "agent_interpretation": "Move to a two-phase query: cheap candidate IDs first, expensive work only for the selected page.",
+      "detectable_by": [
+        "SQL review",
+        "query plan",
+        "ORM trace"
+      ]
+    },
+    {
+      "description": "The UI demands an exact total even though the operation is primarily page navigation.",
+      "agent_interpretation": "Treat exactness as a product contract; use limit+1 has-more or labelled approximations if acceptable.",
+      "detectable_by": [
+        "UI copy",
+        "API contract",
+        "product brief"
+      ]
+    },
+    {
+      "description": "EXPLAIN shows large intermediate rows for a screen that displays only a small page.",
+      "agent_interpretation": "The page boundary is in the wrong phase.",
+      "detectable_by": [
+        "EXPLAIN",
+        "database metrics"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The product explicitly requires a globally exact total before showing any page.",
+      "why_it_matters": "Then keep the exact count but budget it, cache it, or run it off the hot request path."
+    },
+    {
+      "description": "The filtered candidate set is already small and bounded before aggregates run.",
+      "why_it_matters": "The additional two-phase machinery may not be necessary."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A read-only list query is safe because it does not mutate data.",
+    "LIMIT at the end protects every earlier aggregate.",
+    "Exact total counts are harmless UI polish."
+  ],
+  "first_checks": [
+    {
+      "check": "Run EXPLAIN or ORM logging and identify whether candidate IDs are bounded before detail joins and aggregates.",
+      "why": "The expensive phase should operate on the page, not the whole match set.",
+      "files": [
+        "SQL",
+        "ORM query",
+        "query plan"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Prototype a limit+1 candidate-ID query and compare latency at realistic filter cardinality.",
+      "why": "Limit+1 proves has-more without a global count.",
+      "files": [
+        "database console",
+        "staging benchmark"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Review UI copy for exact-total claims.",
+      "why": "Changing an exact number to approximate or has-more is a user-visible contract change, not a hidden performance patch.",
+      "files": [
+        "UI copy",
+        "API response schema"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-17-2026-06-13"
+      ],
+      "condition": "Expensive joins or aggregates run before the page boundary.",
+      "action": "modify_code",
+      "action_detail": "bound_candidate_ids_first",
+      "then": "Filter and sort cheap candidate IDs, fetch limit+1, then join or aggregate only those IDs."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-17-2026-06-13"
+      ],
+      "condition": "The exact global count is not required for the user decision.",
+      "action": "modify_code",
+      "action_detail": "replace_global_count_with_has_more_contract",
+      "then": "Expose has_more or an explicitly labelled approximation instead of a hot exact count."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-17-2026-06-13"
+      ],
+      "condition": "Exact totals are required and expensive.",
+      "action": "modify_workflow",
+      "action_detail": "move_count_off_hot_path",
+      "then": "Cache, precompute, or run the exact count in a separately budgeted path."
+    }
+  ],
+  "do_not": [
+    "Do not run detail joins, window counts, or aggregates across an unbounded list because the final page is small.",
+    "Do not silently replace exact totals with approximate labels without changing the UI contract.",
+    "Do not treat this as the same trap as hot polling or cartesian join blow-up; cross-check those records separately.",
+    "Do not collapse this with hot-count-polling-can-become-the-incident or cartesian-distinct-counts-can-dos-a-production-db; this record is specifically about paging candidate IDs before detail aggregation."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Inspect the query phase order and move the page boundary before expensive aggregation when the screen only needs one page."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is de-identified agent guidance. It does not authorize bypassing maintainer, security, publication, production, billing, data, permission, or destructive-action gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "batch0613-publication-batch-17-2026-06-13",
+        "url": "verification-artifact:batch0613-publication-batch-17-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "Item 17 was distilled from an internal candidate note and selected as a standalone counts/aggregation record."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-13",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

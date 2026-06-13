@@ -1,0 +1,182 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.admin-form-writers-need-warmup-and-readback",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-13T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Admin form writers need warm-up and readback",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "browser-automation",
+    "common-ai-mistake",
+    "external-systems",
+    "forms",
+    "verification"
+  ],
+  "summary": "Browser automation that writes third-party admin forms should warm the list context, prove one exact target, read state before and after save, and classify auth/timeouts as blocked rather than form failure.",
+  "ai_value": "Helps agents avoid mutating the wrong admin object, trusting cold deep links, or claiming form success without pre/post evidence.",
+  "applies_to": {
+    "ecosystem": "agent operations and software delivery",
+    "contexts": [
+      "an agent edits an authenticated admin console or marketplace form through a browser",
+      "deep links can render cold, stale, redirected, or partially authorized pages",
+      "the write target must be singular and externally verified"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "2026-06-13 AI-reviewed publication batch"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The writer starts from a deep edit URL without first loading the list or search context.",
+      "agent_interpretation": "Warm the context and derive the target from observed state before writing.",
+      "detectable_by": [
+        "browser trace",
+        "automation script"
+      ]
+    },
+    {
+      "description": "Selectors match multiple possible records or the URL/form shape does not prove the target.",
+      "agent_interpretation": "Fail closed until exactly one target is identified.",
+      "detectable_by": [
+        "DOM query",
+        "screenshot",
+        "network capture"
+      ]
+    },
+    {
+      "description": "The script saves without reading the relevant field before and after.",
+      "agent_interpretation": "Add pre-save and post-save readback evidence.",
+      "detectable_by": [
+        "automation logs",
+        "screenshots"
+      ]
+    },
+    {
+      "description": "A timeout, login page, or auth interstitial appears during the write.",
+      "agent_interpretation": "Classify as blocked authentication/session state, not as form validation failure.",
+      "detectable_by": [
+        "browser page",
+        "network status"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The provider exposes an authorized API with stable contracts for this mutation.",
+      "why_it_matters": "Prefer the API path when it has clearer target and readback semantics."
+    },
+    {
+      "description": "The task is observation-only extraction, not a write.",
+      "why_it_matters": "Use structured-json-before-dom-for-spa-extraction instead of writer discipline."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A deep edit URL proves the browser is on the intended target.",
+    "If the click succeeded, the remote state changed.",
+    "Timeouts during admin writes are form bugs by default."
+  ],
+  "first_checks": [
+    {
+      "check": "Load the list/search context before the deep edit and derive the exact target from observed fields.",
+      "why": "Warm-up catches auth redirects, stale context, and ambiguous targets.",
+      "files": [
+        "browser trace",
+        "automation logs"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Capture pre-save and post-save readback for the edited fields.",
+      "why": "Readback is the evidence that the remote state changed.",
+      "files": [
+        "screenshots",
+        "safe logs"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Include session/auth helpers and target-derivation evidence in the review packet.",
+      "why": "Reviewers need the context that makes browser writes safe, not just the writer diff.",
+      "files": [
+        "review packet"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-25-2026-06-13"
+      ],
+      "condition": "The writer cannot prove one exact target.",
+      "action": "escalate",
+      "action_detail": "fail_closed_on_ambiguous_target",
+      "then": "Stop before saving and gather list-context or authoritative observation evidence."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-25-2026-06-13"
+      ],
+      "condition": "Pre/post readback differs as intended for the exact target.",
+      "action": "diagnose",
+      "action_detail": "record_remote_write_evidence",
+      "then": "Record the safe readback evidence and proceed with normal verification."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-25-2026-06-13"
+      ],
+      "condition": "Auth/session or timeout pages interrupt the path.",
+      "action": "escalate",
+      "action_detail": "classify_as_blocked_auth_or_session",
+      "then": "Do not rewrite selectors or retry mutations until session state is restored through the proper path."
+    }
+  ],
+  "do_not": [
+    "Do not save through an admin console without exact target proof.",
+    "Do not treat a cold deep link as authoritative page state.",
+    "Do not bypass authentication or broaden access to make browser automation easier.",
+    "Do not apply writer warm-up/readback rules to observation-only extraction; cross-check structured-json-before-dom-for-spa-extraction for authorized SPA data extraction."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Warm the admin list context, prove exactly one target, then capture pre/post readback before claiming a browser write succeeded."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is de-identified agent guidance. It does not authorize bypassing maintainer, security, publication, production, billing, data, permission, or destructive-action gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "batch0613-publication-batch-25-2026-06-13",
+        "url": "verification-artifact:batch0613-publication-batch-25-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "Item 25 was selected as a browser writer record distinct from item 31 extraction discipline."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-13",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

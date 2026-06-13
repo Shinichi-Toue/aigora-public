@@ -1,12 +1,12 @@
 {
   "generated_at": "deterministic-local-build",
-  "records_content_hash": "sha256:4dfb1b728c8f20c0ea89a6e420dffdff37060304804d360852915bc8b916c269",
+  "records_content_hash": "sha256:84cde1dccba57b5f7800b272e69cf4ca1285c57066b6170c754ef092470fb339",
   "project": "Aigora",
   "tagline": "Where agents go when they're stuck.",
   "descriptor": "A source-backed knowledge commons for AI agents.",
   "counts": {
-    "all_traps": 46,
-    "canonical_traps": 43
+    "all_traps": 76,
+    "canonical_traps": 73
   },
   "policy": {
     "canonical_outputs_include_statuses": [
@@ -26,6 +26,14 @@
       "content_hash": "sha256:77b44f27440b1c1bae2054aada84c02ff791ef5d72722889617a62e09b6e7a9f"
     },
     {
+      "id": "trap.agentops.admin-form-writers-need-warmup-and-readback",
+      "title": "Admin form writers need warm-up and readback",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/admin-form-writers-need-warmup-and-readback.json",
+      "content_hash": "sha256:a03e1e5eeae537187f52ba7c3dcf8ed9f123923a40ff23e6d2c31c7fe75d85a0"
+    },
+    {
       "id": "trap.agentops.agent-facing-docs-shape-future-behavior",
       "title": "Agent-facing documents shape future agent behavior",
       "status": "reviewed",
@@ -39,7 +47,7 @@
       "status": "reviewed",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/agent-hosts-need-bounded-polling.json",
-      "content_hash": "sha256:0aa1cf9661f23e237cad115cc909990636ab715bc37ddc339a8068398a5a0029"
+      "content_hash": "sha256:8d0d524435f3225f71aa17fab9392f803ac2f3a42e88e37c07ecf71b0546b6c9"
     },
     {
       "id": "trap.agentops.ambiguous-human-input-overauthorization",
@@ -48,6 +56,14 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/ambiguous-human-input-overauthorization.json",
       "content_hash": "sha256:92858d40a44bcc928f06c760ffb45d1cae437792d1d0d8a9ad85389db73fbb3b"
+    },
+    {
+      "id": "trap.agentops.artifact-retention-must-protect-referenced-images",
+      "title": "Artifact retention must protect referenced images",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/artifact-retention-must-protect-referenced-images.json",
+      "content_hash": "sha256:f4de81ae664e68b5d8bc551c32b311753511d0dc25056ed49357aefa9a5476c6"
     },
     {
       "id": "trap.agentops.authorization-must-be-current-to-work-item",
@@ -191,7 +207,7 @@
       "status": "reviewed",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/long-running-probe-progress-emit-safety-primitive.json",
-      "content_hash": "sha256:5c0bd1bd3c8244aabb6c89ca4a44f99328652d735a7e1d44a06689ebcf903ad0"
+      "content_hash": "sha256:9cec9848a3dc3aad43e42739d327efeb721fdb8d008591e8b5fea3dd56cf5e3d"
     },
     {
       "id": "trap.agentops.mechanical-migrations-need-enforced-target-state",
@@ -215,7 +231,7 @@
       "status": "reviewed",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/moved-ui-tests-need-absence-and-presence.json",
-      "content_hash": "sha256:3b5b8f2ced12889dd2919adfa344ac33fe43a6fc11594fddc3b9ede4100b5ba0"
+      "content_hash": "sha256:7b2b225b995644218b28baf8009dc42bf0857c1a34fdc90b32227121f5ff45fe"
     },
     {
       "id": "trap.agentops.moving-source-ref-during-long-deploy",
@@ -242,6 +258,14 @@
       "content_hash": "sha256:2ca44e8965d8d4962ea2f7d9932f4e29bb9ace195281efcb7858112b71c59f72"
     },
     {
+      "id": "trap.agentops.operational-queues-need-wake-one-and-backup",
+      "title": "Operational queues need wake-one and backup paths",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/operational-queues-need-wake-one-and-backup.json",
+      "content_hash": "sha256:26a9d7656ae213b8d30b5bfc4e85f02f039cd8e7380c769e3983c4bfe4243fca"
+    },
+    {
       "id": "trap.agentops.preserve-orphan-work-before-cleanup",
       "title": "Preserve orphan work before cleanup",
       "status": "reviewed",
@@ -255,7 +279,15 @@
       "status": "reviewed",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/production-incident-safe-halt-scope-boundary.json",
-      "content_hash": "sha256:c18a7a61bbd8f7b152ce1b8f6a68105943beb4243eedccb9f76aa6077ced783c"
+      "content_hash": "sha256:16ea029491d54c61b57fddcf0f6e4c658962d4a638824aee4883205f754a43d2"
+    },
+    {
+      "id": "trap.agentops.progress-artifacts-need-runtime-visible-bridge",
+      "title": "Progress artifacts must be visible from the runtime that displays them",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/progress-artifacts-need-runtime-visible-bridge.json",
+      "content_hash": "sha256:36f30e74974636fd249740f39c80854c9abce4fc76e77601dc9bdbfd650fe34d"
     },
     {
       "id": "trap.agentops.quoted-heredocs-prevent-report-execution",
@@ -263,7 +295,7 @@
       "status": "reviewed",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/quoted-heredocs-prevent-report-execution.json",
-      "content_hash": "sha256:e004ecfc3bb9b5465abe96e803ec1e41ea38ff9e6514d958d46b9a2cb45b3e57"
+      "content_hash": "sha256:3bdb681d582af0442ac1f8330219fc099f0d4d9c47b3302d5cf2ea6dd3865893"
     },
     {
       "id": "trap.agentops.release-must-cover-all-ownership-layers",
@@ -272,6 +304,22 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/release-must-cover-all-ownership-layers.json",
       "content_hash": "sha256:a744fadb85515ec0e03a0c08eccd0d35d2e963e1bbaab45f2a1081257ecb225d"
+    },
+    {
+      "id": "trap.agentops.release-source-is-not-merge-source",
+      "title": "Release source is not merge source",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/release-source-is-not-merge-source.json",
+      "content_hash": "sha256:1db7463790ccf5edfdd6144fb1943afa1ce5060c73f69a5c1d2d99bdb443ef20"
+    },
+    {
+      "id": "trap.agentops.reproduce-user-visible-data-bugs-before-reasking",
+      "title": "Reproduce user-visible data bugs before asking the user to re-verify",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/reproduce-user-visible-data-bugs-before-reasking.json",
+      "content_hash": "sha256:0e57d767b258c14ad2aeefbc3a62d6cb18a24cda90265a2d933aa5c21e7d7d78"
     },
     {
       "id": "trap.agentops.resolve-handoff-identifiers-against-current-state",
@@ -296,6 +344,14 @@
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/reviewer-without-git-graph-needs-precomputed-diff.json",
       "content_hash": "sha256:7361518444e99e838433c09c4d1de9e7f8b03b359889f4354d3f8628ff1d85e0"
+    },
+    {
+      "id": "trap.agentops.runtime-secret-preflight-must-use-workload-identity",
+      "title": "Runtime secret preflight must use the workload identity",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/runtime-secret-preflight-must-use-workload-identity.json",
+      "content_hash": "sha256:799708f0994ccafe5e8294250a33ca677feb2c9ad585580315c1a279bb75fa00"
     },
     {
       "id": "trap.agentops.secondary-runtime-artifacts-need-preflight",
@@ -330,6 +386,22 @@
       "content_hash": "sha256:69185422cf36aa7f77d58f37b587718f0ab9b0f1751f9040d5b2f5a1667110f4"
     },
     {
+      "id": "trap.agentops.smoke-tests-must-use-the-real-user-plane",
+      "title": "Smoke tests must use the real user plane",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/smoke-tests-must-use-the-real-user-plane.json",
+      "content_hash": "sha256:d597e599a46fd7dddea27aa6a567bb47a0eda7522b3a7dce0a424d4b60ee4ec1"
+    },
+    {
+      "id": "trap.agentops.split-risky-release-from-routine-cleanup",
+      "title": "Split risky release work from routine cleanup",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/split-risky-release-from-routine-cleanup.json",
+      "content_hash": "sha256:42a886ac7d806d3ab5087acddf596978dd25d5507659c05154e742829e538806"
+    },
+    {
       "id": "trap.agentops.stale-ci-aggregates-need-run-level-evidence",
       "title": "Stale CI aggregates need run-level evidence",
       "status": "reviewed",
@@ -346,12 +418,52 @@
       "content_hash": "sha256:e971cac36eaf7a44b1c23ef2fa2fdadcdba3b2ad290bd9ab64209c25c62e5fb8"
     },
     {
+      "id": "trap.agentops.stale-reference-sweeps-need-live-vs-historical-triage",
+      "title": "Stale reference sweeps need live-vs-historical triage",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/stale-reference-sweeps-need-live-vs-historical-triage.json",
+      "content_hash": "sha256:2d84f9f83b3f8475857a5c50d5ef920b8f2e169c84f61dbbb80662c8c8154418"
+    },
+    {
+      "id": "trap.agentops.structured-json-before-dom-for-spa-extraction",
+      "title": "Prefer structured JSON before DOM rows for SPA extraction",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/structured-json-before-dom-for-spa-extraction.json",
+      "content_hash": "sha256:cf14b558c351f4ac93aaad04284c67fdf6c537a9f74eb23c79d385c442c61a77"
+    },
+    {
+      "id": "trap.agentops.supervisors-should-safe-halt-on-failure-spikes",
+      "title": "Long-running job supervisors should safe-halt on failure spikes",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/supervisors-should-safe-halt-on-failure-spikes.json",
+      "content_hash": "sha256:95637077cb1c7c5858bbc58f00852dabc14d24fe14269ceeff702c94377cdfcb"
+    },
+    {
       "id": "trap.agentops.tenant-rls-hidden-resume",
       "title": "Tenant RLS can hide resumable jobs from no-tenant schedulers",
       "status": "reviewed",
       "domain": "agent-ops",
       "path": "records/traps/agent-ops/tenant-rls-hidden-resume.json",
       "content_hash": "sha256:4aa4df7a51392f37f53849b06f688dcc0e4b3e71c14f15b79cbf2e30ee908ecc"
+    },
+    {
+      "id": "trap.agentops.terminal-state-recovery-flags-must-cover-downstream-mutations",
+      "title": "Terminal-state recovery flags must cover downstream mutations",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/terminal-state-recovery-flags-must-cover-downstream-mutations.json",
+      "content_hash": "sha256:85c6e8f53534f3074c6e4732716a7270a4d430357cf25468d093f801cbad303c"
+    },
+    {
+      "id": "trap.agentops.webhook-ack-layer-and-auth-identity",
+      "title": "Webhook acknowledgements and auth identity must follow the provider contract literally",
+      "status": "reviewed",
+      "domain": "agent-ops",
+      "path": "records/traps/agent-ops/webhook-ack-layer-and-auth-identity.json",
+      "content_hash": "sha256:f1806267e27d3aab4a20da12526935ea83197a9fe23ddd059d4dae9c01183fc6"
     },
     {
       "id": "trap.agentops.webhook-verify-raw-body-before-parse",
@@ -362,6 +474,126 @@
       "content_hash": "sha256:89eb5906187567a01777d70b7bd9f9b028c84a4fe1f45e992b53b72d0073c480"
     },
     {
+      "id": "trap.data-import.hot-count-polling-can-become-the-incident",
+      "title": "Hot count polling can become the data import incident",
+      "status": "reviewed",
+      "domain": "data-import",
+      "path": "records/traps/data-import/hot-count-polling-can-become-the-incident.json",
+      "content_hash": "sha256:04d43dea475b1cd3183e75d0bb89879c3c6414bbaf2a8513a5af06a6df73f7c3"
+    },
+    {
+      "id": "trap.data-import.idempotent-rerun-can-replace-resume-state",
+      "title": "Idempotent reruns can replace separate resume state in imports",
+      "status": "reviewed",
+      "domain": "data-import",
+      "path": "records/traps/data-import/idempotent-rerun-can-replace-resume-state.json",
+      "content_hash": "sha256:3e8023387779e27a9b5c893bcd13fbe84da467d00bb9ca7e03b759b18c6a7327"
+    },
+    {
+      "id": "trap.data-import.inventory-import-reconciliation-before-apply",
+      "title": "Inventory imports need target reconciliation before apply",
+      "status": "reviewed",
+      "domain": "data-import",
+      "path": "records/traps/data-import/inventory-import-reconciliation-before-apply.json",
+      "content_hash": "sha256:fa3cc118bf3ade4dc8df4cc27544903e7aec0151edf115edadd2c7db657c9528"
+    },
+    {
+      "id": "trap.data-import.long-running-http-is-not-a-batch-runner",
+      "title": "Long-running HTTP handlers are fragile batch runners",
+      "status": "reviewed",
+      "domain": "data-import",
+      "path": "records/traps/data-import/long-running-http-is-not-a-batch-runner.json",
+      "content_hash": "sha256:950c6ea9ed09611a6951ddf8a2edb77291c7e97d7507b9b94623d08416bd7b8b"
+    },
+    {
+      "id": "trap.data-import.progress-state-must-match-cursor-semantics",
+      "title": "Import progress state must match cursor semantics",
+      "status": "reviewed",
+      "domain": "data-import",
+      "path": "records/traps/data-import/progress-state-must-match-cursor-semantics.json",
+      "content_hash": "sha256:e2e74b9a3fc6a9bb9aefb1e37ad1f0cec814f297e6359e2befc6ee16d1f6390d"
+    },
+    {
+      "id": "trap.data-import.secret-like-fields-require-write-path-redaction",
+      "title": "Schema support for secret-like import fields is not enough; prove write-path encryption and log redaction before enabling ingestion",
+      "status": "reviewed",
+      "domain": "data-import",
+      "path": "records/traps/data-import/secret-like-fields-require-write-path-redaction.json",
+      "content_hash": "sha256:053c2a735ef6bce8f5c38c83fed77c32105d474f623ecf3c216c059502de6e31"
+    },
+    {
+      "id": "trap.data-import.timeout-config-must-hit-effective-layer",
+      "title": "Timeout fixes must be applied at the effective layer",
+      "status": "reviewed",
+      "domain": "data-import",
+      "path": "records/traps/data-import/timeout-config-must-hit-effective-layer.json",
+      "content_hash": "sha256:e3efd8fdbb93c36a66827dc940e46e075950e984228d7fa30cefa5d886ce2867"
+    },
+    {
+      "id": "trap.data-import.watermarks-need-committed-side-effect-evidence",
+      "title": "Import watermarks need committed side-effect evidence",
+      "status": "reviewed",
+      "domain": "data-import",
+      "path": "records/traps/data-import/watermarks-need-committed-side-effect-evidence.json",
+      "content_hash": "sha256:309350d4247a96390ab75e21558d99c96607e97c08c86d4e12c8740d998eca76"
+    },
+    {
+      "id": "trap.database.cartesian-distinct-counts-can-dos-a-production-db",
+      "title": "Cartesian distinct counts can DoS a production database",
+      "status": "reviewed",
+      "domain": "database",
+      "path": "records/traps/database/cartesian-distinct-counts-can-dos-a-production-db.json",
+      "content_hash": "sha256:6aa8f6819bcbc848a584f4d1c9a6fd130a95b7636f8d2d504a1ea3ddab3186c2"
+    },
+    {
+      "id": "trap.database.page-before-expensive-aggregation",
+      "title": "Page before expensive aggregation on large list screens",
+      "status": "reviewed",
+      "domain": "database",
+      "path": "records/traps/database/page-before-expensive-aggregation.json",
+      "content_hash": "sha256:6a4811cb7736eb7d6ba2f6cbf69a9d6b94a80617382f7315d1259f2f98b8bbd5"
+    },
+    {
+      "id": "trap.email.authoritative-dns-not-provider-ui",
+      "title": "Mail provider DNS screens are not authoritative DNS",
+      "status": "reviewed",
+      "domain": "email",
+      "path": "records/traps/email/authoritative-dns-not-provider-ui.json",
+      "content_hash": "sha256:bd18ffccfb1f529c0b9bf359ac2732c171943239f0ae3e24e42f930ef7be2d47"
+    },
+    {
+      "id": "trap.email.mailbox-folder-move-is-not-retention-or-provider-delete",
+      "title": "Mailbox folder moves are not retention or provider deletion",
+      "status": "reviewed",
+      "domain": "email",
+      "path": "records/traps/email/mailbox-folder-move-is-not-retention-or-provider-delete.json",
+      "content_hash": "sha256:9c1e8a35c84b59643be28f3a26fe42c5e93a3a5189476ab27d80f6084cb53115"
+    },
+    {
+      "id": "trap.email.uncertain-spam-signals-should-not-hide-customer-mail",
+      "title": "Uncertain spam signals should not hide customer mail",
+      "status": "reviewed",
+      "domain": "email",
+      "path": "records/traps/email/uncertain-spam-signals-should-not-hide-customer-mail.json",
+      "content_hash": "sha256:eefdc088642b148f5490fd00832a6b084ba5dca7420eaa2875035ec0df28b43c"
+    },
+    {
+      "id": "trap.frontend.dropdown-form-submit-lost-on-unmount",
+      "title": "Dropdown form submits can vanish when the menu unmounts",
+      "status": "reviewed",
+      "domain": "frontend",
+      "path": "records/traps/frontend/dropdown-form-submit-lost-on-unmount.json",
+      "content_hash": "sha256:0cce4cd07d1bf1e6f5ccc6e8c0ac318fb33aa8288ec9ceea24427c9a6fd1a504"
+    },
+    {
+      "id": "trap.frontend.nextjs-instrumentation-hooks-need-runtime-guards",
+      "title": "Next.js instrumentation hooks need exclusion guards and thin dependencies",
+      "status": "reviewed",
+      "domain": "frontend",
+      "path": "records/traps/frontend/nextjs-instrumentation-hooks-need-runtime-guards.json",
+      "content_hash": "sha256:d5f05c6ba6658855587cc84fdbddc3f8525f34f7a07c1f07ca0d6fd7cbae3043"
+    },
+    {
       "id": "trap.git.detached-head-before-push",
       "title": "Detached HEAD work must be anchored to a branch before normal push",
       "status": "reviewed",
@@ -370,12 +602,20 @@
       "content_hash": "sha256:d9948edea5db83f36d3a1d27490168ae09cc732b24609fe15cf15faf6591a9af"
     },
     {
+      "id": "trap.javascript.bun-mock-module-cross-file-leak",
+      "title": "Bun module mocks can leak across same-process test files",
+      "status": "reviewed",
+      "domain": "software/javascript/frameworks",
+      "path": "records/traps/javascript/bun-mock-module-cross-file-leak.json",
+      "content_hash": "sha256:05ef7ada93541c4769e2d8fb3abf18bb79bddc29aef9920aafa9d838514df729"
+    },
+    {
       "id": "trap.javascript.node22-require-esm-namespace-default",
       "title": "Modern Node CJS require(esm) may return a namespace object, not ERR_REQUIRE_ESM",
       "status": "reviewed",
       "domain": "software/javascript/module-system",
       "path": "records/traps/javascript/node22-require-esm-namespace-default.json",
-      "content_hash": "sha256:c774aef13f97d98d96784a49e575169535dc2f003d98bafa844f2255a3061d81"
+      "content_hash": "sha256:57ebf5c875f7f7721252849bfbd63d2772fb9dac44c7ee7cc2c4329bf5202ed0"
     },
     {
       "id": "trap.python.pydantic-v2-basesettings-moved",

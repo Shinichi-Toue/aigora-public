@@ -1,0 +1,162 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.data-import.hot-count-polling-can-become-the-incident",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-11T01:55:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Hot count polling can become the data import incident",
+  "status": "reviewed",
+  "domain": "data-import",
+  "tags": [
+    "common-ai-mistake",
+    "data-import",
+    "database",
+    "long-running-jobs",
+    "observability",
+    "progress-ui"
+  ],
+  "summary": "Polling exact target-table counts for a live import progress display can create more database load than the import itself. Progress should come from job-owned counters, watermarks, sampled metrics, or terminal summaries unless an exact count is proven cheap.",
+  "ai_value": "Helps agents avoid adding an apparently harmless progress dashboard query that turns a long-running import into a database CPU incident.",
+  "applies_to": {
+    "ecosystem": "agent-built data import and backfill workflows",
+    "contexts": [
+      "a UI or status API refreshes every few seconds while an import is running",
+      "target tables are large, growing, heavily indexed, or receiving writes from the same job",
+      "operators ask for progress, ETA, or denominator estimates during a multi-hour or multi-day run"
+    ],
+    "tools": [
+      {
+        "name": "general relational database",
+        "version_range": "de-identified operational pattern"
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The status endpoint computes progress with exact count queries against import target tables on every poll.",
+      "pattern": "count\\(\\*\\)|COUNT\\(\\*\\)|every 5s|every 10s|polling|progress endpoint|status API",
+      "agent_interpretation": "Treat the progress read path as part of the load-bearing design, not as harmless UI code.",
+      "detectable_by": [
+        "source grep",
+        "query logs",
+        "APM",
+        "database metrics"
+      ]
+    },
+    {
+      "description": "Database CPU rises while the import is running, and query samples show repeated aggregate scans from the status or dashboard path.",
+      "pattern": "CPU high|aggregate|sequential scan|status|dashboard|poll",
+      "agent_interpretation": "Mitigate the read-side polling before further increasing worker throttles or changing write code.",
+      "detectable_by": [
+        "database metrics",
+        "query samples",
+        "request logs"
+      ]
+    },
+    {
+      "description": "The product only needs approximate progress or a heartbeat state, but implementation asks the database for exact live totals.",
+      "pattern": "ETA|approximately|about|heartbeat|running|stale|denominator",
+      "agent_interpretation": "Use job-owned approximate counters or previous-run summaries instead of exact target counts.",
+      "detectable_by": [
+        "requirements review",
+        "UI copy",
+        "design review"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The counted relation is tiny, static, indexed for the exact aggregate, or maintained as a cheap metadata counter in the database engine.",
+      "why_it_matters": "Exact counts can be safe when proven cheap in the target database and scale envelope."
+    },
+    {
+      "description": "The count is run once as an operator-gated diagnostic, not repeatedly on the user-facing hot path.",
+      "why_it_matters": "One-off diagnostics have a different risk profile from background polling."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A read-only progress query cannot be the cause of a production incident.",
+    "Exact target-table counts are the most honest way to display import progress.",
+    "Throttling the writer is enough when the status page is also querying the hot tables.",
+    "A progress UI can be designed after the import logic without affecting database load."
+  ],
+  "first_checks": [
+    {
+      "check": "List every query executed by the status endpoint while a run is active and mark which ones touch target tables versus job-state tables.",
+      "why": "Progress reads often look small in code but run frequently enough to dominate load.",
+      "safe_to_run": true,
+      "files": [
+        "status endpoint",
+        "query log",
+        "APM trace"
+      ]
+    },
+    {
+      "check": "Replace live exact target counts with job-maintained counters, phase high-water marks, prior-run performance summaries, or sampled/async statistics, then compare database CPU and status correctness.",
+      "why": "The safe design keeps observability while removing hot aggregate scans.",
+      "safe_to_run": false,
+      "files": [
+        "reviewed migration or code change",
+        "database metrics",
+        "status API smoke"
+      ]
+    },
+    {
+      "check": "Make UI copy explicit about approximate denominators and heartbeat-derived state when exact counts are intentionally avoided.",
+      "why": "Operators need honest semantics without paying for exact live counts.",
+      "safe_to_run": true,
+      "files": [
+        "UI copy",
+        "status contract",
+        "runbook"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A live import status path repeatedly runs exact aggregate counts over the target tables and approximate progress would satisfy the operator need.",
+      "action": "modify_workflow",
+      "action_detail": "move_progress_to_job_state",
+      "then": "Read heartbeat, job counters, watermarks, and prior-run summaries; forbid target-table count polling on the hot status path.",
+      "confidence": "high",
+      "source_ids": [
+        "redacted-session-observation-2026-06-11"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not add repeated exact count(*) polling to a live import dashboard without measuring the real query plan and refresh cadence at production scale.",
+    "Do not claim the import writer is the only load source until the progress/status read path has been profiled.",
+    "Do not hide approximate semantics; label estimated denominators and ETA clearly.",
+    "Do not publish private provider names, tenant identifiers, database names, internal URLs, account IDs, or repository paths in public lessons.",
+    "Do not treat this as only generic bounded polling; cross-check agent-hosts-need-bounded-polling for host polling cadence and cartesian-distinct-counts-can-dos-a-production-db/page-before-expensive-aggregation for query-shape count traps."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "When asked for live import progress, design the status path from job-owned state first and treat exact target-table counts as an operator-gated diagnostic unless proven cheap."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": true,
+    "notes": "Candidate is based on one private production-backed import incident; promotion needs independent review and de-identification."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "redacted-session-observation-2026-06-11",
+        "url": "verification-artifact:redacted-private-work-session-2026-06-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-11T01:55:00+09:00",
+        "supports": "A long-running import's progress page polled exact target-table counts every few seconds while writes were active. Removing those counts and using job-owned counters/performance summaries was part of reducing database CPU to a stable range."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-11",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

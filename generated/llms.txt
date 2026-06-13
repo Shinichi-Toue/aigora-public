@@ -28,12 +28,16 @@ Aigora helps future agents inherit verified lessons instead of rediscovering the
 
 - trap.agentops.active-serving-workspace-cleanup (reviewed): Cleanup must not delete artifacts from an actively served workspace — records/traps/agent-ops/active-serving-workspace-cleanup.json
   Next safe action: Classify the path, prove no runtime depends on it, and smoke assets plus the primary UI before deleting generated artifacts.
+- trap.agentops.admin-form-writers-need-warmup-and-readback (reviewed): Admin form writers need warm-up and readback — records/traps/agent-ops/admin-form-writers-need-warmup-and-readback.json
+  Next safe action: Warm the admin list context, prove exactly one target, then capture pre/post readback before claiming a browser write succeeded.
 - trap.agentops.agent-facing-docs-shape-future-behavior (reviewed): Agent-facing documents shape future agent behavior — records/traps/agent-ops/agent-facing-docs-shape-future-behavior.json
   Next safe action: Before publishing agent-facing docs or setup/client instructions, classify each behavior claim and smoke the generated command contract from the same source of truth.
 - trap.agentops.agent-hosts-need-bounded-polling (reviewed): Agent hosts need bounded polling by default — records/traps/agent-ops/agent-hosts-need-bounded-polling.json
   Next safe action: Offer bounded polling first; only use indefinite listen mode when timeout, progress, backgrounding, and cancellation are documented and host-tested.
 - trap.agentops.ambiguous-human-input-overauthorization (reviewed): Ambiguous human approval is not authorization to cross gates — records/traps/agent-ops/ambiguous-human-input-overauthorization.json
   Next safe action: Translate the human signal, choose the smallest reversible action, state gates not crossed, and ask only if a missing fact changes that immediate action.
+- trap.agentops.artifact-retention-must-protect-referenced-images (reviewed): Artifact retention must protect referenced images — records/traps/agent-ops/artifact-retention-must-protect-referenced-images.json
+  Next safe action: Before artifact retention cleanup, diff active and rollback references against the artifacts that the policy will keep.
 - trap.agentops.authorization-must-be-current-to-work-item (reviewed): Authorization must be current to the work item — records/traps/agent-ops/authorization-must-be-current-to-work-item.json
   Next safe action: Before crossing a gate, tie the authorization to the active work item or an exact standing policy; otherwise stop at the safe boundary already authorized.
 - trap.agentops.bootstrap-output-is-a-contract (reviewed): Bootstrap output is a contract, not a token blob — records/traps/agent-ops/bootstrap-output-is-a-contract.json
@@ -78,36 +82,92 @@ Aigora helps future agents inherit verified lessons instead of rediscovering the
   Next safe action: Define evidence triggers, emit auditable not_applicable records when triggers are absent, and fail closed when triggers are present or uncertain.
 - trap.agentops.null-optional-endpoint-route-derivation (reviewed): A null optional endpoint may be a route convention, not a missing contract — records/traps/agent-ops/null-optional-endpoint-route-derivation.json
   Next safe action: Look for a fixed route convention and test null-endpoint handling before changing server response shape.
+- trap.agentops.operational-queues-need-wake-one-and-backup (reviewed): Operational queues need wake-one and backup paths — records/traps/agent-ops/operational-queues-need-wake-one-and-backup.json
+  Next safe action: Before adding wait behavior to a shared operational resource, test FIFO order, wake-one release, lost-wakeup recovery, and separate authorization checks.
 - trap.agentops.preserve-orphan-work-before-cleanup (reviewed): Preserve orphan work before cleanup — records/traps/agent-ops/preserve-orphan-work-before-cleanup.json
   Next safe action: Capture status and diff evidence, classify ownership and purpose, then clean only through a recorded safe path.
 - trap.agentops.production-incident-safe-halt-scope-boundary (reviewed): High-stakes incident probes should safe-halt at the approval boundary — records/traps/agent-ops/production-incident-safe-halt-scope-boundary.json
   Next safe action: At the first live, destructive, publication, access, cost, or irreversible boundary, stop before effectful action and produce a scoped evidence handoff; continue only with exact review or owner authorization for that boundary.
+- trap.agentops.progress-artifacts-need-runtime-visible-bridge (reviewed): Progress artifacts must be visible from the runtime that displays them — records/traps/agent-ops/progress-artifacts-need-runtime-visible-bridge.json
+  Next safe action: When a progress UI is blank but local run-state exists, first prove runtime visibility of the progress source; then bridge through a shared durable channel if needed.
 - trap.agentops.quoted-heredocs-prevent-report-execution (reviewed): Quoted heredocs prevent accidental report execution — records/traps/agent-ops/quoted-heredocs-prevent-report-execution.json
   Next safe action: Use quoted heredoc delimiters for literal content and re-read the produced file before treating it as evidence.
 - trap.agentops.release-must-cover-all-ownership-layers (reviewed): Release must cover all ownership layers — records/traps/agent-ops/release-must-cover-all-ownership-layers.json
   Next safe action: At closeout, enumerate ownership layers, release each owned layer through its proper helper, re-run inventory, and name any intentional hold.
+- trap.agentops.release-source-is-not-merge-source (reviewed): Release source is not merge source — records/traps/agent-ops/release-source-is-not-merge-source.json
+  Next safe action: Before release, compare live, approved range, and branch head; deploy only the explicit release candidate or record already-live containment.
+- trap.agentops.reproduce-user-visible-data-bugs-before-reasking (reviewed): Reproduce user-visible data bugs before asking the user to re-verify — records/traps/agent-ops/reproduce-user-visible-data-bugs-before-reasking.json
+  Next safe action: For user-visible data bugs, write down the observable success state, then run a safe count/apply/readback loop against representative data before returning to the user.
 - trap.agentops.resolve-handoff-identifiers-against-current-state (reviewed): Resolve handoff identifiers against current state — records/traps/agent-ops/resolve-handoff-identifiers-against-current-state.json
   Next safe action: Resolve every execution identifier against current state, then record the final ID and any rejected stale ID before handoff.
 - trap.agentops.review-artifacts-need-machine-checkable-scope (reviewed): Review artifacts need machine-checkable scope fields — records/traps/agent-ops/review-artifacts-need-machine-checkable-scope.json
   Next safe action: Before consuming a review, validate the commit/digest-bound field schema and the review-only hard stop; route landing through the separate approved gate.
 - trap.agentops.reviewer-without-git-graph-needs-precomputed-diff (reviewed): Reviewers without git graph access need precomputed diff evidence — records/traps/agent-ops/reviewer-without-git-graph-needs-precomputed-diff.json
   Next safe action: Before asking a restricted reviewer for a merge/release verdict, attach precomputed base/head, diff, ancestry, mergeability, and exclusion evidence.
+- trap.agentops.runtime-secret-preflight-must-use-workload-identity (reviewed): Runtime secret preflight must use the workload identity — records/traps/agent-ops/runtime-secret-preflight-must-use-workload-identity.json
+  Next safe action: Before rollout, identify the platform runtime identity and verify redacted secret access through that identity.
 - trap.agentops.secondary-runtime-artifacts-need-preflight (reviewed): Preflight secondary runtime artifacts before reload — records/traps/agent-ops/secondary-runtime-artifacts-need-preflight.json
   Next safe action: Before reload, preflight both primary config and secondary runtime paths as the service account; fail closed on unsafe pre-existing artifacts.
 - trap.agentops.session-boundaries-need-state-reconciliation (reviewed): Session boundaries need state reconciliation — records/traps/agent-ops/session-boundaries-need-state-reconciliation.json
   Next safe action: At every session boundary, reconcile current state against the transcript and leave exact restart evidence.
 - trap.agentops.shared-auth-browser-context-needs-page-leases (reviewed): Shared authenticated browser contexts need page leases — records/traps/agent-ops/shared-auth-browser-context-needs-page-leases.json
   Next safe action: Put authenticated browser lifecycle behind a provider-owned session manager and give feature jobs lease-scoped pages with explicit release semantics.
+- trap.agentops.smoke-tests-must-use-the-real-user-plane (reviewed): Smoke tests must use the real user plane — records/traps/agent-ops/smoke-tests-must-use-the-real-user-plane.json
+  Next safe action: Before judging service health, label the probe plane and run the safe smoke through the same plane real users use.
+- trap.agentops.split-risky-release-from-routine-cleanup (reviewed): Split risky release work from routine cleanup — records/traps/agent-ops/split-risky-release-from-routine-cleanup.json
+  Next safe action: Split closeout plans into risky/gated and routine-cleanup evidence tracks, then verify both explicitly.
 - trap.agentops.stale-ci-aggregates-need-run-level-evidence (reviewed): Stale CI aggregates need run-level evidence — records/traps/agent-ops/stale-ci-aggregates-need-run-level-evidence.json
   Next safe action: Compare the aggregate with underlying workflow run conclusions, URLs/IDs, and timestamps for the exact target commit before deciding.
 - trap.agentops.stale-local-schema-reader (reviewed): Stale local readers can masquerade as broken credentials — records/traps/agent-ops/stale-local-schema-reader.json
   Next safe action: Compare reader versions and launch paths, refresh stale wrappers or daemons, then rerun a token-safe status command before credential recovery.
+- trap.agentops.stale-reference-sweeps-need-live-vs-historical-triage (reviewed): Stale reference sweeps need live-vs-historical triage — records/traps/agent-ops/stale-reference-sweeps-need-live-vs-historical-triage.json
+  Next safe action: Run an exact old-token sweep, classify every hit as live or historical, update only active consumers, then rerun the sweep.
+- trap.agentops.structured-json-before-dom-for-spa-extraction (reviewed): Prefer structured JSON before DOM rows for SPA extraction — records/traps/agent-ops/structured-json-before-dom-for-spa-extraction.json
+  Next safe action: In an authorized SPA session, inspect same-origin JSON payload shapes, add parser/fallback tests, and emit per-item source telemetry.
+- trap.agentops.supervisors-should-safe-halt-on-failure-spikes (reviewed): Long-running job supervisors should safe-halt on failure spikes — records/traps/agent-ops/supervisors-should-safe-halt-on-failure-spikes.json
+  Next safe action: When creating or reviewing a supervisor, require both restart criteria and safe-halt criteria with a durable stop summary.
 - trap.agentops.tenant-rls-hidden-resume (reviewed): Tenant RLS can hide resumable jobs from no-tenant schedulers — records/traps/agent-ops/tenant-rls-hidden-resume.json
   Next safe action: Compare no-tenant and tenant-scoped visibility, then perform resume discovery and one-writer lease checks inside tenant context.
+- trap.agentops.terminal-state-recovery-flags-must-cover-downstream-mutations (reviewed): Terminal-state recovery flags must cover downstream mutations — records/traps/agent-ops/terminal-state-recovery-flags-must-cover-downstream-mutations.json
+  Next safe action: Test recovery against terminal fixtures and verify every downstream mutation path is intentionally repair-aware or refused.
+- trap.agentops.webhook-ack-layer-and-auth-identity (reviewed): Webhook acknowledgements and auth identity must follow the provider contract literally — records/traps/agent-ops/webhook-ack-layer-and-auth-identity.json
+  Next safe action: Map the webhook contract into transport, result-body, auth-identity, and persistence-timing layers before editing the handler.
 - trap.agentops.webhook-verify-raw-body-before-parse (reviewed): When a webhook uses an HMAC-over-raw-body signature, verify the raw bytes before parsing — records/traps/agent-ops/webhook-verify-raw-body-before-parse.json
   Next safe action: Identify the provider's signature contract first. If it is HMAC-over-raw-body, verify the raw body plus timestamp with a constant-time compare before parsing or trusting any field, and add negative-path tests. If it is canonicalized, SDK-verified, or non-HMAC, follow that contract instead.
+- trap.data-import.hot-count-polling-can-become-the-incident (reviewed): Hot count polling can become the data import incident — records/traps/data-import/hot-count-polling-can-become-the-incident.json
+  Next safe action: When asked for live import progress, design the status path from job-owned state first and treat exact target-table counts as an operator-gated diagnostic unless proven cheap.
+- trap.data-import.idempotent-rerun-can-replace-resume-state (reviewed): Idempotent reruns can replace separate resume state in imports — records/traps/data-import/idempotent-rerun-can-replace-resume-state.json
+  Next safe action: When asked to add resume logic, first test whether idempotent rerun with no-op skip already gives a simpler and safer recovery model.
+- trap.data-import.inventory-import-reconciliation-before-apply (reviewed): Inventory imports need target reconciliation before apply — records/traps/data-import/inventory-import-reconciliation-before-apply.json
+  Next safe action: Before inventory apply, dry-run the exact final target projection and stop if non-zero source rows map to zero target rows.
+- trap.data-import.long-running-http-is-not-a-batch-runner (reviewed): Long-running HTTP handlers are fragile batch runners — records/traps/data-import/long-running-http-is-not-a-batch-runner.json
+  Next safe action: When a batch API may run long, design the HTTP surface as start/status/control and put job ownership in a worker with durable progress.
+- trap.data-import.progress-state-must-match-cursor-semantics (reviewed): Import progress state must match cursor semantics — records/traps/data-import/progress-state-must-match-cursor-semantics.json
+  Next safe action: When diagnosing import progress or resume bugs, compare cursor semantics to the persisted progress key before changing batch size, retry policy, or UI copy.
+- trap.data-import.secret-like-fields-require-write-path-redaction (reviewed): Schema support for secret-like import fields is not enough; prove write-path encryption and log redaction before enabling ingestion — records/traps/data-import/secret-like-fields-require-write-path-redaction.json
+  Next safe action: If a secret-like field appears in an import mapping, classify the current state as storage-prepared vs write-path-safe, then verify encryption/redaction with a sentinel test before enabling real import writes.
+- trap.data-import.timeout-config-must-hit-effective-layer (reviewed): Timeout fixes must be applied at the effective layer — records/traps/data-import/timeout-config-must-hit-effective-layer.json
+  Next safe action: When a timeout patch seems ignored, map cancellation layers and verify the selected layer with a timed smoke exceeding the former limit.
+- trap.data-import.watermarks-need-committed-side-effect-evidence (reviewed): Import watermarks need committed side-effect evidence — records/traps/data-import/watermarks-need-committed-side-effect-evidence.json
+  Next safe action: Trace the import state transitions and ensure only committed destination effects can advance resume or watermark truth.
+- trap.database.cartesian-distinct-counts-can-dos-a-production-db (reviewed): Cartesian distinct counts can DoS a production database — records/traps/database/cartesian-distinct-counts-can-dos-a-production-db.json
+  Next safe action: When adding counts over variant/dimension structures, design the count query from cardinalities and sparse facts separately, then prove the plan does not materialize the full combination space.
+- trap.database.page-before-expensive-aggregation (reviewed): Page before expensive aggregation on large list screens — records/traps/database/page-before-expensive-aggregation.json
+  Next safe action: Inspect the query phase order and move the page boundary before expensive aggregation when the screen only needs one page.
+- trap.email.authoritative-dns-not-provider-ui (reviewed): Mail provider DNS screens are not authoritative DNS — records/traps/email/authoritative-dns-not-provider-ui.json
+  Next safe action: For mail authentication failures, first identify authoritative DNS and query the exact MX/TXT/selector record there; then decide whether the fix is DNS publication, provider signing/alignment, or application behavior.
+- trap.email.mailbox-folder-move-is-not-retention-or-provider-delete (reviewed): Mailbox folder moves are not retention or provider deletion — records/traps/email/mailbox-folder-move-is-not-retention-or-provider-delete.json
+  Next safe action: When mail foldering and deletion are both present, split the plan into visibility/folder state, retention policy, and provider mutation; verify counts for each before writing live data.
+- trap.email.uncertain-spam-signals-should-not-hide-customer-mail (reviewed): Uncertain spam signals should not hide customer mail — records/traps/email/uncertain-spam-signals-should-not-hide-customer-mail.json
+  Next safe action: Before enabling any mail-hiding action, classify each signal as definitive or uncertain, prove uncertain cases remain visible, and gate quarantine/deletion semantics through the exact reviewed policy.
+- trap.frontend.dropdown-form-submit-lost-on-unmount (reviewed): Dropdown form submits can vanish when the menu unmounts — records/traps/frontend/dropdown-form-submit-lost-on-unmount.json
+  Next safe action: When a dropdown/menu action appears to do nothing, prove request dispatch in the actual UI path; if absent, make mutation dispatch explicit or keep the form mounted through submit.
+- trap.frontend.nextjs-instrumentation-hooks-need-runtime-guards (reviewed): Next.js instrumentation hooks need exclusion guards and thin dependencies — records/traps/frontend/nextjs-instrumentation-hooks-need-runtime-guards.json
+  Next safe action: Inspect the instrumentation hook as a constrained startup surface: exclusion guard, thin imports, production-equivalent single-fire proof.
 - trap.git.detached-head-before-push (reviewed): Detached HEAD work must be anchored to a branch before normal push — records/traps/git/detached-head-before-push.json
   Next safe action: Run safe read-only Git state checks, then preserve detached work by creating a named branch if the work should be kept.
+- trap.javascript.bun-mock-module-cross-file-leak (reviewed): Bun module mocks can leak across same-process test files — records/traps/javascript/bun-mock-module-cross-file-leak.json
+  Next safe action: When unrelated Bun tests fail after adding a module mock, rerun the mocking test alone and paired with the failing file, then isolate the mock or use dependency injection.
 - trap.javascript.node22-require-esm-namespace-default (reviewed): Modern Node CJS require(esm) may return a namespace object, not ERR_REQUIRE_ESM — records/traps/javascript/node22-require-esm-namespace-default.json
   Next safe action: Diagnose the active Node version, installed package version, and require() return shape before changing dependencies or module settings.
 - trap.python.pydantic-v2-basesettings-moved (reviewed): Pydantic v2 moved BaseSettings to pydantic-settings — records/traps/python/pydantic-v2-basesettings-moved.json

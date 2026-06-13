@@ -1,0 +1,183 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.operational-queues-need-wake-one-and-backup",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-13T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Operational queues need wake-one and backup paths",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "common-ai-mistake",
+    "concurrency",
+    "coordination",
+    "queues",
+    "safety-gates"
+  ],
+  "summary": "Adding a wait queue around a shared operational choke point is not enough. The queue needs FIFO no-overtake, wake-one handoff, backup retry, and a strict wait-is-not-authorization boundary.",
+  "ai_value": "Helps agents prevent queue stampedes, skipped waiters, stuck heads, and accidental permission bypasses in multi-agent operations.",
+  "applies_to": {
+    "ecosystem": "agent operations and software delivery",
+    "contexts": [
+      "multiple agents wait for a shared lane, lock, deploy slot, review slot, or other operational choke point",
+      "a wrapper adds waiting around a resource but not queue discipline",
+      "authorization or hard-gate checks are separate from resource availability"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "2026-06-13 AI-reviewed publication batch"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Many waiters wake at once when one holder releases the resource.",
+      "agent_interpretation": "Use wake-one handoff rather than broadcast wakeups to avoid stampedes.",
+      "detectable_by": [
+        "coordination logs",
+        "wrapper behavior"
+      ]
+    },
+    {
+      "description": "A later waiter can overtake the head of the queue after release.",
+      "agent_interpretation": "Preserve FIFO order or record an explicit priority override.",
+      "detectable_by": [
+        "queue state",
+        "event timestamps"
+      ]
+    },
+    {
+      "description": "The queue head can be missed or remain stuck after a lost notification.",
+      "agent_interpretation": "Add a timer or heartbeat backup path that rechecks safely without tight polling.",
+      "detectable_by": [
+        "stale waiters",
+        "heartbeat logs"
+      ]
+    },
+    {
+      "description": "A waiter treats reaching the front of the queue as permission to perform a gated action.",
+      "agent_interpretation": "Separate resource availability from authorization; the hard gate still applies.",
+      "detectable_by": [
+        "handoff text",
+        "wrapper prompt",
+        "run logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "Only one actor can ever use the resource and no wait state is exposed.",
+      "why_it_matters": "A queue may add needless state; a simple lock can be enough."
+    },
+    {
+      "description": "The action is hard-gated and authorization is absent.",
+      "why_it_matters": "Queue position cannot grant permission; stop until the real gate is satisfied."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A lock with wait messages is automatically fair.",
+    "Waking all waiters is safer because someone will proceed.",
+    "If I am first in queue, I am authorized to act."
+  ],
+  "first_checks": [
+    {
+      "check": "Test the queue with at least three waiters and one release.",
+      "why": "This exposes overtakes and broadcast stampedes.",
+      "files": [
+        "queue tests",
+        "coordination event log"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Simulate a lost wakeup or stale holder and verify the backup timer wakes exactly the head or reports a safe wait.",
+      "why": "Queue systems need a mercy path that is not tight polling.",
+      "files": [
+        "wrapper test",
+        "heartbeat log"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Assert that gate checks still run after a waiter becomes eligible.",
+      "why": "Resource availability and authorization are separate state machines.",
+      "files": [
+        "wrapper code",
+        "approval checks"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-22-2026-06-13"
+      ],
+      "condition": "Release wakes multiple independent waiters.",
+      "action": "modify_code",
+      "action_detail": "wake_one_waiter",
+      "then": "Wake only the next eligible waiter and record the handoff evidence."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-22-2026-06-13"
+      ],
+      "condition": "Queue state can overtake or lose the head.",
+      "action": "modify_code",
+      "action_detail": "enforce_fifo_with_backup_recheck",
+      "then": "Store ordered wait state and add a bounded timer or heartbeat recheck for lost wakeups."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-22-2026-06-13"
+      ],
+      "condition": "The next waiter lacks the action authorization.",
+      "action": "escalate",
+      "action_detail": "hold_resource_without_treating_wait_as_permission",
+      "then": "Keep or release the resource safely, but do not perform the gated action until authorization is separately satisfied."
+    }
+  ],
+  "do_not": [
+    "Do not broadcast wake all waiters for a single shared resource release.",
+    "Do not let queue position override hard gates, review requirements, or owner decisions.",
+    "Do not tight-poll a queue when a heartbeat or scheduled backup recheck is enough.",
+    "Do not use queue discipline as a substitute for choosing the right lock target; cross-check lock-shared-resource-not-artifact for resource-vs-artifact lock scope."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Before adding wait behavior to a shared operational resource, test FIFO order, wake-one release, lost-wakeup recovery, and separate authorization checks."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is de-identified agent guidance. It does not authorize bypassing maintainer, security, publication, production, billing, data, permission, or destructive-action gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "batch0613-publication-batch-22-2026-06-13",
+        "url": "verification-artifact:batch0613-publication-batch-22-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "Item 22 was conditionally selected. The symptom-first reshape has four crisp trigger signals, satisfying the publication condition."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-13",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

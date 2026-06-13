@@ -1,0 +1,173 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.structured-json-before-dom-for-spa-extraction",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-13T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Prefer structured JSON before DOM rows for SPA extraction",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "browser-automation",
+    "common-ai-mistake",
+    "external-systems",
+    "retrieval",
+    "verification"
+  ],
+  "summary": "After authorized observation of an authenticated SPA, content-filtered same-origin JSON payloads are often a safer extraction source than brittle DOM rows; keep per-item source telemetry and an explicit DOM fallback.",
+  "ai_value": "Helps agents build extraction tools that are stable, observable, and auth-safe without overfitting to transient DOM or opaque endpoint names.",
+  "applies_to": {
+    "ecosystem": "agent operations and software delivery",
+    "contexts": [
+      "an authenticated SPA renders identifiers or records from same-origin JSON payloads",
+      "DOM rows are virtualized, translated, reordered, or incomplete",
+      "the extraction must remain within an already authorized observation session"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "2026-06-13 AI-reviewed publication batch"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "DOM selectors can find visible rows but miss stable identifiers, hidden fields, or pagination state.",
+      "agent_interpretation": "Inspect captured same-origin JSON payload shapes before committing to DOM scraping.",
+      "detectable_by": [
+        "browser devtools",
+        "network capture",
+        "parser tests"
+      ]
+    },
+    {
+      "description": "Endpoint names are opaque, unstable, or shared by multiple payload types.",
+      "agent_interpretation": "Filter by content shape and required fields, not just URL substrings.",
+      "detectable_by": [
+        "network log",
+        "payload samples"
+      ]
+    },
+    {
+      "description": "Extracted items lack source-field or missing-reason telemetry.",
+      "agent_interpretation": "Add per-item telemetry so extraction drift becomes visible.",
+      "detectable_by": [
+        "parser output",
+        "test fixture"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "Using network payloads would require bypassing authentication or accessing data outside the authorized UI session.",
+      "why_it_matters": "Do not broaden access; stay within the authorized observation boundary."
+    },
+    {
+      "description": "The DOM is the contractual source and JSON payloads are intentionally incomplete or unstable.",
+      "why_it_matters": "Then DOM extraction with stronger assertions may be the safer contract."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "The visible DOM is always the safest extraction source.",
+    "Endpoint URL names are reliable enough filters for SPA payloads.",
+    "Missing identifiers can be silently skipped if most rows extract."
+  ],
+  "first_checks": [
+    {
+      "check": "Capture authorized same-origin JSON payloads and identify content-shape predicates for the needed records.",
+      "why": "Content shape is often more stable than endpoint names or DOM layout.",
+      "files": [
+        "network capture",
+        "parser fixture"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Add parser tests for primary payload, fallback payload, missing identifier, and DOM fallback cases.",
+      "why": "Tests keep extraction failures observable as the SPA evolves.",
+      "files": [
+        "parser tests"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Emit per-item source-field and missing-reason telemetry.",
+      "why": "Telemetry distinguishes no data from extraction drift.",
+      "files": [
+        "extractor output"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-31-2026-06-13"
+      ],
+      "condition": "Authorized structured payloads contain the needed identifiers and fields.",
+      "action": "modify_code",
+      "action_detail": "parse_content_filtered_json_first",
+      "then": "Use content-shape predicates to parse JSON before falling back to DOM rows."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-31-2026-06-13"
+      ],
+      "condition": "Structured payloads are absent or outside the authorized session.",
+      "action": "diagnose",
+      "action_detail": "use_dom_fallback_without_bypassing_auth",
+      "then": "Use the DOM path and record the absence reason rather than bypassing authentication."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-31-2026-06-13"
+      ],
+      "condition": "Telemetry shows missing identifiers or fallback spikes.",
+      "action": "diagnose",
+      "action_detail": "investigate_extraction_drift",
+      "then": "Inspect payload shape and DOM changes before trusting partial results."
+    }
+  ],
+  "do_not": [
+    "Do not bypass authentication or broaden data access to obtain JSON.",
+    "Do not filter only by opaque endpoint names when content shape is available.",
+    "Do not silently drop items with missing identifiers.",
+    "Do not apply extraction guidance to browser mutations; cross-check admin-form-writers-need-warmup-and-readback when the task writes remote admin state."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "In an authorized SPA session, inspect same-origin JSON payload shapes, add parser/fallback tests, and emit per-item source telemetry."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is de-identified agent guidance. It does not authorize bypassing maintainer, security, publication, production, billing, data, permission, or destructive-action gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "batch0613-publication-batch-31-2026-06-13",
+        "url": "verification-artifact:batch0613-publication-batch-31-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "candidate note 31 was selected as a standalone browser extraction record and cross-linked to admin form writer discipline."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-13",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

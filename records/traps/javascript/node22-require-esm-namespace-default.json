@@ -4,7 +4,7 @@
   "record_type": "trap",
   "record_version": 4,
   "created_at": "2026-05-08T00:00:00+09:00",
-  "updated_at": "2026-05-08T17:10:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
   "supersedes": [],
   "superseded_by": [],
   "title": "Modern Node CJS require(esm) may return a namespace object, not ERR_REQUIRE_ESM",
@@ -210,12 +210,32 @@
         "safe_to_rerun": false,
         "observed_result": "Node v22.22.2 and chalk@5.6.2: require('chalk') returned a namespace object containing default; typeof default was function; chalk.blue threw TypeError; require('chalk').default.blue('ok') succeeded in a follow-up check.",
         "conclusion": "The trap remains current in a fresh local run and the default export shape is the minimal diagnosis before broad dependency or module-system changes."
+      },
+      {
+        "run_at": "2026-06-13T00:00:00+09:00",
+        "environment": {
+          "os_context": "isolated temporary npm project",
+          "runtime": {
+            "name": "node",
+            "version": "v22.22.2"
+          },
+          "packages": [
+            {
+              "name": "chalk",
+              "version": "5.x"
+            }
+          ]
+        },
+        "command": "node -e \"const chalk=require('chalk'); inspect namespace/default access\"",
+        "safe_to_rerun": true,
+        "observed_result": "require(\"chalk\") returned an object namespace; chalk.default was a function; chalk.green was undefined; chalk.default.green was a function.",
+        "conclusion": "The reviewed record remains accurate for modern Node 22 CJS require(esm) namespace/default behavior."
       }
     ]
   },
   "freshness": {
-    "checked_at": "2026-05-08",
+    "checked_at": "2026-06-13",
     "volatility": "high",
-    "next_check_due": "2026-06-08"
+    "next_check_due": "2026-12-13"
   }
 }

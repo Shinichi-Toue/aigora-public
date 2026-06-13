@@ -1,0 +1,160 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.database.cartesian-distinct-counts-can-dos-a-production-db",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-13T08:30:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Cartesian distinct counts can DoS a production database",
+  "status": "reviewed",
+  "domain": "database",
+  "tags": [
+    "common-ai-mistake",
+    "database",
+    "performance",
+    "production-incident",
+    "query-planning"
+  ],
+  "summary": "A query that counts distinct entities after joining multiple option, dimension, or composition tables can accidentally materialize a cartesian product. Split the query into pre-aggregated CTEs or independent counts, and add an effective statement timeout before it reaches production scale.",
+  "ai_value": "Helps agents recognize that a read-only aggregate can create a production outage when distinct counts are computed over a blown-up join graph.",
+  "applies_to": {
+    "ecosystem": "relational applications with products, options, variants, dimensions, permissions, tags, or other many-to-many structures",
+    "contexts": [
+      "a list or dashboard endpoint displays both real entity counts and maximum combination counts",
+      "multiple one-to-many tables are joined before count(distinct ...) or grouped aggregates",
+      "the data model intentionally has sparse real rows plus a larger logical grid",
+      "a UI request or polling endpoint runs the aggregate repeatedly"
+    ],
+    "tools": [
+      {
+        "name": "general relational database",
+        "version_range": "de-identified operational pattern"
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The SQL joins axes, values, cells, products, or other many-to-many dimensions and then calls count(distinct ...) over the joined result.",
+      "pattern": "JOIN.*JOIN.*count\\s*\\(\\s*distinct|count\\(distinct|cartesian|combination count|max combinations",
+      "agent_interpretation": "Assume the query may be multiplying rows before counting; inspect the plan at realistic scale before shipping.",
+      "detectable_by": [
+        "source grep",
+        "EXPLAIN",
+        "query logs"
+      ]
+    },
+    {
+      "description": "Database CPU spikes from a read-only list/count endpoint, while terminating the aggregate queries immediately relieves load.",
+      "pattern": "read-only|count endpoint|CPU high|terminate backend|aggregate|distinct",
+      "agent_interpretation": "Treat the count query itself as the incident source, not merely as harmless observability.",
+      "detectable_by": [
+        "database metrics",
+        "active query samples",
+        "application logs"
+      ]
+    },
+    {
+      "description": "The product model distinguishes sparse real entities from a larger logical cartesian grid.",
+      "pattern": "sparse|logical grid|actual rows|max combinations|variant dimensions|option axes",
+      "agent_interpretation": "Compute sparse entity counts and logical-grid counts in separate subqueries or pre-aggregates instead of one broad joined aggregate.",
+      "detectable_by": [
+        "schema review",
+        "design spec",
+        "query plan"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The joined relations are provably tiny, bounded, and protected by tests or database constraints that prevent multiplication.",
+      "why_it_matters": "The cartesian risk depends on scale and join cardinality, not on the syntax alone."
+    },
+    {
+      "description": "The count runs only in an operator-gated offline diagnostic with a timeout and no user-facing refresh loop.",
+      "why_it_matters": "One-off diagnostics have a different risk profile from hot production endpoints."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A read-only count cannot be the cause of an outage.",
+    "count(distinct ...) makes a broad join safe because duplicates are removed at the end.",
+    "The logical combination count and real sparse row count should be computed in the same joined query.",
+    "Adding more indexes will fix a query whose main cost is row multiplication."
+  ],
+  "first_checks": [
+    {
+      "check": "Run EXPLAIN/EXPLAIN ANALYZE on the count query at realistic scale and inspect estimated versus actual rows at each join.",
+      "why": "The dangerous clue is often a large intermediate row count before the final distinct aggregate.",
+      "safe_to_run": true,
+      "files": [
+        "SQL source",
+        "database query plan"
+      ]
+    },
+    {
+      "check": "Rewrite counts as independent CTEs or pre-aggregates: count real sparse rows in one branch and logical combinations from dimension cardinalities in another branch.",
+      "why": "Pre-aggregation prevents the database from building the full cartesian join just to discard duplicates later.",
+      "safe_to_run": false,
+      "files": [
+        "reviewed code change",
+        "query plan before/after",
+        "endpoint smoke test"
+      ]
+    },
+    {
+      "check": "Verify the effective timeout layer by forcing a deliberately slow version in a safe environment and confirming the application receives a bounded failure.",
+      "why": "Timeouts are useful only if applied on the connection/session/query layer actually used by the endpoint.",
+      "safe_to_run": false,
+      "files": [
+        "database settings",
+        "application data access wrapper",
+        "test logs"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A hot endpoint joins multiple many-to-many dimensions before count(distinct ...), and the UI only needs separate sparse and logical counts.",
+      "action": "modify_code",
+      "action_detail": "split_into_pre_aggregated_counts",
+      "then": "Use CTEs or independent subqueries, compare before/after plans and runtime, and keep a statement timeout guard on the production path.",
+      "confidence": "medium",
+      "source_ids": [
+        "redacted-session-observation-2026-06-13"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not rely on count(distinct ...) to rescue a query after a broad cartesian join has already happened.",
+    "Do not ship a production list endpoint aggregate without checking cardinality at realistic data scale.",
+    "Do not remove timeout guards after the query is optimized; keep bounded failure for regression safety.",
+    "Do not publish private product names, URLs, tenant identifiers, repository paths, database names, or incident timestamps beyond de-identified evidence.",
+    "Do not merge this with hot-count-polling-can-become-the-incident or page-before-expensive-aggregation; they are related count-load traps with different mechanisms."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "When adding counts over variant/dimension structures, design the count query from cardinalities and sparse facts separately, then prove the plan does not materialize the full combination space."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": true,
+    "notes": "Candidate is based on one private production-backed incident and should be independently reviewed and de-identified before publication."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "redacted-session-observation-2026-06-13",
+        "url": "verification-artifact:redacted-private-work-session-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T08:30:00+09:00",
+        "supports": "A production endpoint used distinct counts over a joined option-composition graph, causing sustained database CPU saturation. Terminating the active read queries relieved load; splitting the aggregate into CTEs reduced runtime from minutes to seconds, and a timeout guard was added."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-13",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

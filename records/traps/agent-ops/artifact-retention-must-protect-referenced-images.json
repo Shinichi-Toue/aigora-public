@@ -1,0 +1,173 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.artifact-retention-must-protect-referenced-images",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-13T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Artifact retention must protect referenced images",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "common-ai-mistake",
+    "container-registry",
+    "deployment",
+    "release",
+    "safe-recovery"
+  ],
+  "summary": "Retention policies must protect images and artifacts still referenced by active services, rollback targets, or recovery plans. Otherwise cleanup breaks rollback during the incident that needs it.",
+  "ai_value": "Helps agents avoid deleting deploy artifacts that are still part of the live or rollback safety envelope.",
+  "applies_to": {
+    "ecosystem": "agent operations and software delivery",
+    "contexts": [
+      "a registry or artifact store retention policy deletes old tags, images, or build artifacts",
+      "active services, workload specs, or rollback plans reference immutable artifact digests",
+      "cleanup is run before proving referenced artifacts remain available"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "2026-06-13 AI-reviewed publication batch"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A retention policy selects artifacts by age or tag count without checking active and rollback references.",
+      "agent_interpretation": "Diff references against retained artifacts before applying cleanup.",
+      "detectable_by": [
+        "retention config",
+        "deployment metadata"
+      ]
+    },
+    {
+      "description": "Rollback instructions name an artifact that may no longer exist in the registry or store.",
+      "agent_interpretation": "Treat rollback as unproven until the referenced artifact is fetched or verified.",
+      "detectable_by": [
+        "rollback plan",
+        "registry manifest check"
+      ]
+    },
+    {
+      "description": "Cleanup is bundled with incident recovery or release closeout.",
+      "agent_interpretation": "Protect the referenced artifact set before deleting anything.",
+      "detectable_by": [
+        "task plan",
+        "cleanup script"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The system has a separately verified immutable artifact archive for rollback.",
+      "why_it_matters": "Retention can be safe when rollback references are protected elsewhere."
+    },
+    {
+      "description": "The artifact is proven unreferenced by live, pending, and rollback targets.",
+      "why_it_matters": "Then cleanup may proceed through the normal safe path."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Old tags are safe to delete because current deploy uses the latest tag.",
+    "Rollback plans are valid even if the referenced artifact was garbage-collected.",
+    "Registry cleanup is low-risk hygiene during release work."
+  ],
+  "first_checks": [
+    {
+      "check": "List active, pending, and rollback artifact references as immutable digests or exact IDs.",
+      "why": "Tags can move; retention safety needs the actual referenced artifacts.",
+      "files": [
+        "deployment metadata",
+        "rollback plan"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Diff the referenced artifact set against registry or artifact-store manifests before and after policy changes.",
+      "why": "This proves retention did not remove safety-critical artifacts.",
+      "files": [
+        "registry manifest",
+        "retention dry-run"
+      ],
+      "safe_to_run": false
+    },
+    {
+      "check": "Keep cleanup separate from incident rollback unless references are protected.",
+      "why": "Cleanup can destroy the recovery path while trying to tidy it.",
+      "files": [
+        "runbook",
+        "cleanup script"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-28-s1-2026-06-13"
+      ],
+      "condition": "Retention would delete an active, pending, or rollback-referenced artifact.",
+      "action": "escalate",
+      "action_detail": "stop_cleanup_and_protect_reference",
+      "then": "Do not apply retention until the reference is moved, archived, or explicitly retired."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-28-s1-2026-06-13"
+      ],
+      "condition": "References are protected and dry-run shows only unreferenced artifacts removed.",
+      "action": "diagnose",
+      "action_detail": "record_retention_safety_evidence",
+      "then": "Proceed with cleanup under the normal change path and keep manifest evidence."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-28-s1-2026-06-13"
+      ],
+      "condition": "Rollback artifact availability is unknown during an incident.",
+      "action": "diagnose",
+      "action_detail": "verify_artifact_before_promising_rollback",
+      "then": "Fetch or inspect the artifact reference before relying on rollback."
+    }
+  ],
+  "do_not": [
+    "Do not delete artifacts by age alone when live or rollback references exist.",
+    "Do not assume tags are stable rollback evidence.",
+    "Do not publish private registry names, deployment identifiers, or internal handoff pointers in the record."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Before artifact retention cleanup, diff active and rollback references against the artifacts that the policy will keep."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is de-identified agent guidance. It does not authorize bypassing maintainer, security, publication, production, billing, data, permission, or destructive-action gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "batch0613-publication-batch-28-s1-2026-06-13",
+        "url": "verification-artifact:batch0613-publication-batch-28-s1-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "Sub-lesson 28-S1 was extracted after stripping internal pointers and generalizing deployment vocabulary."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-13",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

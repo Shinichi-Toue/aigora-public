@@ -1,0 +1,188 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.email.uncertain-spam-signals-should-not-hide-customer-mail",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-10T02:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Uncertain spam signals should not hide customer mail",
+  "status": "reviewed",
+  "domain": "email",
+  "tags": [
+    "authorization-gate",
+    "common-ai-mistake",
+    "email",
+    "external-systems",
+    "safety-gates",
+    "workflow"
+  ],
+  "summary": "When agents add spam protection to a customer-facing mailbox, they may treat authentication failures, sender reputation hints, or broad content keywords as enough evidence to auto-quarantine messages. For unknown external senders, those signals are uncertain; hiding mail can lose legitimate customer contact. Keep uncertain detections visible as labels, shadow scores, or audit events until a stricter business policy and verification gate exists.",
+  "ai_value": "Prevents agents from converting detection logic into message-hiding behavior before proving that the signal is definitive enough for the mailbox's customer-communication risk.",
+  "applies_to": {
+    "ecosystem": "general",
+    "contexts": [
+      "Applications that ingest or display customer-facing email in a mailbox, CRM, helpdesk, marketplace, or support workflow",
+      "Spam or abuse classifiers based on SPF, DKIM, DMARC, sender domain, content keywords, user reports, or external reputation signals",
+      "Rule engines or settings tables that can label, move, hide, quarantine, retain, or delete mail"
+    ],
+    "tools": [
+      {
+        "name": "email-filtering-rule-engine",
+        "version_range": "general behavioral pattern"
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A new spam feature can move, hide, quarantine, or delete messages from unknown external senders based on authentication failure or missing authentication alone.",
+      "pattern": "SPF|DKIM|DMARC|auth.*fail|quarantine|move.*spam|hide|delete",
+      "agent_interpretation": "Treat this as a customer-mail visibility gate, not just a classifier implementation detail.",
+      "detectable_by": [
+        "source grep",
+        "settings review",
+        "mail-move tests"
+      ]
+    },
+    {
+      "description": "A database setting or admin mode says quarantine, but code and API gates do not independently hold or reject quarantine for uncertain signals.",
+      "pattern": "mode.*quarantine|action.*quarantine|spam.*settings",
+      "agent_interpretation": "Storage shape must not be enough to activate message-hiding behavior.",
+      "detectable_by": [
+        "schema diff",
+        "API tests",
+        "rule execution tests"
+      ]
+    },
+    {
+      "description": "Trusted-domain or own-domain configuration is editable or data-driven and could silently widen self-spoof quarantine beyond the explicitly launched domain set.",
+      "pattern": "trusted.*domain|own.*domain|self.*spoof|allowlist",
+      "agent_interpretation": "Prove a launch allowlist or equivalent policy boundary prevents accidental scope expansion.",
+      "detectable_by": [
+        "configuration review",
+        "unit tests",
+        "negative fixtures"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The action only adds a visible label, score, audit entry, or shadow-mode assessment and does not move, hide, suppress, retain, or delete the message.",
+      "why_it_matters": "Detection-only work can usually proceed with ordinary validation because customer visibility is preserved."
+    },
+    {
+      "description": "The message is a definitive own-domain self-spoof under a reviewed allowlist and failed/missing authentication condition, or the exact sender was manually blocked by an authorized user action.",
+      "why_it_matters": "Some narrow cases can be strong enough for quarantine when tests prove the boundary and no broader customer-mail rule is activated."
+    },
+    {
+      "description": "A reviewed policy explicitly authorizes the exact sender class, signal class, mailbox, retention behavior, and user-visible recovery path for quarantine or deletion.",
+      "why_it_matters": "The trap targets accidental or premature quarantine, not execution of a precise approved policy."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Authentication failure from an external domain always means the message is spam.",
+    "If a setting row says quarantine, the feature is safe to activate without code-level launch holds.",
+    "Broad content words in subject or body are enough to move customer mail out of the inbox.",
+    "Adding a spam folder is reversible enough that no owner or business policy gate is needed.",
+    "A trusted-domain table can double as the production allowlist for self-spoof quarantine without a separate launch boundary."
+  ],
+  "first_checks": [
+    {
+      "check": "Enumerate every code path that can move, hide, quarantine, suppress, retain, or delete mail, including rule execution, API settings, scheduled jobs, and manual actions.",
+      "why": "Spam classifiers often have multiple effect paths; a safe label-only path can be bypassed by a settings or worker path.",
+      "command": "grep -R \"quarantine\\|spam_candidate\\|move.*spam\\|delete.*mail\\|retention\\|label_only\\|shadow\" path/to/mail path/to/rules path/to/api",
+      "safe_to_run": true
+    },
+    {
+      "check": "Add negative fixtures for unknown external senders with failed, missing, or misaligned authentication and spammy-looking content.",
+      "why": "These fixtures should remain visible in the inbox or normal mail list unless a reviewed policy says otherwise.",
+      "safe_to_run": true
+    },
+    {
+      "check": "Add positive fixtures only for definitive cases, such as own-domain self-spoof constrained by an explicit allowlist, and exact-sender manual blocks.",
+      "why": "Positive tests should prove the narrow live behavior without broadening uncertain external-domain quarantine.",
+      "safe_to_run": true
+    },
+    {
+      "check": "Test that database settings, admin API updates, and rule-engine execution all reject or hold general quarantine while policy is pending.",
+      "why": "A database mode can become an accidental feature flag if enforcement exists in only one layer.",
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A signal is uncertain and the sender may be a legitimate external customer.",
+      "action": "modify_code",
+      "action_detail": "label_only_or_shadow_mode",
+      "then": "Keep the message visible and record the assessment as a label, score, audit event, or shadow decision instead of moving or hiding it.",
+      "confidence": "high",
+      "source_ids": [
+        "redacted-mail-spam-session-2026-06-10"
+      ]
+    },
+    {
+      "condition": "A setting, API, or rule action would enable general quarantine, retention, or deletion before policy approval.",
+      "action": "human_gate",
+      "action_detail": "require_exact_visibility_and_retention_policy",
+      "then": "Stop before activation and ask for the exact sender class, mailbox scope, retention/delete semantics, recovery path, and monitoring requirement.",
+      "confidence": "high",
+      "source_ids": [
+        "redacted-mail-spam-session-2026-06-10"
+      ]
+    },
+    {
+      "condition": "The case is definitive own-domain self-spoof and an explicit launch allowlist plus failed/missing authentication are both proven by tests.",
+      "action": "modify_code",
+      "action_detail": "allow_narrow_quarantine_with_negative_tests",
+      "then": "Allow the narrow quarantine path while keeping external-domain and non-allowlisted-domain cases label-only or shadow.",
+      "confidence": "medium",
+      "source_ids": [
+        "redacted-mail-spam-session-2026-06-10"
+      ]
+    },
+    {
+      "condition": "The behavior is a user-initiated exact-sender block or manual spam action.",
+      "action": "diagnose",
+      "action_detail": "verify_exact_sender_scope_and_auditability",
+      "then": "Confirm the action is exact-sender scoped, auditable, and reversible through the product's normal user/admin controls before relying on it as a live path.",
+      "confidence": "medium",
+      "source_ids": [
+        "redacted-mail-spam-session-2026-06-10"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not auto-quarantine unknown external-domain mail solely because SPF, DKIM, or DMARC failed or is missing.",
+    "Do not turn a database quarantine mode into live behavior unless API and rule execution layers enforce the same policy boundary.",
+    "Do not let trusted-domain rows silently expand own-domain self-spoof quarantine beyond an explicit launch allowlist.",
+    "Do not infer deletion, retention, or permanent suppression semantics from a quarantine feature request.",
+    "Do not hide customer-visible mail with broad keyword classifiers unless the exact policy and recovery path have been reviewed.",
+    "Do not use this signal-confidence record to decide retention or provider deletion semantics; cross-check mailbox-folder-move-is-not-retention-or-provider-delete for count-evidence effect separation."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Before enabling any mail-hiding action, classify each signal as definitive or uncertain, prove uncertain cases remain visible, and gate quarantine/deletion semantics through the exact reviewed policy."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "This trap protects customer communications and potential data-loss/visibility boundaries. It does not authorize changing production mail routing, retention, deletion, security, or permission behavior without the applicable reviewed or human gate."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "redacted-mail-spam-session-2026-06-10",
+        "url": "verification-artifact:redacted-private-mail-spam-protection-session-2026-06-10",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-10T02:00:00+09:00",
+        "supports": "A de-identified production mail-spam implementation found that database quarantine mode and trusted-domain data could have widened live quarantine unless code/API launch holds and allowlist filtering were enforced. The safe result kept uncertain external-domain spam label-only/shadow while allowing only narrow definitive self-spoof and manual exact-sender block paths."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-10",
+    "volatility": "medium",
+    "next_check_due": "2026-09-10"
+  }
+}

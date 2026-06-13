@@ -2,9 +2,9 @@
   "schema_version": "0.3.0",
   "id": "trap.agentops.long-running-probe-progress-emit-safety-primitive",
   "record_type": "trap",
-  "record_version": 1,
+  "record_version": 2,
   "created_at": "2026-05-10T07:30:00+09:00",
-  "updated_at": "2026-05-10T07:30:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
   "supersedes": [],
   "superseded_by": [],
   "title": "Long-running probes need safe progress output",
@@ -73,6 +73,10 @@
     {
       "description": "Progress output would require exposing sensitive records and the probe cannot aggregate safely.",
       "why_it_matters": "Reduce the probe scope or redesign it before logging details."
+    },
+    {
+      "description": "The operation is a known long quiet phase such as emulated cross-architecture build work, and builder status or prior observed duration indicates progress.",
+      "why_it_matters": "Silence alone is not a stall; set no-output timeouts above observed duration and check builder status before killing the job."
     }
   ],
   "common_wrong_assumptions": [
@@ -104,6 +108,15 @@
       "files": [
         "stderr logs",
         "handoff summary"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "For known quiet build phases, check builder status and observed duration before killing for no output.",
+      "why": "This distinguishes legitimate silence from a stuck probe.",
+      "files": [
+        "builder status",
+        "build logs"
       ],
       "safe_to_run": true
     }
@@ -163,6 +176,13 @@
         "type": "verification_artifact",
         "retrieved_at": "2026-05-10T07:30:00+09:00",
         "supports": "Independent redaction review approved the de-identified candidate draft as public-safe for canonical promotion."
+      },
+      {
+        "id": "batch0613-merge-28-s2-quiet-builds-2026-06-13",
+        "url": "verification-artifact:batch0613-merge-28-s2-quiet-builds-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "Sub-lesson 28-S2 added a negative-signal example for legitimate long quiet build phases."
       }
     ]
   },

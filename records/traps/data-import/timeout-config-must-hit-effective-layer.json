@@ -1,0 +1,139 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.data-import.timeout-config-must-hit-effective-layer",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-10T21:24:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Timeout fixes must be applied at the effective layer",
+  "status": "reviewed",
+  "domain": "data-import",
+  "tags": [
+    "agent-ops",
+    "common-ai-mistake",
+    "data-import",
+    "database",
+    "timeouts",
+    "verification"
+  ],
+  "summary": "Changing a timeout option in the nearest request call may not affect the actual deadline. Agents should identify the layer that enforces the timeout and verify with a smoke that exceeds the old limit.",
+  "ai_value": "Prevents agents from repeatedly patching timeout literals that look plausible but are ignored by the driver, pool, proxy, or platform actually enforcing the deadline.",
+  "applies_to": {
+    "ecosystem": "agent-debugged data import workflows",
+    "contexts": [
+      "database or provider reads fail at a consistent deadline despite local timeout changes",
+      "client libraries have both per-request and connection/pool/global timeout options",
+      "a query or API call is expected to be slow but safe when bounded by chunking and cancellation rules"
+    ],
+    "tools": [
+      {
+        "name": "general database/API client",
+        "version_range": "de-identified operational pattern"
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Failures still happen at the same fixed duration after a timeout option was changed nearby.",
+      "pattern": "timeout after 15s|timeout after 30s|same deadline|requestTimeout|pool timeout|connection timeout",
+      "agent_interpretation": "The changed option is probably not the enforcing layer.",
+      "detectable_by": [
+        "logs",
+        "timed smoke",
+        "driver documentation"
+      ]
+    },
+    {
+      "description": "The client has multiple timeout scopes such as request, pool, connection, statement, socket, proxy, or load balancer.",
+      "pattern": "pool|request|socket|statement|query|connection|proxy|load balancer|gateway",
+      "agent_interpretation": "Map the timeout hierarchy before changing code.",
+      "detectable_by": [
+        "source grep",
+        "dependency docs",
+        "runtime config"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The failure duration changes exactly as expected after the local option change and is covered by a regression test or timed smoke.",
+      "why_it_matters": "The effective layer may already have been identified."
+    },
+    {
+      "description": "The slow operation should be optimized or indexed rather than allowed to run longer.",
+      "why_it_matters": "Timeout extension can hide an algorithmic or data-model problem."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "The timeout option closest to the query is always the one being enforced.",
+    "A code diff that increases a timeout proves the runtime deadline changed.",
+    "A successful fast query validates a timeout fix."
+  ],
+  "first_checks": [
+    {
+      "check": "Create a timeout map naming every layer that can cancel the call and its current configured deadline.",
+      "why": "The actual deadline is the earliest active cancellation source.",
+      "safe_to_run": true,
+      "files": [
+        "client initialization",
+        "pool config",
+        "runtime config",
+        "proxy/platform config"
+      ]
+    },
+    {
+      "check": "Run a bounded smoke that is expected to take longer than the old deadline and shorter than the new one, then record measured duration and success/failure.",
+      "why": "Only a >old-timeout smoke proves the effective deadline moved.",
+      "safe_to_run": false,
+      "files": [
+        "reviewed test query or API call",
+        "timed logs",
+        "abort plan"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "A timeout remains fixed after local option changes or the client exposes pool/global timeout settings.",
+      "action": "diagnose",
+      "action_detail": "identify_effective_timeout_layer",
+      "then": "Change the enforcing layer, keep the operation bounded, and verify with a timed smoke that crosses the former deadline.",
+      "confidence": "high",
+      "source_ids": [
+        "redacted-session-observation-2026-06-10"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not claim a timeout fix from a fast-path smoke that completes below the old deadline.",
+    "Do not increase timeouts to mask an unbounded query, missing index, or runaway batch without a separate design check.",
+    "Do not publish private driver configs, hostnames, tenant identifiers, SQL text containing business data, or internal paths in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "When a timeout patch seems ignored, map cancellation layers and verify the selected layer with a timed smoke exceeding the former limit."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": true,
+    "notes": "Candidate is based on a private production-backed import; timed smokes against live systems require normal production/data gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "redacted-session-observation-2026-06-10",
+        "url": "verification-artifact:redacted-private-work-session-2026-06-10",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-10T21:24:00+09:00",
+        "supports": "A database import continued to hit the old deadline until the timeout was moved from per-request code to the client pool configuration and verified with a query exceeding the former limit."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-10",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

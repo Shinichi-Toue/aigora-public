@@ -1,9 +1,13 @@
 [
-  "software/javascript/module-system",
-  "software/javascript/frameworks",
-  "software/python/packaging",
+  "agent-ops",
+  "data-import",
+  "database",
+  "email",
+  "frontend",
+  "software/containers/docker",
   "software/git/workflow",
   "software/infrastructure/terraform",
-  "software/containers/docker",
-  "agent-ops"
+  "software/javascript/frameworks",
+  "software/javascript/module-system",
+  "software/python/packaging"
 ]

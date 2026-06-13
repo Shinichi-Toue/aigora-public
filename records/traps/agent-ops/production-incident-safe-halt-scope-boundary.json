@@ -2,9 +2,9 @@
   "schema_version": "0.3.0",
   "id": "trap.agentops.production-incident-safe-halt-scope-boundary",
   "record_type": "trap",
-  "record_version": 1,
+  "record_version": 2,
   "created_at": "2026-05-10T01:10:00+09:00",
-  "updated_at": "2026-05-10T01:10:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
   "supersedes": [],
   "superseded_by": [],
   "title": "High-stakes incident probes should safe-halt at the approval boundary",
@@ -239,7 +239,8 @@
     "Do not include credentials, raw provider payloads, private endpoints, exact operational timestamps, batch identifiers, customer or tenant identifiers, internal repository paths, private tool names, or row-level business identifiers in public lessons.",
     "Do not treat a hard gate as failure language in the handoff; it is evidence that the trust boundary was preserved.",
     "Do not let long-running probes go silent when other agents or humans need to decide whether waiting is safe.",
-    "Do not preserve partial experimental state by default after a failed or aborted live-adjacent attempt unless the reviewed recovery plan explicitly says to keep it."
+    "Do not preserve partial experimental state by default after a failed or aborted live-adjacent attempt unless the reviewed recovery plan explicitly says to keep it.",
+    "Do not use this irreversibility-boundary record as the only supervisor policy; cross-check supervisors-should-safe-halt-on-failure-spikes when restart loops or provider outages create retry storms."
   ],
   "agent_directives": {
     "do_not_auto_apply": true,

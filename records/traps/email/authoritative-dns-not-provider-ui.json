@@ -1,0 +1,145 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.email.authoritative-dns-not-provider-ui",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-11T02:15:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Mail provider DNS screens are not authoritative DNS",
+  "status": "reviewed",
+  "domain": "email",
+  "tags": [
+    "common-ai-mistake",
+    "email",
+    "external-systems",
+    "safety-gates",
+    "workflow"
+  ],
+  "summary": "When diagnosing SPF, DKIM, DMARC, or MX failures, an agent can mistake a mail host or SaaS control panel that displays generated DNS records for the place where public DNS is actually served. The control panel may be correct locally while the authoritative registrar/DNS provider has no matching public record.",
+  "ai_value": "Prevents agents from chasing application credentials, code, or propagation guesses before proving which DNS provider is authoritative for the queried name.",
+  "applies_to": {
+    "ecosystem": "general",
+    "contexts": [
+      "Email deliverability, SMTP envelope, POP/IMAP, SPF, DKIM, DMARC, or MX diagnostics",
+      "SaaS or hosting panels that generate DNS records while a different registrar or DNS provider serves the zone",
+      "Agents deciding whether a domain authentication failure is a code bug, provider rejection, or DNS publication issue"
+    ],
+    "tools": [
+      {
+        "name": "dns-and-mail-diagnostics",
+        "version_range": "general behavioral pattern"
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A provider UI says SPF, DKIM, DMARC, MX, or a selector exists, but external checks or message headers still show missing or failing authentication.",
+      "pattern": "SPF|DKIM|DMARC|MX|selector|control panel|provider UI|authentication failed|record missing",
+      "agent_interpretation": "Split generated settings from publicly served DNS and query the authoritative nameservers directly.",
+      "detectable_by": [
+        "task brief",
+        "message headers",
+        "dig/nslookup output",
+        "provider UI screenshot"
+      ]
+    },
+    {
+      "description": "The team is about to rotate credentials, change mail code, or add workarounds because a DNS-backed mail check fails.",
+      "pattern": "rotate password|change credentials|SMTP code|POP code|workaround|fallback",
+      "agent_interpretation": "First prove authoritative DNS state; otherwise the proposed fix may be irrelevant and riskier than the root cause.",
+      "detectable_by": [
+        "change plan",
+        "diff review",
+        "runbook"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The provider shown in the UI is also confirmed as an authoritative nameserver for the exact zone or delegated subdomain.",
+      "why_it_matters": "Then the provider UI may be a valid source of public DNS truth, though external query verification is still useful."
+    },
+    {
+      "description": "External authoritative DNS queries show the required record and message headers still fail for a different reason.",
+      "why_it_matters": "Then the remaining problem is more likely alignment, selector mismatch, provider signing, SMTP envelope, or application configuration."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A mail host control panel that displays a DKIM key has published that key to the public Internet.",
+    "A DNS checker in one vendor console is enough evidence for every subdomain and selector.",
+    "If authentication fails after a record was entered somewhere, the next step is credential or application debugging.",
+    "DNS propagation is the default explanation before checking delegation and authoritative nameservers."
+  ],
+  "first_checks": [
+    {
+      "check": "Find the authoritative nameservers for the exact domain or subdomain being tested.",
+      "why": "Only the authoritative DNS provider determines what public resolvers can see.",
+      "command": "dig NS example.com +short; dig TXT selector._domainkey.example.com @<authoritative-ns>",
+      "safe_to_run": true
+    },
+    {
+      "check": "Compare the record host/name expected by the provider with the host/name actually queried in headers or diagnostics.",
+      "why": "DKIM selector and subdomain mistakes can look like unpublished DNS even when some related record exists.",
+      "safe_to_run": true
+    },
+    {
+      "check": "After publication, verify through both authoritative query and a fresh message header or provider test.",
+      "why": "The record existing in DNS and the mail system using/aliging it are separate facts.",
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The generated DNS record is visible in a vendor UI but absent from authoritative DNS.",
+      "action": "diagnose",
+      "action_detail": "fix_public_dns_before_code_or_secret_changes",
+      "then": "Publish the record at the authoritative provider or correct delegation; do not rotate credentials or patch application mail logic for this symptom.",
+      "confidence": "high",
+      "source_ids": [
+        "redacted-mail-dns-session-2026-06-11"
+      ]
+    },
+    {
+      "condition": "The operation would mutate production DNS, credentials, mail routing, or delivery policy.",
+      "action": "human_gate",
+      "action_detail": "use_appropriate_dns_or_secret_change_gate",
+      "then": "Stop at the relevant operational gate and present the authoritative-query evidence and exact record names.",
+      "confidence": "high",
+      "source_ids": [
+        "redacted-mail-dns-session-2026-06-11"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not treat a generated DNS record shown in a mail/SaaS panel as proof of public DNS publication.",
+    "Do not change application credentials or mail code before checking authoritative nameservers when the symptom is DNS-backed authentication failure.",
+    "Do not paste private domains, selectors, account names, or provider console screenshots into public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "For mail authentication failures, first identify authoritative DNS and query the exact MX/TXT/selector record there; then decide whether the fix is DNS publication, provider signing/alignment, or application behavior."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": true,
+    "notes": "DNS, credentials, and mail-routing changes can affect live delivery. This candidate only guides diagnosis and does not authorize production DNS or secret mutation."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "redacted-mail-dns-session-2026-06-11",
+        "url": "verification-artifact:redacted-private-mail-dns-session-2026-06-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-11T02:15:00+09:00",
+        "supports": "A private mail-recovery session found that a hosting/mail UI displayed generated authentication records while the authoritative DNS provider was elsewhere; public DKIM/SPF state only changed after records were added at the authoritative provider."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-11",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

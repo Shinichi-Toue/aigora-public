@@ -1,0 +1,138 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.supervisors-should-safe-halt-on-failure-spikes",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-10T16:53:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Long-running job supervisors should safe-halt on failure spikes",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "common-ai-mistake",
+    "long-running-jobs",
+    "retries",
+    "safe-halt",
+    "supervisors"
+  ],
+  "summary": "A supervisor that restarts every failed long-running job can turn a transient network, provider, or database outage into an infinite retry storm unless it detects rapid failure growth and stops for attention.",
+  "ai_value": "When agents build keepalive loops, they should specify both the restart condition and the stop condition, including evidence that future operators can use to decide whether to resume.",
+  "applies_to": {
+    "ecosystem": "agent-operated long-running automation",
+    "contexts": [
+      "imports, backfills, scrapers, sync jobs, report generation, and external API workers",
+      "jobs use tunnels, provider APIs, browser sessions, or remote databases that can fail independently of job logic",
+      "operator wants unattended progress but not uncontrolled mutation or retries"
+    ],
+    "tools": [
+      {
+        "name": "general supervisor pattern",
+        "version_range": "de-identified operational pattern"
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "Many failures share the same transport or connection class within a short window.",
+      "pattern": "ECONNREFUSED|connection closed|timeout|rate limit|5xx|failed count increased rapidly",
+      "agent_interpretation": "Prefer safe halt and handoff over blind restart.",
+      "detectable_by": [
+        "logs",
+        "metrics",
+        "supervisor summary"
+      ]
+    },
+    {
+      "description": "The supervisor has a restart loop but no failure threshold, backoff cap, or stop reason artifact.",
+      "pattern": "while true|restart always|nohup loop|no threshold|no halt condition",
+      "agent_interpretation": "Add a stop condition before relying on unattended execution.",
+      "detectable_by": [
+        "script review",
+        "unit file review"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The job is read-only, externally idempotent, cheap, and already has exponential backoff plus alerting.",
+      "why_it_matters": "Automatic retries may be acceptable when blast radius and cost are bounded."
+    },
+    {
+      "description": "A human explicitly authorized an emergency retry loop with a time/cost bound and monitoring owner.",
+      "why_it_matters": "Some operational incidents require aggressive retries, but only with explicit bounds."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Unattended means always restart.",
+    "A retry loop is safer than stopping because it needs less human attention.",
+    "Connection failures are harmless if the write path is idempotent."
+  ],
+  "first_checks": [
+    {
+      "check": "Define maximum consecutive failures, maximum failure rate, backoff behavior, and the artifact written when the supervisor stops.",
+      "why": "Future agents need to know whether the stop was intentional protection or a crash.",
+      "safe_to_run": true,
+      "files": [
+        "supervisor script",
+        "runbook",
+        "logs"
+      ]
+    },
+    {
+      "check": "After a safe halt, inspect the latest failure classes before resuming instead of only checking whether the process is dead.",
+      "why": "The process may have stopped because the guard worked as designed.",
+      "safe_to_run": true,
+      "files": [
+        "supervisor summary",
+        "last errors",
+        "resource status"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Failures spike in a way consistent with transport/provider outage rather than isolated item-level errors.",
+      "action": "escalate",
+      "action_detail": "safe_halt_with_summary",
+      "then": "Stop the loop, write counts and failure classes, and require a deliberate resume after diagnosis.",
+      "confidence": "high",
+      "source_ids": [
+        "redacted-session-observation-2026-06-10"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not implement Restart=always or while-true loops without a failure-spike stop condition for mutable long-running jobs.",
+    "Do not treat a guarded safe halt as an incident by itself; inspect the stop reason first.",
+    "Do not publish private service names, tunnel targets, account IDs, URLs, or organization-specific queue names in public lessons.",
+    "Do not confuse failure-spike safe halts with production-incident-safe-halt-scope-boundary; cross-check that record when the stop reason is an irreversible or approval boundary rather than retry-storm protection."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "When creating or reviewing a supervisor, require both restart criteria and safe-halt criteria with a durable stop summary."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": true,
+    "notes": "Candidate generalizes one private supervised import halt; thresholds and retry policy must be adapted to each system's cost and mutation risk."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "redacted-session-observation-2026-06-10",
+        "url": "verification-artifact:redacted-private-work-session-2026-06-10",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-10T16:53:00+09:00",
+        "supports": "A long-running job supervisor stopped after rapid connection failures and left a summary for morning attention, avoiding uncontrolled retries."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-10",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

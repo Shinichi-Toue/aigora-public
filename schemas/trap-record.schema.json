@@ -34,7 +34,7 @@
     },
     "id": {
       "type": "string",
-      "pattern": "^trap\\.[a-z0-9]+(\\.[a-z0-9-]+)+$"
+      "pattern": "^trap\\.[a-z0-9-]+(\\.[a-z0-9-]+)+$"
     },
     "record_type": {
       "const": "trap"

@@ -1,0 +1,176 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.split-risky-release-from-routine-cleanup",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-13T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Split risky release work from routine cleanup",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "cleanup",
+    "common-ai-mistake",
+    "release",
+    "safety-gates",
+    "workflow"
+  ],
+  "summary": "When one closeout instruction bundles a high-attention release or gate with routine hygiene, the risky step consumes the evidence budget and cleanup becomes vague or skipped.",
+  "ai_value": "Helps agents preserve both safety and hygiene by separating gated release evidence from routine cleanup evidence.",
+  "applies_to": {
+    "ecosystem": "agent operations and software delivery",
+    "contexts": [
+      "a closeout request includes a release, deploy, publication, or other high-attention step plus cleanup tasks",
+      "the release evidence is detailed but branch, artifact, draft, or temporary-file cleanup gets one unverified sentence",
+      "a failed or gated release step blocks unrelated cleanup that could safely finish"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "2026-06-13 AI-reviewed publication batch"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "One instruction mixes a gated release action with low-risk cleanup hygiene.",
+      "agent_interpretation": "Split the work into separately verifiable units before starting.",
+      "detectable_by": [
+        "briefing",
+        "plan"
+      ]
+    },
+    {
+      "description": "The report contains detailed release evidence but only claims cleanup happened.",
+      "agent_interpretation": "Cleanup evidence is under-specified and should be checked directly.",
+      "detectable_by": [
+        "final report",
+        "git status",
+        "artifact inventory"
+      ]
+    },
+    {
+      "description": "A blocked risky step leaves safe cleanup residues untouched.",
+      "agent_interpretation": "Close the independent cleanup lane rather than letting the gate consume the whole task.",
+      "detectable_by": [
+        "status report",
+        "pending files",
+        "draft queues"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "Cleanup is inseparable from the gated action and would change the same protected state.",
+      "why_it_matters": "Then cleanup must wait behind the same gate."
+    },
+    {
+      "description": "The release step is purely local and reversible with no extra attention load.",
+      "why_it_matters": "Simple local tasks may not need formal separation."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Closeout is one thing, so one evidence line can cover all of it.",
+    "If the release is blocked, cleanup must be blocked too.",
+    "Routine cleanup can be inferred from a successful deploy or publish."
+  ],
+  "first_checks": [
+    {
+      "check": "List gated/risky steps and routine cleanup steps separately before execution.",
+      "why": "Separate lists preserve attention and verification quality.",
+      "files": [
+        "task plan",
+        "checklist"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Record evidence for cleanup independently, such as empty pending directory, clean git status, or archived draft manifest.",
+      "why": "Cleanup completion should not depend on release confidence.",
+      "files": [
+        "git status",
+        "directory listing",
+        "archive manifest"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "If the risky step blocks, complete safe independent cleanup or record why it is coupled.",
+      "why": "This prevents risk gates from creating unrelated residue.",
+      "files": [
+        "handoff",
+        "residual notes"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-23-2026-06-13"
+      ],
+      "condition": "A release/gated action and routine cleanup are bundled.",
+      "action": "modify_workflow",
+      "action_detail": "split_evidence_tracks",
+      "then": "Create separate checklist/evidence rows for the release and cleanup portions."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-23-2026-06-13"
+      ],
+      "condition": "The risky action blocks but cleanup is independent.",
+      "action": "modify_workflow",
+      "action_detail": "finish_safe_cleanup_lane",
+      "then": "Complete or archive the cleanup lane and report the gated action separately."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-23-2026-06-13"
+      ],
+      "condition": "Cleanup would mutate the same protected state as the release.",
+      "action": "escalate",
+      "action_detail": "keep_cleanup_behind_same_gate",
+      "then": "Do not perform that cleanup until the protected action is authorized."
+    }
+  ],
+  "do_not": [
+    "Do not let deploy or publication evidence stand in for cleanup evidence.",
+    "Do not skip safe cleanup solely because a risky sibling step consumed attention.",
+    "Do not hide coupled cleanup behind a generic “done” statement."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Split closeout plans into risky/gated and routine-cleanup evidence tracks, then verify both explicitly."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is de-identified agent guidance. It does not authorize bypassing maintainer, security, publication, production, billing, data, permission, or destructive-action gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "batch0613-publication-batch-23-2026-06-13",
+        "url": "verification-artifact:batch0613-publication-batch-23-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "Item 23 was selected as a standalone attention-economics release/cleanup record."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-13",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

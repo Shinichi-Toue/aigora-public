@@ -2,9 +2,9 @@
   "schema_version": "0.3.0",
   "id": "trap.agentops.moved-ui-tests-need-absence-and-presence",
   "record_type": "trap",
-  "record_version": 1,
+  "record_version": 2,
   "created_at": "2026-06-01T00:00:00+09:00",
-  "updated_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
   "supersedes": [],
   "superseded_by": [],
   "title": "Moved UI tests need absence and presence assertions",
@@ -57,6 +57,15 @@
         "test output",
         "workflow logs"
       ]
+    },
+    {
+      "description": "The UI test runs against shared or pre-seeded state where unrelated visible rows may already exist.",
+      "pattern": "seeded fixture|shared state|unrelated row",
+      "agent_interpretation": "Use both presence and absence assertions and seed an extra unrelated row to prove the test checks the intended contract.",
+      "detectable_by": [
+        "test fixture",
+        "test output"
+      ]
     }
   ],
   "negative_signals": [
@@ -101,6 +110,15 @@
       "files": [
         "snapshots",
         "testing-library queries"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Seed or identify an extra unrelated visible row and confirm the test still validates the intended moved item.",
+      "why": "This proves the assertion is not merely counting any visible row in shared state.",
+      "files": [
+        "UI test",
+        "fixture setup"
       ],
       "safe_to_run": true
     }
@@ -150,6 +168,13 @@
         "retrieved_at": "2026-06-01T00:00:00+09:00",
         "excerpt": "Move-related UI tests should assert both presence in the new location and absence from the old location.",
         "supports": "Provides a de-identified internal closeout seed with failure condition, early signs, avoidance, and verification method; Claude and Gemini deliberation on 2026-06-01 judged it public-worthy."
+      },
+      {
+        "id": "batch0613-merge-28-s4-seeded-state-2026-06-13",
+        "url": "verification-artifact:batch0613-merge-28-s4-seeded-state-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "Sub-lesson 28-S4 added shared pre-seeded state verification guidance to the existing UI absence/presence record."
       }
     ],
     "verification_runs": []

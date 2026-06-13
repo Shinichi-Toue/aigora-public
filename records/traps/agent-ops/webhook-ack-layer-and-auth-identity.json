@@ -1,0 +1,175 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.webhook-ack-layer-and-auth-identity",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-13T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Webhook acknowledgements and auth identity must follow the provider contract literally",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "authorization",
+    "common-ai-mistake",
+    "external-systems",
+    "web-security",
+    "webhook"
+  ],
+  "summary": "Webhook receivers can fail by treating transport success, structured provider result codes, persistence timing, and authentication identity as one layer. Model each contract layer explicitly.",
+  "ai_value": "Helps agents avoid hiding actionable provider result codes, acknowledging before durable persistence, or trusting display identifiers as authentication truth.",
+  "applies_to": {
+    "ecosystem": "agent operations and software delivery",
+    "contexts": [
+      "a webhook provider expects HTTP 200 plus a structured result body for receiver-known failures",
+      "the receiver must authenticate a request using secrets, signatures, or source identity",
+      "external notifications are acknowledged before local durable state is written"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "2026-06-13 AI-reviewed publication batch"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The provider documentation distinguishes HTTP acknowledgement from an application-level result code.",
+      "agent_interpretation": "Return the transport status the provider expects and put actionable receiver-known errors in the structured body.",
+      "detectable_by": [
+        "provider docs",
+        "handler code",
+        "integration logs"
+      ]
+    },
+    {
+      "description": "The handler uses a public display identifier, URL slug, or request label as authentication truth.",
+      "agent_interpretation": "Fail closed until the provider contract says that identifier is security-relevant and verifies it cryptographically or through a trusted channel.",
+      "detectable_by": [
+        "handler code",
+        "request parser",
+        "auth review"
+      ]
+    },
+    {
+      "description": "The handler returns success to the provider before the local side effect is durably persisted.",
+      "agent_interpretation": "Move acknowledgement after durable persistence or make retry/reconciliation semantics explicit.",
+      "detectable_by": [
+        "handler code",
+        "transaction logs",
+        "queue contract"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The provider explicitly requires non-2xx transport failures for the exact condition.",
+      "why_it_matters": "Then the structured-body pattern may be wrong; follow the documented retry contract."
+    },
+    {
+      "description": "The identifier is a signed claim or verified subject in the provider contract.",
+      "why_it_matters": "Then it can contribute to auth, but only after signature and freshness checks."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "HTTP 200 always means the webhook operation succeeded semantically.",
+    "A 4xx response is the clearest way to communicate every receiver-known error.",
+    "A public account or object identifier in the payload is enough to authenticate the sender."
+  ],
+  "first_checks": [
+    {
+      "check": "Read the provider contract for transport acknowledgement, structured result body, retry behavior, and auth identity separately.",
+      "why": "Webhook contracts often split these layers in non-obvious ways.",
+      "files": [
+        "provider docs",
+        "handler tests"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Log safe diagnostics such as hash prefix and payload length rather than raw secret or payload values.",
+      "why": "Diagnostics should prove parsing/auth paths without leaking credentials or private content.",
+      "files": [
+        "handler logs"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Test the known-error path and the durable-persist-before-ack path.",
+      "why": "Both paths often pass happy-path smoke while still failing real provider retries.",
+      "files": [
+        "webhook tests",
+        "integration smoke"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-16-2026-06-13"
+      ],
+      "condition": "The provider expects HTTP 200 with a structured result code for receiver-known errors.",
+      "action": "modify_code",
+      "action_detail": "separate_transport_ack_from_result_body",
+      "then": "Return the documented transport acknowledgement and encode the actionable error in the structured response body."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-16-2026-06-13"
+      ],
+      "condition": "Auth truth is ambiguous or based only on public identifiers.",
+      "action": "escalate",
+      "action_detail": "fail_closed_until_contract_verified",
+      "then": "Reject or quarantine the request until the authenticated identity source is verified against the contract."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-16-2026-06-13"
+      ],
+      "condition": "The external sender may retry based on acknowledgement timing.",
+      "action": "modify_workflow",
+      "action_detail": "ack_after_durable_persist_or_define_reconciliation",
+      "then": "Persist the local side effect before acknowledging, or document a retry-safe reconciliation path."
+    }
+  ],
+  "do_not": [
+    "Do not collapse HTTP status, application result code, persistence, and authentication identity into one boolean success flag.",
+    "Do not expose raw secrets or payloads in diagnostics.",
+    "Do not accept a public display identifier as authorization proof by default."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Map the webhook contract into transport, result-body, auth-identity, and persistence-timing layers before editing the handler."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is de-identified agent guidance. It does not authorize bypassing maintainer, security, publication, production, billing, data, permission, or destructive-action gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "batch0613-publication-batch-16-2026-06-13",
+        "url": "verification-artifact:batch0613-publication-batch-16-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "two independent reviewers and synthesis selected item 16 for publication; item 18 ACK-after-persist was folded into this record."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-13",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

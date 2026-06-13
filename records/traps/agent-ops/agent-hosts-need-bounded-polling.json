@@ -2,9 +2,9 @@
   "schema_version": "0.3.0",
   "id": "trap.agentops.agent-hosts-need-bounded-polling",
   "record_type": "trap",
-  "record_version": 1,
+  "record_version": 2,
   "created_at": "2026-06-07T00:27:47+09:00",
-  "updated_at": "2026-06-07T00:27:47+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
   "supersedes": [
     "artifact:proposals/pending/agent-bootstrap-relay-bridge-traps-candidate-2026-06-03#host-long-poll"
   ],
@@ -149,7 +149,8 @@
     "Do not make indefinite foreground polling the only documented receive path.",
     "Do not assume an AI coding session can safely host a forever-running client.",
     "Do not hide timeout/cancellation assumptions in human-only prose.",
-    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons."
+    "Do not include private service names, internal URLs, account identifiers, incident identifiers, private repository paths, tenant/store names, setup-card field names, low-level endpoint strings or organization-specific tooling in public lessons.",
+    "Do not use host-level bounded polling guidance as the whole answer when the status endpoint itself runs hot exact counts; cross-check hot-count-polling-can-become-the-incident."
   ],
   "agent_directives": {
     "do_not_auto_apply": true,

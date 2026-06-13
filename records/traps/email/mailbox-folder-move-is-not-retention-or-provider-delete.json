@@ -1,0 +1,161 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.email.mailbox-folder-move-is-not-retention-or-provider-delete",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-11T23:35:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Mailbox folder moves are not retention or provider deletion",
+  "status": "reviewed",
+  "domain": "email",
+  "tags": [
+    "authorization-gate",
+    "common-ai-mistake",
+    "email",
+    "external-systems",
+    "safety-gates",
+    "workflow"
+  ],
+  "summary": "Mailbox folder moves, retention reservations, and provider-side deletion are separate state transitions. Prove each with count evidence before treating a move request as destructive retention or delete work.",
+  "ai_value": "Prevents agents from turning a reversible visibility/routing change into data loss or provider-side mutation while still honoring explicit folder-routing intent.",
+  "applies_to": {
+    "ecosystem": "general",
+    "contexts": [
+      "Applications that ingest, classify, or bulk-move email into mailbox folders",
+      "Spam, quarantine, archive, trash, or server-delete staging features",
+      "Live-data cleanup scripts that translate tags, labels, rules, or assessments into folder state"
+    ],
+    "tools": [
+      {
+        "name": "email-mailbox-and-provider-sync",
+        "version_range": "general behavioral pattern"
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A human says to move mail to a spam, archive, trash, or quarantine folder, and the code or cleanup plan also touches retention, scheduled deletion, provider delete state, or server-side delete reservations.",
+      "pattern": "move.*(spam|archive|trash|quarantine)|folder.*move|retention|delete.*server|provider.*delete|purge",
+      "agent_interpretation": "Split the requested folder move from every deletion or retention effect before applying changes.",
+      "detectable_by": [
+        "task brief",
+        "cleanup plan",
+        "SQL diff",
+        "provider-sync code review"
+      ]
+    },
+    {
+      "description": "A live cleanup converts a tag, label, or classifier result into folder membership for many existing messages.",
+      "pattern": "tag|label|classifier|bulk.*move|folder_id|message_folder",
+      "agent_interpretation": "Count source labels and destination-folder inventory, then verify that stale delete/staging state is either intentionally preserved or intentionally cleared.",
+      "detectable_by": [
+        "database counts",
+        "dry-run SQL",
+        "post-transaction verification"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The change only updates an internal folder pointer or visible label and tests show it does not enqueue deletion, update provider delete state, or shorten retention.",
+      "why_it_matters": "A reversible mailbox organization change is usually lower risk than a deletion or provider mutation, though live data still needs normal safeguards."
+    },
+    {
+      "description": "A separate reviewed policy explicitly authorizes the retention period, delete scope, provider-side mutation, recovery path, and verification evidence.",
+      "why_it_matters": "The trap is accidental bundling; explicit deletion policy can proceed through the appropriate gate."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A request to move mail between folders automatically includes retention changes or provider-side deletion.",
+    "Putting a message in a spam folder means it should also be scheduled for deletion.",
+    "A cleanup from spam labels to spam folders should preserve or create server-delete reservations by default.",
+    "Trash, spam, quarantine, and provider-side delete are equivalent because the UI hides the message from the inbox.",
+    "If a folder move is reversible in the app, provider-side deletion is also safe to include.",
+    "Source tag counts are enough for a live cleanup review without destination-folder inventory and delete-state counts."
+  ],
+  "first_checks": [
+    {
+      "check": "List every data field, queue, job, or provider call that can delete, purge, expire, or hide the message outside the requested folder move.",
+      "why": "Folder state and deletion state often live in different tables or workers; a cleanup can accidentally carry both.",
+      "command": "grep -R \"retention\\|server.*delete\\|provider.*delete\\|purge\\|trash\\|spam_folder\\|folder_id\" path/to/mail path/to/jobs path/to/sync",
+      "safe_to_run": true
+    },
+    {
+      "check": "Before live cleanup, count source labels/tags, destination folder inventory, existing delete reservations, and rows with both old and new states.",
+      "why": "These counts prove whether the plan is a move, a duplicate state, or a deletion-state mutation.",
+      "safe_to_run": true
+    },
+    {
+      "check": "After the transaction, verify moved count, remaining source links, destination count delta, and delete reservation count delta.",
+      "why": "Post-checks catch partial moves and accidental retention/deletion side effects.",
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The user asked for a folder move but did not explicitly authorize deletion, retention expiry, or provider-side mutation.",
+      "action": "modify_code",
+      "action_detail": "perform_folder_move_only_and_clear_conflicting_delete_state_when_needed",
+      "then": "Move the messages within the mailbox model, preserve recoverability, and do not enqueue provider/server deletion unless a separate gate authorizes it.",
+      "confidence": "medium",
+      "source_ids": [
+        "redacted-mail-folder-cleanup-session-2026-06-11"
+      ]
+    },
+    {
+      "condition": "The cleanup plan would preserve, create, or execute delete reservations for messages being moved to a non-delete folder.",
+      "action": "diagnose",
+      "action_detail": "separate_move_semantics_from_delete_semantics",
+      "then": "Stop and present counts for source labels, target folder, and delete reservations; require explicit deletion/retention policy before proceeding with delete effects.",
+      "confidence": "medium",
+      "source_ids": [
+        "redacted-mail-folder-cleanup-session-2026-06-11"
+      ]
+    },
+    {
+      "condition": "A reviewed policy explicitly asks for retention or provider deletion after foldering.",
+      "action": "human_gate",
+      "action_detail": "use_the_destructive_or_provider_mutation_path",
+      "then": "Run the normal hard-gate path with retention duration, scope, dry-run counts, rollback/recovery limits, and post-apply verification.",
+      "confidence": "high",
+      "source_ids": [
+        "redacted-mail-folder-cleanup-session-2026-06-11"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not infer provider-side deletion from a request to move messages into a spam, archive, trash, or quarantine folder.",
+    "Do not combine label-to-folder cleanup with retention or server-delete changes unless the delete semantics are explicitly authorized.",
+    "Do not review a live mail cleanup using only source label counts; include target folder inventory and delete-state counts.",
+    "Do not publish private mailbox domains, account names, message subjects, or customer data in public lessons.",
+    "Do not merge this with uncertain-spam visibility policy; cross-check uncertain-spam-signals-should-not-hide-customer-mail when signal confidence is the issue.",
+    "Do not over-read a human request scope; compare ambiguous-human-input-overauthorization when authorization wording is ambiguous."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "When mail foldering and deletion are both present, split the plan into visibility/folder state, retention policy, and provider mutation; verify counts for each before writing live data."
+  },
+  "risk": {
+    "level": "high",
+    "human_gate_required": true,
+    "notes": "Provider deletion, retention changes, and live mailbox cleanup can cause data loss. This candidate only guides separation of effects and does not authorize destructive mail changes."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "redacted-mail-folder-cleanup-session-2026-06-11",
+        "url": "verification-artifact:redacted-private-mail-folder-cleanup-session-2026-06-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-11T23:35:00+09:00",
+        "supports": "A private mail cleanup session distinguished an operator-requested spam-folder move from automatic deletion and provider/server delete reservations; the safe path moved messages to the folder, removed obsolete label/link state, and did not add deletion behavior."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-11",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

@@ -1,0 +1,171 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.progress-artifacts-need-runtime-visible-bridge",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-10T09:25:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Progress artifacts must be visible from the runtime that displays them",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "common-ai-mistake",
+    "long-running-jobs",
+    "operations"
+  ],
+  "summary": "A progress UI or status API can look blank even while a job is running if it reads a local artifact path that exists only on the agent/operator host and not inside the production runtime serving the UI.",
+  "ai_value": "Before wiring a progress page to files, logs, or run-state artifacts, agents should prove that the display runtime can read the same source, or add a durable bridge such as a database row, object-storage object, or service endpoint.",
+  "applies_to": {
+    "ecosystem": "agent-operations",
+    "contexts": [
+      "long-running imports, backfills, syncs, or batch jobs that write progress to local files or logs",
+      "a web UI, API, dashboard, or alerting path runs in a different container, VM, account, or host from the job owner",
+      "agents are asked to make progress visible without interrupting the running job"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern"
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The progress source path starts with a local workspace, temp directory, or operator-host path while the display code runs in a remote production or preview runtime.",
+      "pattern": "/tmp|/var|workspace|run_state|progress\\.ndjson|local file|operator host|container",
+      "agent_interpretation": "Check runtime visibility before debugging the UI component itself.",
+      "detectable_by": [
+        "task brief",
+        "source grep",
+        "deployment config"
+      ]
+    },
+    {
+      "description": "A local script can read current progress, but the deployed page or API returns blank, null, not found, or an old snapshot.",
+      "pattern": "blank|null|not found|stale|works locally|deployed page",
+      "agent_interpretation": "Suspect a visibility boundary between job artifacts and display runtime.",
+      "detectable_by": [
+        "local command output",
+        "API response",
+        "browser smoke"
+      ]
+    },
+    {
+      "description": "The requested fix explicitly says not to stop, restart, or mutate the running job.",
+      "pattern": "do not stop|do not restart|read-only|running job|live import",
+      "agent_interpretation": "Use a read-only bridge or snapshot path; do not 'fix' visibility by moving or restarting the owner process without authorization.",
+      "detectable_by": [
+        "task brief",
+        "coordination note"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The job owner and display runtime share the same durable mounted volume with documented read permissions and lifecycle.",
+      "why_it_matters": "A file source can be valid when runtime visibility is explicitly designed and verified."
+    },
+    {
+      "description": "The display path intentionally shows only persisted terminal summaries, not live progress.",
+      "why_it_matters": "A blank live-progress card may be expected if the product does not promise live status."
+    },
+    {
+      "description": "The deployed API can read the artifact source in the target runtime but still returns wrong values.",
+      "why_it_matters": "Then the defect is more likely parsing, auth, tenant selection, caching, or rendering rather than artifact visibility."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "If an agent can read a progress file locally, the production UI can read it too.",
+    "A blank progress page means the job is not running or the React component is broken.",
+    "The quickest visibility fix is to restart the job inside the web runtime.",
+    "Sidecar bridges are permanent architecture rather than temporary operational adapters unless explicitly retired."
+  ],
+  "first_checks": [
+    {
+      "check": "Name the job owner runtime and the display runtime, then prove whether the progress source exists inside both.",
+      "why": "The source must be visible from the reader, not only from the writer or the agent shell.",
+      "safe_to_run": true,
+      "files": [
+        "task brief",
+        "deployment manifest",
+        "process list",
+        "API response"
+      ]
+    },
+    {
+      "check": "Smoke the deployed status API and compare it with a read-only local progress read.",
+      "why": "A mismatch distinguishes display-runtime visibility from job progress itself.",
+      "safe_to_run": true,
+      "files": [
+        "status API response",
+        "local run-state read"
+      ]
+    },
+    {
+      "check": "If a bridge is added, record its owner, cadence, connection count, stop condition, and retirement path.",
+      "why": "A temporary sidecar can solve visibility without becoming invisible production coupling.",
+      "safe_to_run": true,
+      "files": [
+        "handoff",
+        "runbook",
+        "coordination log"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The progress artifact is local to the job host and invisible to the display runtime.",
+      "action": "modify_workflow",
+      "action_detail": "add_runtime_visible_progress_bridge",
+      "then": "Publish read-only progress through a durable shared channel such as a database snapshot, object-storage object, or small service endpoint; avoid restarting or relocating the live job unless separately authorized.",
+      "confidence": "high",
+      "source_ids": [
+        "redacted-session-observation-2026-06-10"
+      ]
+    },
+    {
+      "condition": "A temporary bridge is used to preserve a live job and meet an urgent visibility need.",
+      "action": "modify_workflow",
+      "action_detail": "record_sidecar_lifecycle",
+      "then": "Document the bridge process, update cadence, resource use, stop condition, and the future direct-write design that will retire it.",
+      "confidence": "medium",
+      "source_ids": [
+        "redacted-session-observation-2026-06-10"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not assume local filesystem artifacts are available to a remote or containerized display runtime.",
+    "Do not stop or restart a live job merely to move its progress writer closer to the UI unless the operation is authorized.",
+    "Do not leave a temporary progress bridge without a named owner, stop condition, and retirement path.",
+    "Do not include private service names, internal URLs, tenant identifiers, account identifiers, repository paths, or organization-specific tool names in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "When a progress UI is blank but local run-state exists, first prove runtime visibility of the progress source; then bridge through a shared durable channel if needed."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": true,
+    "notes": "Candidate is based on one private operational case. It should be reviewed and de-identified again before promotion, especially around live database, process, or production mutations."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "redacted-session-observation-2026-06-10",
+        "url": "verification-artifact:redacted-private-work-session-2026-06-10",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-10T09:25:00+09:00",
+        "supports": "A live import wrote progress to a host-local run-state artifact while the production web runtime could not see that path; a database snapshot bridge made the production progress card visible without stopping the import."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-10",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

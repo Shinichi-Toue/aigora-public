@@ -1,0 +1,139 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.data-import.long-running-http-is-not-a-batch-runner",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-10T21:24:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Long-running HTTP handlers are fragile batch runners",
+  "status": "reviewed",
+  "domain": "data-import",
+  "tags": [
+    "agent-ops",
+    "batch-jobs",
+    "common-ai-mistake",
+    "data-import",
+    "http",
+    "load-balancers"
+  ],
+  "summary": "A large import or backfill should not depend on one HTTP request staying open through a load balancer or proxy. Use a resident worker or short start request plus durable progress and idempotent resume behavior.",
+  "ai_value": "When an agent is asked to run or build a long import, this record should make it check transport timeouts before treating a 504/timeout as only an application bug.",
+  "applies_to": {
+    "ecosystem": "agent-built import and backfill workflows",
+    "contexts": [
+      "imports or backfills expected to run longer than common gateway, proxy, or platform request limits",
+      "operator UI triggers a job by POST and waits for the full result",
+      "progress, ETA, or resumability is needed after the initiating browser or HTTP client disconnects"
+    ],
+    "tools": [
+      {
+        "name": "general web application runtime",
+        "version_range": "de-identified operational pattern"
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The requested implementation runs the whole import inside one API route, controller, function, or web request.",
+      "pattern": "POST /import|route handler|controller|server action|wait for completion|long request|504|gateway timeout",
+      "agent_interpretation": "Design a job handoff instead of stretching the HTTP timeout.",
+      "detectable_by": [
+        "task brief",
+        "source grep",
+        "architecture review"
+      ]
+    },
+    {
+      "description": "The operation has chunking, ETA, progress rows, or resume requirements.",
+      "pattern": "chunk|progress|ETA|resume|checkpoint|backfill|sweep",
+      "agent_interpretation": "The user-facing request should start or observe the job, not be the job owner.",
+      "detectable_by": [
+        "spec review",
+        "UI/API review",
+        "run logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The entire operation is proven to finish comfortably below every relevant platform timeout and has no need to continue after disconnect.",
+      "why_it_matters": "A simple synchronous request can be correct for genuinely small bounded work."
+    },
+    {
+      "description": "The platform provides a first-class long-running job primitive behind the same API surface.",
+      "why_it_matters": "The architectural issue is not HTTP syntax itself but tying job lifetime to a client request."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Increasing the HTTP timeout is enough to make a long import reliable.",
+    "A gateway timeout means the server-side work failed.",
+    "Chunking inside a request is equivalent to a durable worker.",
+    "Progress UI can be added later without first deciding where job state lives."
+  ],
+  "first_checks": [
+    {
+      "check": "List every request timeout between the browser/client and the handler: client, framework, proxy, load balancer, platform, and database driver.",
+      "why": "The smallest timeout sets the real synchronous budget.",
+      "safe_to_run": true,
+      "files": [
+        "deployment config",
+        "runtime docs",
+        "API route code"
+      ]
+    },
+    {
+      "check": "Prove job state survives HTTP disconnect by starting a bounded run, disconnecting or exceeding the former timeout, and reading progress from a durable source.",
+      "why": "This distinguishes a worker design from a merely longer request.",
+      "safe_to_run": false,
+      "files": [
+        "staging or reviewed production test plan",
+        "progress store",
+        "worker logs"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "The expected runtime can exceed a gateway/proxy/client timeout or must keep running after the operator page closes.",
+      "action": "modify_workflow",
+      "action_detail": "use_worker_plus_durable_progress",
+      "then": "Make HTTP start/status endpoints short and bounded; run the import in a resident worker, queue consumer, scheduler, or platform job with idempotent resume/retry semantics.",
+      "confidence": "high",
+      "source_ids": [
+        "redacted-session-observation-2026-06-10"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not stretch only one timeout without checking upstream and downstream limits.",
+    "Do not treat a timed-out client request as proof that the background work stopped; verify runtime state separately.",
+    "Do not publish private URLs, tenant identifiers, account IDs, database names, or internal repository paths in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "When a batch API may run long, design the HTTP surface as start/status/control and put job ownership in a worker with durable progress."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": true,
+    "notes": "Candidate is based on a private production-backed import redesign; promotion needs review and de-identification."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "redacted-session-observation-2026-06-10",
+        "url": "verification-artifact:redacted-private-work-session-2026-06-10",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-10T21:24:00+09:00",
+        "supports": "A production import initially hit the web request boundary; it became reliable after moving execution to a resident runner with durable progress and short HTTP control/status calls."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-10",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

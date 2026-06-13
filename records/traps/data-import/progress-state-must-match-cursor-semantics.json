@@ -1,0 +1,183 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.data-import.progress-state-must-match-cursor-semantics",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-11T16:08:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Import progress state must match cursor semantics",
+  "status": "reviewed",
+  "domain": "data-import",
+  "tags": [
+    "agent-ops",
+    "batch-jobs",
+    "common-ai-mistake",
+    "data-import",
+    "idempotency",
+    "progress-ui"
+  ],
+  "summary": "If two import modes interpret a cursor differently, they must not share the same progress row or aggregate run key. The state key must include every dimension that changes resume, watermark, window, or counter semantics.",
+  "ai_value": "Before adding or reusing progress tables for full, differential, archive, retry, or per-window imports, agents should check whether the persisted key matches the meaning of the cursor and counters.",
+  "applies_to": {
+    "ecosystem": "agent-built data import and backfill workflows",
+    "contexts": [
+      "one system supports both full backfills and incremental or differential imports",
+      "progress rows, run rows, or cursor rows are keyed by a small subset such as tenant and source",
+      "operators can start another import mode while a long-running backfill is paused, running, or resumable",
+      "a status UI displays processed counts, estimates, cursors, watermarks, or import windows"
+    ],
+    "tools": [
+      {
+        "name": "general relational database and job-state store",
+        "version_range": "de-identified operational pattern"
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A progress table or run table is keyed only by source, tenant, account, or job name while code branches on mode, window, partition, archive/current source, or full-versus-incremental behavior.",
+      "pattern": "unique.*tenant.*source|progress.*source|import_mode|mode|full|differential|incremental|archive|window_start|cursor|watermark",
+      "agent_interpretation": "The persisted key may be too coarse; check whether different modes can overwrite each other's cursor or counters.",
+      "detectable_by": [
+        "schema review",
+        "source grep",
+        "design review"
+      ]
+    },
+    {
+      "description": "Starting a small incremental run makes the denominator jump to all historical records, or makes a full backfill resume from the wrong cursor.",
+      "pattern": "estimated_total|denominator|all records|full history|resume cursor|progress overwritten|clobber",
+      "agent_interpretation": "A mode/window mismatch may have reused the wrong progress row or lower-bound cursor.",
+      "detectable_by": [
+        "status API",
+        "operator UI",
+        "database probe",
+        "run logs"
+      ]
+    },
+    {
+      "description": "Processed counts reset on resume even though the operator-facing window has not changed, or counts accumulate across a new window even though the denominator changed.",
+      "pattern": "processed_count|resume|window|estimated_total|reset|cumulative",
+      "agent_interpretation": "Counter semantics are not explicit enough; distinguish per-attempt counters from per-window cumulative counters.",
+      "detectable_by": [
+        "bounded run test",
+        "status UI",
+        "database probe"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "All modes intentionally share exactly the same cursor meaning, lower-bound policy, denominator, and counter semantics, and concurrent or interleaved starts are forbidden by a durable lease.",
+      "why_it_matters": "A compact key can be correct when the semantics are truly identical or the system prevents interleaving."
+    },
+    {
+      "description": "The progress row is purely ephemeral display state and is never used for resume, lower-bound selection, committed watermark, deduplication, or operator decisions.",
+      "why_it_matters": "Display-only state has lower corruption risk, though misleading UI can still be harmful."
+    },
+    {
+      "description": "The import can safely recompute progress from immutable committed records and does not persist mutable cursors or counters between attempts.",
+      "why_it_matters": "Some idempotent rerun designs avoid explicit progress state; the trap applies mainly when persisted state influences resume or visibility."
+    },
+    {
+      "description": "Processed-count stillness occurs during a long transaction while the transaction boundary has not committed.",
+      "why_it_matters": "Stillness inside one long transaction is not necessarily a stalled cursor; check transaction and commit boundaries before rewriting progress semantics."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "One source has one progress row, even if full and incremental imports use different cursor meanings.",
+    "Adding import_mode to logs is enough; it also has to be part of persisted uniqueness if it changes resume behavior.",
+    "A cursor can serve both as an in-flight deep position and as the committed lower bound for future incremental work.",
+    "Processed count is self-explanatory; operators will know whether it means this attempt, this window, or all history."
+  ],
+  "first_checks": [
+    {
+      "check": "List every field that changes import semantics: mode, source family, account or tenant, partition, window start/end, committed watermark, in-flight cursor, archive/current source, and retry attempt. Compare that list with the unique key of progress and aggregate-run state.",
+      "why": "Any missing semantic dimension can let one run overwrite another run's resume state or displayed progress.",
+      "safe_to_run": true,
+      "files": [
+        "database schema",
+        "job-state writes",
+        "status reads",
+        "resume cursor reads"
+      ]
+    },
+    {
+      "check": "Run a bounded full-or-large window, then start a bounded incremental-or-small window, and verify that each mode's cursor, denominator, and processed count remain isolated.",
+      "why": "The failure often appears only when modes are interleaved, not when each mode is tested alone.",
+      "safe_to_run": false,
+      "files": [
+        "staging or reviewed production test plan",
+        "progress table probe",
+        "status API response"
+      ]
+    },
+    {
+      "check": "Define counter labels before UI work: per-attempt processed, per-window cumulative processed, all-time imported total, estimated window total, and committed watermark should not share ambiguous names.",
+      "why": "Clear names prevent a resumed run from looking like it lost work or silently expanded scope.",
+      "safe_to_run": true,
+      "files": [
+        "status contract",
+        "UI copy",
+        "job-state schema"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Two import modes can run or resume against the same source but use different lower bounds, cursor formats, source tables, archive/current scopes, or denominators.",
+      "action": "modify_code",
+      "action_detail": "scope_progress_state_by_cursor_semantics",
+      "then": "Add the differentiating dimensions to the persisted progress/run key and migrate existing state forward-only; keep committed watermarks separate from in-flight cursors.",
+      "confidence": "high",
+      "source_ids": [
+        "redacted-session-observation-2026-06-11"
+      ]
+    },
+    {
+      "condition": "The operator-facing import window is unchanged and a run is resumed after a partial attempt.",
+      "action": "modify_code",
+      "action_detail": "preserve_window_cumulative_counter",
+      "then": "Continue the per-window processed counter instead of resetting it; reset only when a new window begins, or expose per-attempt and per-window counters separately.",
+      "confidence": "medium",
+      "source_ids": [
+        "redacted-session-observation-2026-06-11"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not reuse one progress row for full and incremental imports merely because they target the same destination table.",
+    "Do not let a partial or failed run's in-flight cursor become the committed watermark without reconciliation.",
+    "Do not fix an inflated denominator only in UI formatting if the underlying state key still allows cursor clobbering.",
+    "Do not publish private tenant identifiers, source names, database names, URLs, account IDs, repository paths, or customer data in public lessons.",
+    "Do not classify processed-count stillness during one long transaction as a stall until transaction and commit boundaries are checked.",
+    "Do not use cursor-key fixes as proof that side effects committed; cross-check watermarks-need-committed-side-effect-evidence for completion-boundary truth."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "When diagnosing import progress or resume bugs, compare cursor semantics to the persisted progress key before changing batch size, retry policy, or UI copy."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": true,
+    "notes": "Candidate is based on a private production-backed import repair. Promotion needs independent review, especially around migration and live-data handling."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "redacted-session-observation-2026-06-11",
+        "url": "verification-artifact:redacted-private-work-session-2026-06-11",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-11T16:08:00+09:00",
+        "supports": "A long-running backfill and a small differential import shared progress state keyed too broadly. Starting the small mode overwrote the large mode's cursor and made estimates look like an all-history sweep. The repair separated state by mode/window, used committed watermarks for incremental lower bounds, and preserved cumulative window counters across resume."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-11",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

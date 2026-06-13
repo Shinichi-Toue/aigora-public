@@ -1,0 +1,172 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.frontend.nextjs-instrumentation-hooks-need-runtime-guards",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-13T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Next.js instrumentation hooks need exclusion guards and thin dependencies",
+  "status": "reviewed",
+  "domain": "frontend",
+  "tags": [
+    "common-ai-mistake",
+    "frontend",
+    "nextjs",
+    "react",
+    "testing",
+    "workflow"
+  ],
+  "summary": "Framework instrumentation hooks run in constrained startup contexts. Guard unsupported runtimes by exclusion, keep the hook thin, and prove it fires once in a production-equivalent start.",
+  "ai_value": "Helps agents avoid bundling server-only runner graphs into framework startup hooks or skipping runtimes because an expected runtime variable is undefined.",
+  "applies_to": {
+    "ecosystem": "agent operations and software delivery",
+    "contexts": [
+      "a Next.js app adds or changes instrumentation startup hooks",
+      "the hook may execute in node and edge-like runtime contexts",
+      "the hook imports job runners, database clients, or other server-only graphs"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "2026-06-13 AI-reviewed publication batch"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The guard only runs when a runtime value equals the expected supported runtime.",
+      "agent_interpretation": "Guard by excluding known unsupported runtimes; an undefined value may still be the desired server runtime.",
+      "detectable_by": [
+        "instrumentation code",
+        "build logs"
+      ]
+    },
+    {
+      "description": "The hook imports a large runner graph or server-only modules directly.",
+      "agent_interpretation": "Move the heavy dependency behind a thin dynamic boundary or runtime-specific loader.",
+      "detectable_by": [
+        "import graph",
+        "build error"
+      ]
+    },
+    {
+      "description": "Build or startup errors mention unsupported schemes or runtime-only modules from the hook path.",
+      "agent_interpretation": "Treat the hook as a constrained startup surface, not a normal application module.",
+      "detectable_by": [
+        "build output",
+        "server start logs"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The hook is pure telemetry with no runtime-specific imports and has an explicit supported-runtime contract.",
+      "why_it_matters": "The thin-hook trap may not apply, but still verify single-fire startup behavior."
+    },
+    {
+      "description": "Processed-count stillness occurs during a long transaction in an import job.",
+      "why_it_matters": "That is an import progress signal, not an instrumentation stall; see progress-state-must-match-cursor-semantics."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A startup hook can import anything a normal server route can import.",
+    "Undefined runtime means the hook is not running in the supported runtime.",
+    "A successful build proves the hook fires exactly once at startup."
+  ],
+  "first_checks": [
+    {
+      "check": "Build after adding or changing the instrumentation hook.",
+      "why": "Import-graph and runtime-boundary failures often surface only at build time.",
+      "files": [
+        "framework build output"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Start the app in the closest production-equivalent mode and verify the hook fires once.",
+      "why": "Development hot reload can hide missing or repeated startup behavior.",
+      "files": [
+        "startup logs",
+        "safe diagnostic marker"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Review imports from the hook entrypoint and move heavy/server-only graphs behind thin adapters.",
+      "why": "Thin hooks reduce runtime compatibility failures.",
+      "files": [
+        "instrumentation file",
+        "import graph"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-21-2026-06-13"
+      ],
+      "condition": "The hook must skip unsupported runtimes.",
+      "action": "modify_code",
+      "action_detail": "guard_by_excluding_unsupported_runtimes",
+      "then": "Skip known unsupported runtime values and allow unspecified supported server startup when the framework uses that convention."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-21-2026-06-13"
+      ],
+      "condition": "The hook imports heavy or server-only implementation graphs.",
+      "action": "modify_code",
+      "action_detail": "thin_the_hook_dependency_boundary",
+      "then": "Keep the hook as a small dispatcher and load runtime-specific work only inside the supported runtime."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-21-2026-06-13"
+      ],
+      "condition": "The hook cannot be proven to fire once in production-equivalent mode.",
+      "action": "diagnose",
+      "action_detail": "verify_startup_contract_before_shipping",
+      "then": "Add a safe diagnostic marker or test until single-fire startup behavior is observed."
+    }
+  ],
+  "do_not": [
+    "Do not bundle background job runners or server-only module graphs directly into instrumentation startup hooks.",
+    "Do not assume positive runtime detection is reliable when the framework may leave it undefined.",
+    "Do not keep unrelated lease or import-resume lessons in this record; link those records instead."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Inspect the instrumentation hook as a constrained startup surface: exclusion guard, thin imports, production-equivalent single-fire proof."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is de-identified agent guidance. It does not authorize bypassing maintainer, security, publication, production, billing, data, permission, or destructive-action gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "batch0613-publication-batch-21-2026-06-13",
+        "url": "verification-artifact:batch0613-publication-batch-21-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "Item 21 was conditionally selected after narrowing to guard-by-exclusion and thin instrumentation hooks. The reshape provides three trigger signals, so it was published."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-13",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

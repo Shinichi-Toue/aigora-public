@@ -2,9 +2,9 @@
   "schema_version": "0.3.0",
   "id": "trap.agentops.quoted-heredocs-prevent-report-execution",
   "record_type": "trap",
-  "record_version": 1,
+  "record_version": 2,
   "created_at": "2026-06-01T00:00:00+09:00",
-  "updated_at": "2026-06-01T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
   "supersedes": [],
   "superseded_by": [],
   "title": "Quoted heredocs prevent accidental report execution",
@@ -59,6 +59,16 @@
         "review evidence",
         "workflow logs"
       ]
+    },
+    {
+      "description": "An unquoted heredoc executed a command while the agent was trying to write a report, and the command was gated or potentially mutating.",
+      "pattern": "unquoted heredoc|accidental execution|gated command",
+      "agent_interpretation": "Stop and treat this as a gate-crossing incident, not merely a formatting mistake.",
+      "detectable_by": [
+        "shell output",
+        "file diff",
+        "audit log"
+      ]
     }
   ],
   "negative_signals": [
@@ -75,7 +85,7 @@
   ],
   "common_wrong_assumptions": [
     "Markdown code spans inside heredocs are inert.",
-    "A report-writing command cannot execute code because it is not \u201crunning\u201d the report.",
+    "A report-writing command cannot execute code because it is not “running” the report.",
     "If the command succeeded, the file content must be what was intended."
   ],
   "first_checks": [
@@ -125,12 +135,23 @@
       "source_ids": [
         "seed-9-heredoc-execution-2026-05-11"
       ]
+    },
+    {
+      "condition": "An unquoted heredoc executed a gated or potentially mutating command.",
+      "action": "escalate",
+      "action_detail": "post_incident_gate_crossing_recovery",
+      "then": "Stop; verify state with read-only checks; do not reflexively roll back destructively; record the incident; route the next gated action explicitly.",
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-merge-29-heredoc-gate-crossing-2026-06-13"
+      ]
     }
   ],
   "do_not": [
     "Do not use unquoted heredocs for literal Markdown containing backticks or `$()` examples.",
     "Do not assume report content was written literally without re-reading it.",
-    "Do not include secret-bearing examples in a shell-expanded heredoc."
+    "Do not include secret-bearing examples in a shell-expanded heredoc.",
+    "Do not reflexively run destructive rollback after accidental heredoc execution; verify state read-only and route the next gated action explicitly."
   ],
   "agent_directives": {
     "do_not_auto_apply": false,
@@ -150,6 +171,13 @@
         "retrieved_at": "2026-06-01T00:00:00+09:00",
         "excerpt": "AI recovery guidance identified unquoted heredocs containing shell syntax as a recurring report-writing hazard.",
         "supports": "Supports the quote-and-reread publication record."
+      },
+      {
+        "id": "batch0613-merge-29-heredoc-gate-crossing-2026-06-13",
+        "url": "verification-artifact:batch0613-merge-29-heredoc-gate-crossing-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "Public draft 29 was merged into the existing heredoc record with post-incident gate-crossing recovery guidance."
       }
     ],
     "verification_runs": []

@@ -1,0 +1,174 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.smoke-tests-must-use-the-real-user-plane",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-13T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Smoke tests must use the real user plane",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "common-ai-mistake",
+    "deployment",
+    "external-systems",
+    "smoke-testing",
+    "verification"
+  ],
+  "summary": "A smoke probe from the operator host can be a network-topology signal rather than service-health evidence. Keep a smoke path through the same plane real users use.",
+  "ai_value": "Helps agents avoid both false-down and false-up conclusions when private networks, meshes, proxies, or gateways separate operator reachability from user reachability.",
+  "applies_to": {
+    "ecosystem": "agent operations and software delivery",
+    "contexts": [
+      "a service is reachable through a user gateway, proxy, mesh, or public edge but not necessarily from the operator host",
+      "a private address, internal hostname, or side-channel probe is used for smoke testing",
+      "a rollout or auth migration needs evidence from the actual user path"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "2026-06-13 AI-reviewed publication batch"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "An operator-host probe times out against a private or internal address.",
+      "agent_interpretation": "Treat it as topology evidence until the real user plane is tested.",
+      "detectable_by": [
+        "curl output",
+        "network diagram",
+        "smoke logs"
+      ]
+    },
+    {
+      "description": "A side-channel health check succeeds while user-path requests fail.",
+      "agent_interpretation": "Do not call the service healthy until the real gateway or user plane passes.",
+      "detectable_by": [
+        "health checks",
+        "user-path smoke"
+      ]
+    },
+    {
+      "description": "The smoke test bypasses auth, routing, proxy, or gateway layers that real users traverse.",
+      "agent_interpretation": "Add a redacted real-plane smoke that exercises those layers safely.",
+      "detectable_by": [
+        "smoke script",
+        "routing config"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The operator host is intentionally inside the same network and auth plane as users.",
+      "why_it_matters": "Then the probe may be representative, but document why."
+    },
+    {
+      "description": "The task only needs a component liveness check, not user-visible readiness.",
+      "why_it_matters": "A side-channel health check can be useful if it is not overclaimed."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "Timeout from my shell means the service is down.",
+    "A private health endpoint passing means users can reach the service.",
+    "Smoke tests can ignore the gateway because routing was not changed."
+  ],
+  "first_checks": [
+    {
+      "check": "Draw or list the operator plane, service plane, and real user plane for the smoke path.",
+      "why": "Reachability depends on topology, not just process health.",
+      "files": [
+        "smoke plan",
+        "routing notes"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Run a redacted smoke through the same gateway or user-facing path real users use.",
+      "why": "This catches false-up side-channel health and false-down operator reachability.",
+      "files": [
+        "smoke script",
+        "safe request log"
+      ],
+      "safe_to_run": false
+    },
+    {
+      "check": "Record what the smoke proves and what it bypasses.",
+      "why": "Evidence labels prevent topology signals from being mistaken for health truth.",
+      "files": [
+        "release evidence",
+        "handoff"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-27-l4-2026-06-13"
+      ],
+      "condition": "Operator-plane probe fails but real-plane status is unknown.",
+      "action": "diagnose",
+      "action_detail": "classify_as_topology_signal",
+      "then": "Do not call the service down; test through the real user plane or inspect routing."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-27-l4-2026-06-13"
+      ],
+      "condition": "Side-channel health passes but user plane fails.",
+      "action": "diagnose",
+      "action_detail": "treat_as_routing_or_gateway_failure",
+      "then": "Investigate the layers bypassed by the health check."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-27-l4-2026-06-13"
+      ],
+      "condition": "Real-plane smoke passes and side-channel health passes.",
+      "action": "diagnose",
+      "action_detail": "record_layered_readiness_evidence",
+      "then": "Record both component liveness and user-path readiness."
+    }
+  ],
+  "do_not": [
+    "Do not equate operator-host reachability with user reachability.",
+    "Do not overclaim side-channel health checks as user-visible readiness.",
+    "Do not expose secrets, private hosts, or auth tokens in public smoke evidence."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Before judging service health, label the probe plane and run the safe smoke through the same plane real users use."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is de-identified agent guidance. It does not authorize bypassing maintainer, security, publication, production, billing, data, permission, or destructive-action gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "batch0613-publication-batch-27-l4-2026-06-13",
+        "url": "verification-artifact:batch0613-publication-batch-27-l4-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "Sub-lesson 27-L4 was extracted and generalized; both false-down and false-up smoke directions were preserved."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-13",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

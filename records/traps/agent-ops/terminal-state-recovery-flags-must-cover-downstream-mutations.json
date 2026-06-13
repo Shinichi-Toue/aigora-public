@@ -1,0 +1,174 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.terminal-state-recovery-flags-must-cover-downstream-mutations",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-13T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Terminal-state recovery flags must cover downstream mutations",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "common-ai-mistake",
+    "safe-recovery",
+    "safety-gates",
+    "workflow"
+  ],
+  "summary": "A recovery flag that bypasses only the first terminal-state guard can still fail or mutate later layers unexpectedly. Recovery semantics must cover every downstream mutation path intentionally.",
+  "ai_value": "Helps agents design repair modes that are auditable, side-effect-bounded, and not merely a narrow parser bypass.",
+  "applies_to": {
+    "ecosystem": "agent operations and software delivery",
+    "contexts": [
+      "a wrapper or tool has terminal records that normally cannot be reopened",
+      "a repair mode adds an allow flag for skipped, completed, retired, or failed states",
+      "downstream setup, expensive initialization, or mutation happens after the first guard"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "2026-06-13 AI-reviewed publication batch"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "A flag name says allow or recover, but only the first validation branch checks it.",
+      "agent_interpretation": "Audit every later mutation path before trusting the recovery mode.",
+      "detectable_by": [
+        "source grep",
+        "wrapper tests"
+      ]
+    },
+    {
+      "description": "The tool performs expensive setup before discovering the terminal-state repair is not actually allowed.",
+      "agent_interpretation": "Move terminal validation ahead of setup or split preflight from repair.",
+      "detectable_by": [
+        "logs",
+        "test failure",
+        "code review"
+      ]
+    },
+    {
+      "description": "A repair command can silently reopen, reactivate, or rewrite a terminal record.",
+      "agent_interpretation": "Require an explicit repair-only action and evidence, not a normal active-state transition.",
+      "detectable_by": [
+        "database diff",
+        "tool output",
+        "tests"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The recovery mode is side-effect-free and only reports the repair plan.",
+      "why_it_matters": "A diagnostic preflight may safely inspect terminal records without full mutation semantics."
+    },
+    {
+      "description": "All downstream mutations are explicitly covered by tests for terminal input.",
+      "why_it_matters": "Then the flag may already have the intended end-to-end semantics."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "One allow flag at the parser layer changes the meaning of the whole workflow.",
+    "Raw mutation is acceptable when the safe wrapper cannot repair terminal state.",
+    "If the first guard passes, later setup and mutation cannot violate terminal semantics."
+  ],
+  "first_checks": [
+    {
+      "check": "Inject a terminal record and run the recovery path in dry-run or test mode.",
+      "why": "The test proves whether downstream code still assumes active state.",
+      "files": [
+        "wrapper tests",
+        "fixture records"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Assert that no active-state transition APIs are called during repair.",
+      "why": "Recovery should repair the intended artifact, not silently reopen it.",
+      "files": [
+        "mocks",
+        "audit logs"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Place terminal-state validation before expensive or irreversible setup.",
+      "why": "Rejected recovery should fail before costly side effects.",
+      "files": [
+        "wrapper entrypoint",
+        "setup code"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-20-2026-06-13"
+      ],
+      "condition": "A recovery flag affects only an early guard.",
+      "action": "modify_code",
+      "action_detail": "thread_recovery_semantics_through_all_mutations",
+      "then": "Make every downstream mutation either repair-aware or explicitly refused before setup."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-20-2026-06-13"
+      ],
+      "condition": "A terminal record needs narrow artifact repair.",
+      "action": "modify_workflow",
+      "action_detail": "use_auditable_repair_mode_not_raw_mutation",
+      "then": "Provide a scoped repair command with evidence rather than normalizing direct data edits."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-20-2026-06-13"
+      ],
+      "condition": "The requested recovery would reopen or alter terminal truth.",
+      "action": "escalate",
+      "action_detail": "stop_at_state_boundary",
+      "then": "Stop and route through the appropriate gate for state-changing recovery."
+    }
+  ],
+  "do_not": [
+    "Do not let allow flags become partial parser bypasses.",
+    "Do not perform expensive setup before deciding whether terminal recovery is allowed.",
+    "Do not normalize raw mutation because the wrapper lacks a repair mode."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Test recovery against terminal fixtures and verify every downstream mutation path is intentionally repair-aware or refused."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is de-identified agent guidance. It does not authorize bypassing maintainer, security, publication, production, billing, data, permission, or destructive-action gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "batch0613-publication-batch-20-2026-06-13",
+        "url": "verification-artifact:batch0613-publication-batch-20-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "Item 20 was selected for schema shaping only; reviewers found it public-safe and broadly applicable."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-13",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

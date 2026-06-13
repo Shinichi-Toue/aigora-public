@@ -1,0 +1,178 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.agentops.release-source-is-not-merge-source",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-13T00:00:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Release source is not merge source",
+  "status": "reviewed",
+  "domain": "agent-ops",
+  "tags": [
+    "agent-ops",
+    "authorization-gate",
+    "common-ai-mistake",
+    "release",
+    "safety-gates"
+  ],
+  "summary": "A reviewed feature being ready to merge does not authorize deploying the current integration branch head. Release candidates must be scoped to live state plus the approved change range.",
+  "ai_value": "Helps agents avoid shipping unrelated branch-head work while performing closeout, publication, or deploy steps for one approved change.",
+  "applies_to": {
+    "ecosystem": "agent operations and software delivery",
+    "contexts": [
+      "an integration branch has advanced beyond the reviewed feature commit",
+      "a closeout deploy or publication step is requested after merge or review",
+      "the target may already contain the approved artifact or data state"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern",
+        "observed_versions": [
+          "2026-06-13 AI-reviewed publication batch"
+        ]
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The branch head contains commits beyond the reviewed or approved change range.",
+      "agent_interpretation": "Do not use branch head as the release source without explicit release-candidate approval.",
+      "detectable_by": [
+        "git log",
+        "review packet",
+        "release notes"
+      ]
+    },
+    {
+      "description": "The approved work may already be reflected in the live artifact or data ledger.",
+      "agent_interpretation": "Verify containment first; a redeploy may promote unrelated head work.",
+      "detectable_by": [
+        "artifact metadata",
+        "migration ledger",
+        "runtime version endpoint"
+      ]
+    },
+    {
+      "description": "A deploy instruction names a feature, not a complete release candidate.",
+      "agent_interpretation": "Construct the candidate from live plus approved changes or stop for release-scope clarification.",
+      "detectable_by": [
+        "briefing",
+        "PR description",
+        "release checklist"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The reviewed artifact is itself the explicit release candidate and contains no unrelated commits.",
+      "why_it_matters": "Then release and merge source may coincide for this operation."
+    },
+    {
+      "description": "The requester explicitly approved the advanced branch head as the release candidate.",
+      "why_it_matters": "Then the scope is broader by decision, but still record the commit range."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "If a feature was reviewed, the current branch head is safe to deploy.",
+    "A closeout redeploy is harmless when the target already contains the fix.",
+    "Merged means authorized for every environment."
+  ],
+  "first_checks": [
+    {
+      "check": "Compare live commit/artifact, reviewed commit range, and current branch head.",
+      "why": "This reveals unrelated commits that would be promoted by a head deploy.",
+      "files": [
+        "git log",
+        "artifact metadata",
+        "review packet"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "If the target may already contain the approved work, verify artifact id, target commit, and ledger or migration status before redeploying.",
+      "why": "Already-live containment can make redeploy unnecessary and risky.",
+      "files": [
+        "runtime metadata",
+        "ledger",
+        "release notes"
+      ],
+      "safe_to_run": true
+    },
+    {
+      "check": "Record excluded commits and candidate construction.",
+      "why": "Release evidence must show what did not ship as well as what did.",
+      "files": [
+        "release checklist",
+        "handoff"
+      ],
+      "safe_to_run": true
+    }
+  ],
+  "decision_rules": [
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-24-2026-06-13"
+      ],
+      "condition": "Branch head includes work outside the approved change range.",
+      "action": "escalate",
+      "action_detail": "do_not_deploy_unapproved_head",
+      "then": "Build or select a release candidate from live plus approved changes, or stop for explicit release-scope approval."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-24-2026-06-13"
+      ],
+      "condition": "Live artifact and data state already contain the approved work.",
+      "action": "diagnose",
+      "action_detail": "record_containment_and_skip_redundant_redeploy",
+      "then": "Record live artifact id, target commit, containment proof, ledger status, and excluded commits; do not redeploy unless required."
+    },
+    {
+      "confidence": "medium",
+      "source_ids": [
+        "batch0613-publication-batch-24-2026-06-13"
+      ],
+      "condition": "The branch head is the approved release candidate.",
+      "action": "diagnose",
+      "action_detail": "record_release_candidate_range",
+      "then": "Proceed through the normal release path with the exact commit range and review evidence."
+    }
+  ],
+  "do_not": [
+    "Do not equate merge source with release source.",
+    "Do not redeploy just to “close out” if containment evidence proves the target already has the approved work.",
+    "Do not ship advanced branch-head work under a narrow feature approval.",
+    "Do not confuse this release-candidate scoping trap with moving-source-ref-during-long-deploy, where the ref moves during an in-flight deploy, or authorization-must-be-current-to-work-item, where stale approval is reused across work items."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "Before release, compare live, approved range, and branch head; deploy only the explicit release candidate or record already-live containment."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": false,
+    "notes": "This record is de-identified agent guidance. It does not authorize bypassing maintainer, security, publication, production, billing, data, permission, or destructive-action gates."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "batch0613-publication-batch-24-2026-06-13",
+        "url": "verification-artifact:batch0613-publication-batch-24-2026-06-13",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-13T00:00:00+09:00",
+        "supports": "Item 24 was selected as the release-trio publication and absorbs item 19 closeout containment checks."
+      }
+    ],
+    "verification_runs": []
+  },
+  "freshness": {
+    "checked_at": "2026-06-13",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}

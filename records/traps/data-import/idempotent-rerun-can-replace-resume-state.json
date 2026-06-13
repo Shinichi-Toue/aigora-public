@@ -1,0 +1,137 @@
+{
+  "schema_version": "0.3.0",
+  "id": "trap.data-import.idempotent-rerun-can-replace-resume-state",
+  "record_type": "trap",
+  "record_version": 1,
+  "created_at": "2026-06-10T16:53:00+09:00",
+  "updated_at": "2026-06-13T00:00:00+09:00",
+  "supersedes": [],
+  "superseded_by": [],
+  "title": "Idempotent reruns can replace separate resume state in imports",
+  "status": "reviewed",
+  "domain": "data-import",
+  "tags": [
+    "agent-ops",
+    "batch-jobs",
+    "common-ai-mistake",
+    "data-import",
+    "idempotency"
+  ],
+  "summary": "When an import can cheaply detect already-committed records and upsert batches idempotently, a separate resume button or state machine may add more operational risk than value.",
+  "ai_value": "Before adding resume/cancel/status complexity to a failed import, agents should ask whether rerunning the same operation with no-op skip and idempotent writes safely provides the resume behavior.",
+  "applies_to": {
+    "ecosystem": "agent-implemented data import workflows",
+    "contexts": [
+      "large imports or backfills where failures are common and partial commits are expected",
+      "records have stable external IDs, watermarks, hashes, or other keys that allow duplicate detection",
+      "the operator UI is becoming more complex to represent stop/resume states"
+    ],
+    "tools": [
+      {
+        "name": "general agent workflow",
+        "version_range": "de-identified operational pattern"
+      }
+    ]
+  },
+  "trigger_signals": [
+    {
+      "description": "The proposed UI or API adds explicit resume state, but the write path already has stable identifiers and can detect unchanged rows.",
+      "pattern": "resume|checkpoint|watermark|upsert|stable id|no-op|already imported",
+      "agent_interpretation": "Evaluate idempotent rerun before expanding the state machine.",
+      "detectable_by": [
+        "design review",
+        "source grep",
+        "database constraints"
+      ]
+    },
+    {
+      "description": "A rerun after partial completion mostly skips already-written work and quickly reaches the missing tail.",
+      "pattern": "attempted high|inserted low|updated low|no-op skip|already committed",
+      "agent_interpretation": "The operation may already be resume-by-reexecution.",
+      "detectable_by": [
+        "run logs",
+        "metrics",
+        "dry-run sample"
+      ]
+    }
+  ],
+  "negative_signals": [
+    {
+      "description": "The external source is non-deterministic, destructive, or charges per read in a way that makes reruns materially harmful.",
+      "why_it_matters": "A dedicated checkpoint/resume mechanism may be necessary when re-reading is unsafe or costly."
+    },
+    {
+      "description": "The write path lacks stable uniqueness keys or cannot distinguish duplicate from changed records.",
+      "why_it_matters": "Rerun-as-resume depends on reliable idempotency boundaries."
+    }
+  ],
+  "common_wrong_assumptions": [
+    "A failed long-running import always needs a separate resume button.",
+    "More explicit state always improves operator safety.",
+    "No-op detection is only an optimization, not a simplification of the recovery model."
+  ],
+  "first_checks": [
+    {
+      "check": "Identify the idempotency key for each imported entity and prove duplicate writes are skipped or converted into safe upserts.",
+      "why": "Without stable keys, rerun-as-resume can duplicate or corrupt data.",
+      "safe_to_run": true,
+      "files": [
+        "schema",
+        "upsert code",
+        "small dry-run or test import"
+      ]
+    },
+    {
+      "check": "Run a bounded partial import, then rerun the same range and compare attempted/inserted/updated/no-op counts.",
+      "why": "This demonstrates whether already-committed work is safely skipped and whether the tail progresses.",
+      "safe_to_run": false,
+      "files": [
+        "test plan",
+        "run logs",
+        "rollback or cleanup plan"
+      ]
+    }
+  ],
+  "decision_rules": [
+    {
+      "condition": "Rerun performs safe no-op skip/upsert for already-committed records and reaches missing records without manual state repair.",
+      "action": "modify_workflow",
+      "action_detail": "use_rerun_as_resume",
+      "then": "Prefer one run button plus clear progress/history over a separate resume state machine.",
+      "confidence": "medium",
+      "source_ids": [
+        "redacted-session-observation-2026-06-10"
+      ]
+    }
+  ],
+  "do_not": [
+    "Do not remove resume controls until idempotency is proven with a bounded partial-run test.",
+    "Do not use this pattern for destructive imports or external APIs where re-reading has material cost without a human gate.",
+    "Do not publish private provider names, tenant identifiers, URLs, account IDs, or internal repository paths in public lessons."
+  ],
+  "agent_directives": {
+    "do_not_auto_apply": true,
+    "preferred_next_step": "When asked to add resume logic, first test whether idempotent rerun with no-op skip already gives a simpler and safer recovery model."
+  },
+  "risk": {
+    "level": "medium",
+    "human_gate_required": true,
+    "notes": "Candidate is based on one private production-backed import redesign and needs review before promotion."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "redacted-session-observation-2026-06-10",
+        "url": "verification-artifact:redacted-private-work-session-2026-06-10",
+        "type": "verification_artifact",
+        "retrieved_at": "2026-06-10T16:53:00+09:00",
+        "supports": "A long-running import was simplified by batch upserts plus no-op skip; rerunning became the resume path, and a rollback/repair probe confirmed recovery behavior."
+      }
+    ]
+  },
+  "freshness": {
+    "checked_at": "2026-06-10",
+    "volatility": "medium",
+    "next_check_due": "2026-12-13"
+  }
+}
